@@ -1,19 +1,20 @@
-/* Classic Literature Visual Design System
- * Theme: Ivory/Cream, Burgundy, Dark Antique Brown, Gold
- */
+/* ==========================================================================
+   ATHENÆUM CLASSICAL LITERATURE DESIGN SYSTEM - MASTER STYLESHEET
+   Palette: Ivory, Aged Parchment, Antique Dark Brown, Burgundy, Gold
+   ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Classical Color Palette */
+  /* Core Color Palette */
   --bg-primary: #FDFBF7;           /* Warm Alabaster / Ivory */
   --bg-secondary: #F6F1E9;         /* Aged Parchment / Vellum */
-  --bg-surface: #FFFFFF;           /* Crisp Paper */
+  --bg-surface: #FFFFFF;           /* Pristine Paper */
   --bg-dark: #1E140C;              /* Bookbinder Ebony */
   
   --text-primary: #2C1D11;         /* Deep Antique Dark Brown */
   --text-secondary: #5C4A3C;       /* Warm Sepia */
-  --text-muted: #8C7869;           /* Pale Sepia */
+  --text-muted: #8C7869;           /* Pale Sepia / Inscription */
   --text-light: #FDFBF7;           /* Light Ivory */
 
   --accent-burgundy: #722F37;      /* Imperial Wine / Burgundy */
@@ -25,24 +26,28 @@
   --accent-gold-light: #F7F1E4;
 
   --border-classic: #E3DAC9;       /* Delicate Bookline Border */
-  --border-dark: #3A281A;
+  --border-focus: #C5A059;         /* Gold Focus Ring */
 
-  /* Typography */
-  --font-serif-display: 'Cinzel', 'Playfair Display', Georgia, serif;
-  --font-serif-heading: 'Playfair Display', Georgia, serif;
-  --font-serif-reading: 'Lora', Georgia, serif;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Typography Scale */
+  --font-display: 'Cinzel', 'Playfair Display', Georgia, serif;
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-reading: 'Lora', Georgia, serif;
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* Elevation */
-  --shadow-subtle: 0 2px 8px rgba(44, 29, 17, 0.05);
-  --shadow-card: 0 4px 16px rgba(44, 29, 17, 0.08);
+  /* Elevation & Shadows */
+  --shadow-subtle: 0 2px 8px rgba(44, 29, 17, 0.04);
+  --shadow-card: 0 4px 16px rgba(44, 29, 17, 0.07);
   --shadow-elevated: 0 8px 24px rgba(44, 29, 17, 0.12);
 
+  /* Layout Boundaries */
+  --container-max: 1240px;
+  --container-reading: 760px;
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
 }
 
+/* Global Reset & Base */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -52,32 +57,57 @@
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-family: var(--font-sans);
+  font-family: var(--font-ui);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
+/* Typography Hierarchy */
 h1, h2, h3, h4, .serif-title {
-  font-family: var(--font-serif-heading);
+  font-family: var(--font-heading);
   color: var(--text-primary);
   letter-spacing: -0.01em;
+  font-weight: 600;
 }
 
-/* Classic Button Utilities */
+p.reading-text {
+  font-family: var(--font-reading);
+  font-size: 1.12rem;
+  line-height: 1.85;
+  color: var(--text-primary);
+}
+
+/* Drop-Cap for Literature Openings */
+.drop-cap::first-letter {
+  font-family: var(--font-display);
+  font-size: 3.4rem;
+  float: left;
+  line-height: 0.8;
+  margin-right: 0.5rem;
+  margin-top: 0.2rem;
+  color: var(--accent-burgundy);
+}
+
+/* Reusable Classical Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  font-family: var(--font-sans);
+  font-family: var(--font-ui);
   font-weight: 500;
   font-size: 0.92rem;
-  padding: 0.6rem 1.25rem;
+  padding: 0.65rem 1.35rem;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease-in-out;
   text-decoration: none;
   border: 1px solid transparent;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
 }
 
 .btn-primary {
@@ -88,6 +118,7 @@ h1, h2, h3, h4, .serif-title {
 
 .btn-primary:hover {
   background-color: var(--accent-burgundy-hover);
+  border-color: var(--accent-burgundy-hover);
 }
 
 .btn-secondary {
@@ -111,34 +142,151 @@ h1, h2, h3, h4, .serif-title {
   background-color: var(--accent-gold-hover);
 }
 
-.btn-sm {
-  padding: 0.35rem 0.75rem;
-  font-size: 0.82rem;
+/* Form Inputs & Controls */
+.input-field {
+  width: 100%;
+  padding: 0.65rem 0.9rem;
+  font-family: var(--font-ui);
+  font-size: 0.92rem;
+  color: var(--text-primary);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Container */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
+.input-field:focus {
+  outline: none;
+  border-color: var(--accent-burgundy);
+  box-shadow: 0 0 0 3px var(--accent-burgundy-subtle);
 }
 
-.reading-container {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
+/* Literary Card Anatomy */
+.literature-plate {
+  display: flex;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  gap: 1.5rem;
+  box-shadow: var(--shadow-subtle);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Literary Badge */
+.literature-plate:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}
+
+.cover-container {
+  width: 110px;
+  height: 165px;
+  flex-shrink: 0;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.cover-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Badges & Tags */
 .tag-badge {
   display: inline-block;
-  font-size: 0.75rem;
-  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-family: var(--font-ui);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   padding: 0.2rem 0.6rem;
   background-color: var(--bg-secondary);
   color: var(--text-secondary);
   border: 1px solid var(--border-classic);
   border-radius: 2px;
+}
+
+.tag-badge.burgundy {
+  background-color: var(--accent-burgundy-subtle);
+  color: var(--accent-burgundy);
+  border-color: rgba(114, 47, 55, 0.2);
+}
+
+/* Star Rating System */
+.star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--accent-gold);
+}
+
+/* Admin Dashboard KPI Cards */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.kpi-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-subtle);
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--accent-burgundy);
+}
+
+.kpi-card.gold-top::before {
+  background-color: var(--accent-gold);
+}
+
+.kpi-title {
+  font-size: 0.78rem;
+  font-family: var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-value {
+  font-family: var(--font-heading);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+/* Responsive Grid Adapters */
+@media (max-width: 1024px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .literature-plate {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
 }
