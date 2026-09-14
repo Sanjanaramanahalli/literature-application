@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
+import { AuthModal } from './components/AuthModal';
 import './components/Header.css';
+import './components/AuthModal.css';
 
 export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<string>('home');
   const [user, setUser] = useState<any>(null);
+  
+  // Auth Modal State
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
   useEffect(() => {
     // Check saved session
@@ -18,6 +24,15 @@ export const App: React.FC = () => {
     }
   }, []);
 
+  const handleOpenAuth = (mode: 'login' | 'register') => {
+    setAuthMode(mode);
+    setAuthModalOpen(true);
+  };
+
+  const handleAuthSuccess = (authenticatedUser: any, _token: string) => {
+    setUser(authenticatedUser);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('literature_token');
     localStorage.removeItem('literature_user');
@@ -30,7 +45,7 @@ export const App: React.FC = () => {
         currentTab={currentTab}
         setCurrentTab={setCurrentTab}
         user={user}
-        onOpenAuth={(mode) => console.log('Open auth:', mode)}
+        onOpenAuth={handleOpenAuth}
         onLogout={handleLogout}
       />
 
@@ -42,6 +57,25 @@ export const App: React.FC = () => {
           <p style={{ maxWidth: '650px', margin: '0 auto', color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
             A dedicated sanctuary for discovering, reading, and contemplating timeless works of world literature.
           </p>
+
+          {user && (
+            <div
+              style={{
+                marginTop: '2rem',
+                display: 'inline-block',
+                padding: '1rem 2rem',
+                backgroundColor: 'var(--bg-secondary)',
+                border: '1px solid var(--border-classic)',
+                borderRadius: 'var(--radius-md)',
+              }}
+              id="active-user-banner"
+            >
+              <p style={{ fontWeight: 600, color: 'var(--accent-burgundy)' }}>
+                Authenticated as {user.name} ({user.role})
+              </p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{user.email}</p>
+            </div>
+          )}
         </div>
       </main>
 
@@ -50,6 +84,14 @@ export const App: React.FC = () => {
           © 2026 Athenæum Classic Literature Repository. Dedicated to humanistic arts and timeless scholarship.
         </p>
       </footer>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        initialMode={authMode}
+        onClose={() => setAuthModalOpen(false)}
+        onSuccess={handleAuthSuccess}
+      />
     </div>
   );
 };

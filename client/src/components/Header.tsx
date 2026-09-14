@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, Search, Bookmark, ShieldCheck, LogOut, Menu, X, User as UserIcon } from 'lucide-react';
+import { BookOpen, Search, Bookmark, ShieldCheck, LogOut, Menu, X } from 'lucide-react';
 
 interface HeaderProps {
   currentTab: string;

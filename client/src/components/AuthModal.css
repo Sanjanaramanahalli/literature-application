@@ -1,0 +1,229 @@
+/* Classical Auth Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(30, 20, 12, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1.5rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-plate {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-elevated);
+  position: relative;
+  overflow: hidden;
+  max-width: 460px;
+  width: 100%;
+}
+
+.auth-modal-container {
+  padding: 2.25rem;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.modal-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.modal-title {
+  font-size: 1.55rem;
+  color: var(--accent-burgundy);
+  line-height: 1.2;
+}
+
+.modal-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease;
+}
+
+.btn-close:hover {
+  color: var(--text-primary);
+}
+
+/* Feedback Alerts */
+.auth-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.86rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1.25rem;
+}
+
+.auth-alert.error {
+  background-color: #FDF2F2;
+  color: #9B1C1C;
+  border: 1px solid #F8B4B4;
+}
+
+.auth-alert.success {
+  background-color: #F3FAF7;
+  color: #0E9F6E;
+  border: 1px solid #BCF0DA;
+}
+
+/* Forms */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-group label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.input-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 0.85rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.input-icon-wrapper .input-field {
+  padding-left: 2.35rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 0.85rem;
+}
+
+.form-group.half {
+  flex: 1;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--accent-burgundy);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.link-btn:hover {
+  color: var(--accent-burgundy-hover);
+}
+
+.btn-block {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+/* Admin Secret Toggle */
+.admin-secret-toggle {
+  text-align: right;
+  margin-top: -0.35rem;
+}
+
+.admin-field-group {
+  animation: fadeIn 0.2s ease-out;
+  background-color: var(--bg-secondary);
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border-classic);
+}
+
+/* Divider */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.5rem 0 1rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border-classic);
+}
+
+.auth-divider span {
+  padding: 0 0.75rem;
+}
+
+/* Google OAuth Button */
+.btn-google {
+  background-color: #FFFFFF;
+  color: #3C4043;
+  border: 1px solid var(--border-classic);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.btn-google:hover {
+  background-color: #F8FAFC;
+  border-color: #CBD5E1;
+}
+
+/* Footer Switch */
+.modal-footer-switch {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
