@@ -4,12 +4,14 @@
   "description": "Full-Stack Classic Literature Application Monorepo Root",
   "private": true,
   "scripts": {
+    "dev": "concurrently \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
     "dev:server": "npm --prefix server run dev",
     "dev:client": "npm --prefix client run dev",
     "seed": "npm --prefix server run seed",
     "test:e2e": "playwright test"
   },
   "devDependencies": {
-    "@playwright/test": "^1.63.0"
+    "@playwright/test": "^1.49.0",
+    "concurrently": "^9.1.2"
   }
 }
