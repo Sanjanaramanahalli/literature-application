@@ -1,0 +1,129 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  passwordHash String?
+  role         String    @default("READER") // "READER" or "ADMIN"
+  googleId     String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  ratings      Rating[]
+  saves        Save[]
+  comments     Comment[]
+}
+
+model Creator {
+  id          String       @id @default(uuid())
+  name        String
+  bio         String?
+  roleType    String       @default("AUTHOR") // "AUTHOR", "PLAYWRIGHT", or "BOTH"
+  createdAt   DateTime     @default(now())
+
+  literatures Literature[]
+}
+
+model Category {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  description String?
+  slug        String       @unique
+  createdAt   DateTime     @default(now())
+
+  literatures Literature[]
+}
+
+model Literature {
+  id                String          @id @default(uuid())
+  title             String
+  subheading        String?
+  brief             String
+  content           String
+  language          String          @default("English")
+  subject           String?
+  genre             String?
+  coverImage        String?
+  publicationStatus String          @default("DRAFT") // "DRAFT", "PUBLISHED", "UNPUBLISHED"
+  publicationDate   DateTime?
+
+  creatorId         String
+  creator           Creator         @relation(fields: [creatorId], references: [id], onDelete: Restrict)
+
+  categoryId        String
+  category          Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  tags              LiteratureTag[]
+  ratings           Rating[]
+  saves             Save[]
+  comments          Comment[]
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+model Tag {
+  id          String          @id @default(uuid())
+  name        String          @unique
+  literatures LiteratureTag[]
+}
+
+model LiteratureTag {
+  literatureId String
+  tagId        String
+
+  literature   Literature @relation(fields: [literatureId], references: [id], onDelete: Cascade)
+  tag          Tag        @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([literatureId, tagId])
+}
+
+model Rating {
+  id           String     @id @default(uuid())
+  value        Int        // 1 to 5
+  userId       String
+  literatureId String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  literature   Literature @relation(fields: [literatureId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, literatureId])
+}
+
+model Save {
+  id           String     @id @default(uuid())
+  userId       String
+  literatureId String
+  createdAt    DateTime   @default(now())
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  literature   Literature @relation(fields: [literatureId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, literatureId])
+}
+
+model Comment {
+  id           String     @id @default(uuid())
+  content      String
+  userId       String
+  literatureId String
+  parentId     String?    // Null for top-level comments, parent ID for replies
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  literature   Literature @relation(fields: [literatureId], references: [id], onDelete: Cascade)
+
+  parent       Comment?   @relation("ThreadedReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies      Comment[]  @relation("ThreadedReplies")
+}

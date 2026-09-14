@@ -1,0 +1,22 @@
+# Node & Dependencies
+node_modules/
+dist/
+.env
+.env.local
+
+# Database
+server/prisma/*.db
+server/prisma/*.db-journal
+
+# Uploads
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Playwright
+test-results/
+playwright-report/
+
+# Logs & OS
+*.log
+.DS_Store
+Thumbs.db
