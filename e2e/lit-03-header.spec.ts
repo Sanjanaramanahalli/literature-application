@@ -27,7 +27,25 @@ test.describe('Milestone 2 - LIT-03: Classic Literature Design System & Sticky H
     expect(position).toBe('sticky');
   });
 
-  test('Positive: Mobile view switches to responsive toggle menu', async ({ page }) => {
+  test('Positive: Classic Literature CSS tokens are defined and applied', async ({ page }) => {
+    await page.goto('http://localhost:5173');
+    const tokens = await page.evaluate(() => {
+      const style = window.getComputedStyle(document.documentElement);
+      return {
+        bgPrimary: style.getPropertyValue('--bg-primary').trim(),
+        textPrimary: style.getPropertyValue('--text-primary').trim(),
+        accentBurgundy: style.getPropertyValue('--accent-burgundy').trim(),
+        accentGold: style.getPropertyValue('--accent-gold').trim(),
+      };
+    });
+
+    expect(tokens.bgPrimary.toLowerCase()).toBe('#fdfbf7');
+    expect(tokens.textPrimary.toLowerCase()).toBe('#2c1d11');
+    expect(tokens.accentBurgundy.toLowerCase()).toBe('#722f37');
+    expect(tokens.accentGold.toLowerCase()).toBe('#c5a059');
+  });
+
+  test('Positive: Mobile view switches to responsive toggle menu and drawer interactions work', async ({ page }) => {
     await page.setViewportSize({ width: 480, height: 800 });
     await page.goto('http://localhost:5173');
 
@@ -36,6 +54,13 @@ test.describe('Milestone 2 - LIT-03: Classic Literature Design System & Sticky H
 
     // Click toggle to open drawer
     await toggle.click();
-    await expect(page.locator('#mobile-menu')).toBeVisible();
+    const mobileMenu = page.locator('#mobile-menu');
+    await expect(mobileMenu).toBeVisible();
+    await expect(mobileMenu.locator('button', { hasText: 'Home' })).toBeVisible();
+    await expect(mobileMenu.locator('button', { hasText: 'Explore Literature' })).toBeVisible();
+
+    // Click toggle again to close drawer
+    await toggle.click();
+    await expect(mobileMenu).not.toBeVisible();
   });
 });
