@@ -12,7 +12,7 @@ export default defineConfig({
   reporter: 'list',
   use: {
     baseURL: 'http://localhost:5173',
-    trace: 'on-first-retry',
+    trace: 'off',
     headless: true,
   },
   projects: [
