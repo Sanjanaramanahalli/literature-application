@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { AuthModal } from './components/AuthModal';
 import { CatalogView } from './components/CatalogView';
+import { SearchView } from './components/SearchView';
 import './components/Header.css';
 import './components/AuthModal.css';
 
@@ -96,14 +97,11 @@ export const App: React.FC = () => {
         )}
 
         {currentTab === 'search' && (
-          <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-            <h2 className="serif-title" style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--accent-burgundy)' }}>
-              Search & Filter Archives
-            </h2>
-            <p style={{ color: 'var(--text-muted)' }}>
-              Use the top search or advance queries to explore our literature catalog.
-            </p>
-          </div>
+          <SearchView
+            onSelectLiterature={(item) => {
+              console.log('Selected literature from search:', item.title);
+            }}
+          />
         )}
 
         {currentTab === 'saved' && (
