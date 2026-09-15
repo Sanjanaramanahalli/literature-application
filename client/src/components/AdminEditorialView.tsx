@@ -14,6 +14,13 @@ import {
   Check,
   RotateCcw,
   ShieldAlert,
+  BarChart3,
+  Users,
+  Star,
+  MessageSquare,
+  BookmarkCheck,
+  TrendingUp,
+  RefreshCw,
 } from 'lucide-react';
 import './AdminEditorialView.css';
 
@@ -21,6 +28,34 @@ interface Creator {
   id: string;
   name: string;
   roleType: string;
+}
+
+interface KpiData {
+  totalLiterature: number;
+  publishedLiterature: number;
+  draftLiterature: number;
+  registeredReaders: number;
+  totalRatings: number;
+  averageRating: number;
+  totalComments: number;
+  totalSaves: number;
+}
+
+interface SecondaryComment {
+  id: string;
+  content: string;
+  createdAt: string;
+  user: { name: string; role: string };
+  literature: { title: string };
+}
+
+interface SecondaryLiterature {
+  id: string;
+  title: string;
+  publicationStatus: string;
+  createdAt: string;
+  creator: { name: string };
+  category: { name: string };
 }
 
 interface Category {
@@ -57,8 +92,15 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
   onOpenAuth,
   onViewLiterature,
 }) => {
-  // Navigation tabs: 'create' | 'manage'
-  const [activeTab, setActiveTab] = useState<'create' | 'manage'>('create');
+  // Navigation tabs: 'create' | 'manage' | 'analytics'
+  const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'analytics'>('create');
+
+  // Executive KPI Dashboard State
+  const [kpiData, setKpiData] = useState<KpiData | null>(null);
+  const [recentComments, setRecentComments] = useState<SecondaryComment[]>([]);
+  const [recentLiterature, setRecentLiterature] = useState<SecondaryLiterature[]>([]);
+  const [kpiLoading, setKpiLoading] = useState(false);
+  const [lastRefreshedTime, setLastRefreshedTime] = useState<string>('');
 
   // Form State
   const [title, setTitle] = useState('');
@@ -148,10 +190,33 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
     }
   };
 
+  const fetchDashboardKpis = async () => {
+    if (!isAdmin) return;
+    setKpiLoading(true);
+    const token = localStorage.getItem('literature_token');
+    try {
+      const res = await fetch('http://localhost:5000/api/admin/dashboard/kpis', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setKpiData(data.kpis);
+        setRecentComments(data.recentComments || []);
+        setRecentLiterature(data.recentLiterature || []);
+        setLastRefreshedTime(new Date().toLocaleTimeString());
+      }
+    } catch (err) {
+      console.error('Failed to fetch dashboard KPIs:', err);
+    } finally {
+      setKpiLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (isAdmin) {
       fetchMetadata();
       fetchArchivalWorks();
+      fetchDashboardKpis();
     }
   }, [isAdmin]);
 
@@ -446,6 +511,17 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
         {/* Navigation Tabs */}
         <div className="editorial-nav-tabs">
           <button
+            className={`editorial-tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('analytics');
+              fetchDashboardKpis();
+            }}
+            id="tab-btn-executive-analytics"
+          >
+            <BarChart3 size={16} />
+            Live Dashboard
+          </button>
+          <button
             className={`editorial-tab-btn ${activeTab === 'create' ? 'active' : ''}`}
             onClick={() => setActiveTab('create')}
             id="tab-btn-create-manuscript"
@@ -487,6 +563,231 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
           >
             <X size={16} />
           </button>
+        </div>
+      )}
+
+      {/* VIEW 0: EXECUTIVE KPI DASHBOARD & SECONDARY ANALYTICS (LIT-10) */}
+      {activeTab === 'analytics' && (
+        <div id="executive-kpi-dashboard-view">
+          {/* Header Bar with Live Refresh */}
+          <div className="kpi-dashboard-header">
+            <div>
+              <h2 className="serif-title" style={{ fontSize: '1.45rem', color: 'var(--accent-burgundy)' }}>
+                Athenæum Sanctuary Metrics & Executive KPIs
+              </h2>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                Live database telemetry {lastRefreshedTime ? `• Last synchronized at ${lastRefreshedTime}` : ''}
+              </p>
+            </div>
+            <button
+              className={`kpi-refresh-btn ${kpiLoading ? 'spinning' : ''}`}
+              onClick={fetchDashboardKpis}
+              disabled={kpiLoading}
+              id="btn-refresh-kpis"
+            >
+              <RefreshCw size={15} className="refresh-icon" />
+              {kpiLoading ? 'Synchronizing...' : 'Refresh Metrics'}
+            </button>
+          </div>
+
+          {/* 8 LIVE KPI CARDS */}
+          <div className="kpis-grid" id="kpi-cards-container">
+            {/* 1. Total Literature */}
+            <div className="kpi-card" id="kpi-total-literature" data-testid="kpi-card-total-literature">
+              <div className="kpi-card-top">
+                <span className="kpi-card-label">Total Literature</span>
+                <div className="kpi-card-icon-wrap burgundy">
+                  <BookOpen size={18} />
+                </div>
+              </div>
+              <div className="kpi-card-value" id="kpi-val-total-literature">
+                {kpiData ? kpiData.totalLiterature : '0'}
+              </div>
+              <div className="kpi-card-subtext">
+                <span>All cataloged manuscripts</span>
+              </div>
+            </div>
+
+            {/* 2. Published Literature */}
+            <div className="kpi-card" id="kpi-published-literature" data-testid="kpi-card-published-literature">
+              <div className="kpi-card-top">
+                <span className="kpi-card-label">Published Works</span>
+                <div className="kpi-card-icon-wrap green">
+                  <CheckCircle2 size={18} />
+                </div>
+              </div>
+              <div className="kpi-card-value" id="kpi-val-published-literature">
+                {kpiData ? kpiData.publishedLiterature : '0'}
+              </div>
+              <div className="kpi-card-subtext">
+                <span>Live in public catalog</span>
+              </div>
+            </div>
+
+            {/* 3. Draft Literature */}
+            <div className="kpi-card" id="kpi-draft-literature" data-testid="kpi-card-draft-literature">
+              <div className="kpi-card-top">
+                <span className="kpi-card-label">Draft Manuscripts</span>
+                <div className="kpi-card-icon-wrap amber">
+                  <Feather size={18} />
+                </div>
+              </div>
+              <div className="kpi-card-value" id="kpi-val-draft-literature">
+                {kpiData ? kpiData.draftLiterature : '0'}
+              </div>
+              <div className="kpi-card-subtext">
+                <span>Curatorial work in progress</span>
+              </div>
+            </div>
+
+            {/* 4. Registered Readers (Strictly Excluding Admins) */}
+            <div className="kpi-card" id="kpi-registered-readers" data-testid="kpi-card-registered-readers">
+              <div className="kpi-card-top">
+                <span className="kpi-card-label">Registered Readers</span>
+                <div className="kpi-card-icon-wrap blue">
+                  <Users size={18} />
+                </div>
+              </div>
+              <div className="kpi-card-value" id="kpi-val-registered-readers">
+                {kpiData ? kpiData.registeredReaders : '0'}
+              </div>
+              <div className="kpi-card-subtext">
+                <span>Active scholar accounts (excl. Admins)</span>
+              </div>
+            </div>
+
+            {/* 5. Total Ratings */}
+            <div className="kpi-card" id="kpi-total-ratings" data-testid="kpi-card-total-ratings">
+              <div className="kpi-card-top">
+                <span className="kpi-card-label">Total Ratings</span>
+                <div className="kpi-card-icon-wrap gold">
+                  <Star size={18} />
+                </div>
+              </div>
+              <div className="kpi-card-value" id="kpi-val-total-ratings">
+                {kpiData ? kpiData.totalRatings : '0'}
+              </div>
+              <div className="kpi-card-subtext">
+                <span>Scholar ratings recorded</span>
+              </div>
+            </div>
+
+            {/* 6. Average Rating */}
+            <div className="kpi-card" id="kpi-average-rating" data-testid="kpi-card-average-rating">
+              <div className="kpi-card-top">
+                <span className="kpi-card-label">Average Rating</span>
+                <div className="kpi-card-icon-wrap gold">
+                  <TrendingUp size={18} />
+                </div>
+              </div>
+              <div className="kpi-card-value" id="kpi-val-average-rating">
+                {kpiData && !isNaN(kpiData.averageRating) ? kpiData.averageRating.toFixed(1) : '0.0'}
+              </div>
+              <div className="kpi-card-subtext">
+                <span>Scale 1.0 to 5.0 stars</span>
+              </div>
+            </div>
+
+            {/* 7. Total Comments */}
+            <div className="kpi-card" id="kpi-total-comments" data-testid="kpi-card-total-comments">
+              <div className="kpi-card-top">
+                <span className="kpi-card-label">Total Comments</span>
+                <div className="kpi-card-icon-wrap purple">
+                  <MessageSquare size={18} />
+                </div>
+              </div>
+              <div className="kpi-card-value" id="kpi-val-total-comments">
+                {kpiData ? kpiData.totalComments : '0'}
+              </div>
+              <div className="kpi-card-subtext">
+                <span>Discussions and threaded replies</span>
+              </div>
+            </div>
+
+            {/* 8. Total Saves */}
+            <div className="kpi-card" id="kpi-total-saves" data-testid="kpi-card-total-saves">
+              <div className="kpi-card-top">
+                <span className="kpi-card-label">Total Saves</span>
+                <div className="kpi-card-icon-wrap burgundy">
+                  <BookmarkCheck size={18} />
+                </div>
+              </div>
+              <div className="kpi-card-value" id="kpi-val-total-saves">
+                {kpiData ? kpiData.totalSaves : '0'}
+              </div>
+              <div className="kpi-card-subtext">
+                <span>Sanctuary bookmarked works</span>
+              </div>
+            </div>
+          </div>
+
+          {/* SECONDARY ANALYTICS WIDGETS */}
+          <div className="secondary-analytics-grid" id="secondary-analytics-container">
+            {/* Recent Scholar Discussions */}
+            <div className="analytics-panel" id="panel-recent-comments">
+              <div className="analytics-panel-header">
+                <h3 className="serif-title analytics-panel-title">
+                  <MessageSquare size={18} />
+                  Recent Scholar Discourse
+                </h3>
+                <span className="tag-badge burgundy" style={{ fontSize: '0.75rem' }}>Live Stream</span>
+              </div>
+              <div className="recent-item-list">
+                {recentComments.length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontStyle: 'italic', padding: '1rem 0' }}>
+                    No comments recorded in the sanctuary yet.
+                  </p>
+                ) : (
+                  recentComments.map((c) => (
+                    <div key={c.id} className="recent-comment-item" data-testid={`recent-comment-${c.id}`}>
+                      <div className="recent-comment-meta">
+                        <span className="recent-comment-author">
+                          {c.user?.name} ({c.user?.role})
+                        </span>
+                        <span>{new Date(c.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--accent-burgundy)', marginBottom: '0.35rem', fontWeight: 600 }}>
+                        On: {c.literature?.title}
+                      </div>
+                      <p className="recent-comment-text">"{c.content}"</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Recently Cataloged Works */}
+            <div className="analytics-panel" id="panel-recent-literature">
+              <div className="analytics-panel-header">
+                <h3 className="serif-title analytics-panel-title">
+                  <BookOpen size={18} />
+                  Recent Archival Ingestions
+                </h3>
+                <span className="tag-badge gold" style={{ fontSize: '0.75rem' }}>Registry</span>
+              </div>
+              <div className="recent-item-list">
+                {recentLiterature.length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontStyle: 'italic', padding: '1rem 0' }}>
+                    No literature recorded in the archive yet.
+                  </p>
+                ) : (
+                  recentLiterature.map((lit) => (
+                    <div key={lit.id} className="recent-literature-item" data-testid={`recent-lit-${lit.id}`}>
+                      <div className="recent-literature-info">
+                        <span className="recent-literature-title">{lit.title}</span>
+                        <span className="recent-literature-author">
+                          By {lit.creator?.name} • {lit.category?.name}
+                        </span>
+                      </div>
+                      <span className={`status-badge ${lit.publicationStatus.toLowerCase()}`}>
+                        {lit.publicationStatus}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
