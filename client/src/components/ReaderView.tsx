@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Star, Bookmark, Calendar, Globe, Tag } from 'lucide-react';
+import { ThreadedComments } from './ThreadedComments';
 import type { LiteratureItem } from './LiteratureCard';
 import './ReaderView.css';
 
@@ -382,6 +383,15 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
             </div>
           )}
         </section>
+
+        {/* 2-Level Threaded Comments & Dialogues */}
+        <ThreadedComments
+          literatureId={literatureId}
+          comments={literature.comments || []}
+          user={user}
+          onCommentsUpdated={fetchLiteratureDetail}
+          onOpenAuth={onOpenAuth}
+        />
       </article>
     </div>
   );
