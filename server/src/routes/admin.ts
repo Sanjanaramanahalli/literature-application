@@ -37,12 +37,24 @@ const upload = multer({
   },
 });
 
-// 1. Upload Cover Image
+// 1. Upload Cover Image with Multer Error Handling
 adminRouter.post(
   '/upload-cover',
   authenticateToken,
   requireRole('ADMIN'),
-  upload.single('coverImage'),
+  (req, res, next) => {
+    upload.single('coverImage')(req, res, (err: any) => {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ error: 'File size exceeds maximum allowable limit of 5MB.' });
+        }
+        return res.status(400).json({ error: `Upload error: ${err.message}` });
+      } else if (err) {
+        return res.status(400).json({ error: err.message || 'Image upload failed.' });
+      }
+      next();
+    });
+  },
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
       if (!req.file) {
@@ -50,7 +62,7 @@ adminRouter.post(
         return;
       }
       const coverUrl = `/uploads/${req.file.filename}`;
-      res.json({ message: 'Cover uploaded successfully.', coverUrl });
+      res.json({ message: 'Cover uploaded successfully.', coverUrl, filename: req.file.filename });
     } catch (err: any) {
       res.status(500).json({ error: err.message || 'Image upload failed.' });
     }
@@ -123,6 +135,130 @@ adminRouter.post(
     } catch (err) {
       console.error('Create literature error:', err);
       res.status(500).json({ error: 'Failed to create literature.' });
+    }
+  }
+);
+
+// 2b. List all Literature for Admin Curation (Drafts, Published, Unpublished)
+adminRouter.get(
+  '/literature',
+  authenticateToken,
+  requireRole('ADMIN'),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { status } = req.query;
+      const whereClause: any = {};
+      if (status && ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'].includes(String(status).toUpperCase())) {
+        whereClause.publicationStatus = String(status).toUpperCase();
+      }
+
+      const literatures = await prisma.literature.findMany({
+        where: whereClause,
+        include: {
+          creator: true,
+          category: true,
+          tags: { include: { tag: true } },
+          ratings: true,
+          saves: true,
+          comments: true,
+        },
+        orderBy: { updatedAt: 'desc' },
+      });
+
+      const enriched = literatures.map((item) => {
+        const totalRatingsCount = item.ratings.length;
+        const averageRating =
+          totalRatingsCount > 0
+            ? Number((item.ratings.reduce((acc, r) => acc + r.value, 0) / totalRatingsCount).toFixed(1))
+            : 0;
+
+        return {
+          id: item.id,
+          title: item.title,
+          subheading: item.subheading,
+          brief: item.brief,
+          content: item.content,
+          language: item.language,
+          subject: item.subject,
+          genre: item.genre,
+          coverImage: item.coverImage,
+          publicationStatus: item.publicationStatus,
+          publicationDate: item.publicationDate,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+          creator: item.creator,
+          category: item.category,
+          tags: item.tags.map((t) => t.tag.name),
+          totalRatingsCount,
+          averageRating,
+          totalSavesCount: item.saves.length,
+          totalCommentsCount: item.comments.length,
+        };
+      });
+
+      res.json({ literatures: enriched });
+    } catch (err) {
+      console.error('Admin list literature error:', err);
+      res.status(500).json({ error: 'Failed to retrieve literature list for administration.' });
+    }
+  }
+);
+
+// 2c. Get Creators list & Create Creator
+adminRouter.get(
+  '/creators',
+  authenticateToken,
+  requireRole('ADMIN'),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const creators = await prisma.creator.findMany({
+        orderBy: { name: 'asc' },
+      });
+      res.json({ creators });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to retrieve creators.' });
+    }
+  }
+);
+
+adminRouter.post(
+  '/creators',
+  authenticateToken,
+  requireRole('ADMIN'),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { name, bio, roleType } = req.body;
+      if (!name || !name.trim()) {
+        res.status(400).json({ error: 'Creator name is required.' });
+        return;
+      }
+      const creator = await prisma.creator.create({
+        data: {
+          name: name.trim(),
+          bio: bio?.trim(),
+          roleType: roleType || 'AUTHOR',
+        },
+      });
+      res.status(201).json({ message: 'Creator registered successfully.', creator });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to register creator.' });
+    }
+  }
+);
+
+// 2d. Get Categories list for Admin
+adminRouter.get(
+  '/categories',
+  authenticateToken,
+  requireRole('ADMIN'),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const categories = await prisma.category.findMany({
+        orderBy: { name: 'asc' },
+      });
+      res.json({ categories });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to retrieve categories.' });
     }
   }
 );

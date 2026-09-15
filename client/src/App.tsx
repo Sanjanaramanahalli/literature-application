@@ -5,6 +5,7 @@ import { CatalogView } from './components/CatalogView';
 import { SearchView } from './components/SearchView';
 import { ReaderView } from './components/ReaderView';
 import { SavedWorksView } from './components/SavedWorksView';
+import { AdminEditorialView } from './components/AdminEditorialView';
 import './components/Header.css';
 import './components/AuthModal.css';
 
@@ -131,14 +132,13 @@ export const App: React.FC = () => {
         )}
 
         {currentTab === 'admin' && (
-          <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-            <h2 className="serif-title" style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--accent-burgundy)' }}>
-              Archival Curation & Administration
-            </h2>
-            <p style={{ color: 'var(--text-muted)' }}>
-              Administrative dashboard with live KPI analytics and publication control.
-            </p>
-          </div>
+          <AdminEditorialView
+            user={user}
+            onOpenAuth={handleOpenAuth}
+            onViewLiterature={(id) => {
+              setSelectedLiteratureId(id);
+            }}
+          />
         )}
       </main>
 
