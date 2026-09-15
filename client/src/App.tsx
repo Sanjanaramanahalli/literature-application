@@ -3,11 +3,13 @@ import { Header } from './components/Header';
 import { AuthModal } from './components/AuthModal';
 import { CatalogView } from './components/CatalogView';
 import { SearchView } from './components/SearchView';
+import { ReaderView } from './components/ReaderView';
 import './components/Header.css';
 import './components/AuthModal.css';
 
 export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<string>('home');
+  const [selectedLiteratureId, setSelectedLiteratureId] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   
   // Auth Modal State
@@ -45,7 +47,10 @@ export const App: React.FC = () => {
     <div className="app-shell" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header
         currentTab={currentTab}
-        setCurrentTab={setCurrentTab}
+        setCurrentTab={(tab) => {
+          setSelectedLiteratureId(null);
+          setCurrentTab(tab);
+        }}
         user={user}
         onOpenAuth={handleOpenAuth}
         onLogout={handleLogout}
@@ -86,22 +91,33 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {/* Dynamic View rendering based on currentTab */}
-        {(currentTab === 'home' || currentTab === 'explore' || currentTab === 'categories') && (
-          <CatalogView
-            currentTab={currentTab}
-            onSelectLiterature={(item) => {
-              console.log('Selected literature:', item.title);
-            }}
+        {/* Dynamic View rendering based on selected literature or currentTab */}
+        {selectedLiteratureId ? (
+          <ReaderView
+            literatureId={selectedLiteratureId}
+            user={user}
+            onBack={() => setSelectedLiteratureId(null)}
+            onOpenAuth={handleOpenAuth}
           />
-        )}
+        ) : (
+          <>
+            {(currentTab === 'home' || currentTab === 'explore' || currentTab === 'categories') && (
+              <CatalogView
+                currentTab={currentTab}
+                onSelectLiterature={(item) => {
+                  setSelectedLiteratureId(item.id);
+                }}
+              />
+            )}
 
-        {currentTab === 'search' && (
-          <SearchView
-            onSelectLiterature={(item) => {
-              console.log('Selected literature from search:', item.title);
-            }}
-          />
+            {currentTab === 'search' && (
+              <SearchView
+                onSelectLiterature={(item) => {
+                  setSelectedLiteratureId(item.id);
+                }}
+              />
+            )}
+          </>
         )}
 
         {currentTab === 'saved' && (
