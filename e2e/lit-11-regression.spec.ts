@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Milestone 5 - LIT-11: Full End-to-End User Journey Regression Suite', () => {
   test('Complete Visitor Journey: Browse, Explore, Advanced Search and Read', async ({ page }) => {
     // 1. Visit Home Page
-    await page.goto('http://localhost:5173');
+    await page.goto('/');
     await expect(page.locator('.brand-title')).toHaveText('ATHENÆUM');
 
     // 2. Query Search API directly as visitor
