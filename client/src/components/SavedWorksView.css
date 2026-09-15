@@ -1,0 +1,175 @@
+/* SavedWorksView.css - Personal Reading Sanctuary */
+
+.saved-works-container {
+  width: 100%;
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.saved-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.saved-main-title {
+  font-size: 2.5rem;
+  color: var(--accent-burgundy);
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.saved-main-subtitle {
+  max-width: 650px;
+  margin: 0 auto;
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.saved-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-full);
+  font-size: 0.92rem;
+  color: var(--accent-burgundy);
+  font-weight: 500;
+  margin-bottom: 2rem;
+}
+
+/* Empty State */
+.saved-empty-state {
+  text-align: center;
+  padding: 4.5rem 2rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-lg);
+  max-width: 680px;
+  margin: 0 auto;
+  box-shadow: 0 4px 20px rgba(44, 24, 16, 0.04);
+}
+
+.saved-empty-icon {
+  font-size: 2.75rem;
+  margin-bottom: 1rem;
+}
+
+.saved-empty-title {
+  font-size: 1.8rem;
+  color: var(--accent-burgundy);
+  margin-bottom: 0.75rem;
+}
+
+.saved-empty-desc {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 480px;
+  margin: 0 auto 1.75rem;
+}
+
+/* Grid of Saved Manuscripts */
+.saved-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+/* Saved Card Plate */
+.saved-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-md);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 16px rgba(44, 24, 16, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+
+.saved-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(44, 24, 16, 0.08);
+}
+
+.saved-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.saved-card-title {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  color: var(--accent-burgundy);
+  margin-bottom: 0.35rem;
+  cursor: pointer;
+  line-height: 1.3;
+}
+
+.saved-card-title:hover {
+  color: var(--accent-gold);
+}
+
+.saved-card-author {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.saved-card-brief {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-bottom: 1.25rem;
+}
+
+.saved-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-classic);
+  margin-bottom: 1.25rem;
+}
+
+.saved-card-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.btn-read-now {
+  flex: 1;
+}
+
+.btn-unsave {
+  padding: 0.5rem 0.75rem;
+  color: #a33;
+  border-color: rgba(170, 51, 51, 0.3);
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.btn-unsave:hover {
+  background: rgba(170, 51, 51, 0.08);
+  border-color: #a33;
+}
+
+/* Loading */
+.saved-loading {
+  text-align: center;
+  padding: 4rem 1rem;
+}

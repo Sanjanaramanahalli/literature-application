@@ -4,6 +4,7 @@ import { AuthModal } from './components/AuthModal';
 import { CatalogView } from './components/CatalogView';
 import { SearchView } from './components/SearchView';
 import { ReaderView } from './components/ReaderView';
+import { SavedWorksView } from './components/SavedWorksView';
 import './components/Header.css';
 import './components/AuthModal.css';
 
@@ -121,14 +122,12 @@ export const App: React.FC = () => {
         )}
 
         {currentTab === 'saved' && (
-          <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-            <h2 className="serif-title" style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--accent-burgundy)' }}>
-              Personal Reading Sanctuary
-            </h2>
-            <p style={{ color: 'var(--text-muted)' }}>
-              Sign in as a reader to view your saved personal manuscripts and reading list.
-            </p>
-          </div>
+          <SavedWorksView
+            user={user}
+            onSelectLiterature={(id) => setSelectedLiteratureId(id)}
+            onNavigateExplore={() => setCurrentTab('explore')}
+            onOpenAuth={handleOpenAuth}
+          />
         )}
 
         {currentTab === 'admin' && (

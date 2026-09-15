@@ -39,16 +39,25 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   const [ratingLoading, setRatingLoading] = useState<boolean>(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
+  // Save State
+  const [isSaved, setIsSaved] = useState<boolean>(false);
+  const [savesCount, setSavesCount] = useState<number>(0);
+  const [saveLoading, setSaveLoading] = useState<boolean>(false);
+
   useEffect(() => {
     fetchLiteratureDetail();
-  }, [literatureId]);
+  }, [literatureId, user]);
 
   const fetchLiteratureDetail = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const res = await fetch(`http://localhost:5000/api/reader/literature/${literatureId}`);
+      const token = localStorage.getItem('literature_token');
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`http://localhost:5000/api/reader/literature/${literatureId}`, { headers });
       if (!res.ok) {
         throw new Error('Failed to retrieve archival manuscript.');
       }
@@ -58,6 +67,23 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       setLiterature(item);
       setAverageRating(item.averageRating || 0);
       setTotalRatingsCount(item.totalRatingsCount || 0);
+      setSavesCount(item.totalSavesCount || 0);
+
+      // Check if item is saved in user's library if authenticated
+      if (token && user) {
+        try {
+          const savedRes = await fetch('http://localhost:5000/api/reader/saved', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (savedRes.ok) {
+            const savedData = await savedRes.json();
+            const exists = (savedData.savedWorks || []).some((w: any) => w.id === literatureId);
+            setIsSaved(exists);
+          }
+        } catch (e) {
+          console.error('Error verifying save state:', e);
+        }
+      }
     } catch (err: any) {
       console.error('Reader detail fetch failure:', err);
       setError(err.message || 'Unable to open reading sanctuary.');
@@ -105,6 +131,39 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
     }
   };
 
+  const handleToggleSave = async () => {
+    if (!user) {
+      setFeedbackMessage('Please sign in to save this work to your personal sanctuary.');
+      onOpenAuth('login');
+      return;
+    }
+
+    try {
+      setSaveLoading(true);
+      const token = localStorage.getItem('literature_token');
+      const res = await fetch(`http://localhost:5000/api/reader/literature/${literatureId}/save`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to toggle save.');
+      }
+
+      const data = await res.json();
+      setIsSaved(data.saved);
+      setSavesCount(data.totalSavesCount);
+      setFeedbackMessage(data.message);
+    } catch (err: any) {
+      console.error('Save toggle error:', err);
+      setFeedbackMessage(err.message || 'Error updating saved status.');
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="reader-loading" id="reader-loading-state">
@@ -148,12 +207,21 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
         </button>
 
         <div className="reader-actions-quick">
-          {literature.totalSavesCount !== undefined && (
-            <span className="tag-badge" title="Saved by readers">
-              <Bookmark size={13} style={{ marginRight: '4px' }} />
-              {literature.totalSavesCount} Saves
-            </span>
-          )}
+          <button
+            className={`btn ${isSaved ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+            onClick={handleToggleSave}
+            disabled={saveLoading}
+            id="btn-toggle-save-reader"
+            title={isSaved ? 'Remove from your reading list' : 'Bookmark to your reading list'}
+          >
+            <Bookmark
+              size={14}
+              fill={isSaved ? 'currentColor' : 'transparent'}
+              style={{ marginRight: '4px' }}
+            />
+            <span>{isSaved ? 'Saved in Sanctuary' : 'Save to Sanctuary'}</span>
+            <span style={{ opacity: 0.8, marginLeft: '4px' }}>({savesCount})</span>
+          </button>
         </div>
       </div>
 
