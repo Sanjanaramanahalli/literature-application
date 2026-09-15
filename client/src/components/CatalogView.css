@@ -1,0 +1,354 @@
+/* ==========================================================================
+   ATHENÆUM - CATALOG VIEW & HERO SHOWCASE STYLES
+   ========================================================================== */
+
+.catalog-container {
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+  width: 100%;
+}
+
+/* Loading & Error States */
+.catalog-loading {
+  text-align: center;
+  padding: 5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  width: 42px;
+  height: 42px;
+  border: 3px solid var(--border-classic);
+  border-top-color: var(--accent-burgundy);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+}
+
+.catalog-error-state {
+  text-align: center;
+  padding: 4rem 1.5rem;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-md);
+  max-width: 500px;
+  margin: 2rem auto;
+}
+
+.error-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.error-title {
+  font-family: var(--font-heading);
+  color: var(--accent-burgundy);
+  margin-bottom: 0.5rem;
+}
+
+.error-msg {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+/* 1. Featured Work Hero Section */
+.featured-hero-section {
+  width: 100%;
+}
+
+.featured-card-plate {
+  display: flex;
+  background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-secondary) 100%);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  transition: box-shadow 0.3s ease;
+}
+
+.featured-card-plate::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent-burgundy), var(--accent-gold), var(--accent-burgundy));
+}
+
+.featured-cover-box {
+  width: 320px;
+  flex-shrink: 0;
+  position: relative;
+  background-color: var(--bg-dark);
+  overflow: hidden;
+}
+
+.featured-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  min-height: 420px;
+  display: block;
+}
+
+.featured-laurel-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background-color: rgba(30, 20, 12, 0.85);
+  color: var(--accent-gold);
+  border: 1px solid var(--accent-gold);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  backdrop-filter: blur(4px);
+  text-transform: uppercase;
+}
+
+.featured-details {
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+
+.featured-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.featured-lang {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+  font-family: var(--font-reading);
+}
+
+.featured-title {
+  font-family: var(--font-heading);
+  font-size: 2.4rem;
+  line-height: 1.15;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.featured-subheading {
+  font-size: 1.1rem;
+  color: var(--accent-burgundy);
+  font-style: italic;
+  margin-bottom: 1rem;
+  font-family: var(--font-reading);
+}
+
+.featured-author {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.25rem;
+}
+
+.featured-brief {
+  margin-bottom: 1.5rem;
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.featured-metrics-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.25rem;
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-sm);
+  margin-bottom: 1.5rem;
+  width: fit-content;
+}
+
+.featured-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.featured-stat .star-icon {
+  color: var(--accent-gold);
+  font-size: 1.2rem;
+}
+
+.stat-divider {
+  color: var(--border-classic);
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.featured-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+/* 2. Section Headers */
+.catalog-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.section-header-classic {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.ornament-line {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--accent-gold);
+  letter-spacing: 0.3em;
+  margin-bottom: 0.35rem;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  color: var(--text-primary);
+  margin-bottom: 0.4rem;
+}
+
+.section-subtitle {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* 3. Literature Card Grids */
+.literature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.75rem;
+  width: 100%;
+}
+
+/* 4. Category Filter Bar */
+.category-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.category-filter-btn {
+  background-color: var(--bg-surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-classic);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.category-filter-btn:hover {
+  border-color: var(--accent-burgundy);
+  color: var(--accent-burgundy);
+  background-color: var(--accent-burgundy-subtle);
+}
+
+.category-filter-btn.active {
+  background-color: var(--accent-burgundy);
+  color: var(--text-light);
+  border-color: var(--accent-burgundy);
+  font-weight: 600;
+  box-shadow: var(--shadow-subtle);
+}
+
+/* Empty Catalog State */
+.empty-catalog-state {
+  text-align: center;
+  padding: 3.5rem 1.5rem;
+  background-color: var(--bg-surface);
+  border: 1px dashed var(--border-classic);
+  border-radius: var(--radius-md);
+  margin: 1.5rem 0;
+}
+
+.empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.empty-title {
+  font-family: var(--font-heading);
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.empty-desc {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  margin-bottom: 1.25rem;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 900px) {
+  .featured-card-plate {
+    flex-direction: column;
+  }
+  .featured-cover-box {
+    width: 100%;
+    height: 260px;
+    min-height: auto;
+  }
+  .featured-details {
+    padding: 1.75rem;
+  }
+  .featured-title {
+    font-size: 1.85rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .literature-grid {
+    grid-template-columns: 1fr;
+  }
+  .featured-metrics-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  .stat-divider {
+    display: none;
+  }
+}

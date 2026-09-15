@@ -1,0 +1,248 @@
+/* ==========================================================================
+   ATHENÆUM - LITERATURE CARD COMPONENT STYLES
+   ========================================================================== */
+
+.literature-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-subtle);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.2s ease;
+  position: relative;
+  cursor: pointer;
+}
+
+.literature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card);
+  border-color: var(--accent-gold);
+}
+
+/* Card Cover Container */
+.card-cover-wrapper {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-classic);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.literature-card:hover .card-cover-img {
+  transform: scale(1.03);
+}
+
+/* Card Ribbons */
+.card-ribbon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.25rem 0.6rem;
+  border-radius: 3px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  z-index: 2;
+}
+
+.ribbon-popularity {
+  background-color: var(--accent-burgundy);
+  color: var(--text-light);
+}
+
+.ribbon-release {
+  background-color: var(--accent-gold);
+  color: #FFFFFF;
+}
+
+.ribbon-category {
+  background-color: var(--bg-surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-classic);
+}
+
+/* Card Body Content */
+.card-content {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.card-meta-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+  font-size: 0.75rem;
+}
+
+.category-pill {
+  background-color: var(--accent-burgundy-subtle);
+  color: var(--accent-burgundy);
+  border: 1px solid rgba(114, 47, 55, 0.15);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.18rem 0.55rem;
+  border-radius: 2px;
+}
+
+.card-genre {
+  color: var(--text-muted);
+  font-style: italic;
+  font-family: var(--font-reading);
+}
+
+.card-title {
+  font-family: var(--font-heading);
+  font-size: 1.22rem;
+  line-height: 1.35;
+  color: var(--text-primary);
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.literature-card:hover .card-title {
+  color: var(--accent-burgundy);
+}
+
+.card-subheading {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 0.65rem;
+  font-style: italic;
+}
+
+.card-author {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+.by-prefix {
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.author-name {
+  color: var(--text-primary);
+}
+
+.card-brief {
+  font-family: var(--font-reading);
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-bottom: 1rem;
+  flex: 1;
+}
+
+/* Card Footer */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border-classic);
+  margin-top: auto;
+  font-size: 0.82rem;
+}
+
+.card-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--accent-gold);
+}
+
+.star-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.rating-val {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.rating-count {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.card-metrics {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.metric-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.metric-score {
+  background-color: var(--bg-secondary);
+  color: var(--accent-burgundy);
+  font-weight: 600;
+  font-size: 0.72rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 2px;
+  border: 1px solid var(--border-classic);
+}
+
+.card-pub-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  text-align: right;
+  font-family: var(--font-ui);
+}
+
+/* Plate / Horizontal Layout */
+.literature-card.layout-plate {
+  flex-direction: row;
+}
+
+.literature-card.layout-plate .card-cover-wrapper {
+  width: 140px;
+  height: auto;
+  min-height: 190px;
+  border-bottom: none;
+  border-right: 1px solid var(--border-classic);
+}
+
+@media (max-width: 640px) {
+  .literature-card.layout-plate {
+    flex-direction: column;
+  }
+  .literature-card.layout-plate .card-cover-wrapper {
+    width: 100%;
+    height: 200px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-classic);
+  }
+}
