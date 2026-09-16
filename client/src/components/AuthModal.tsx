@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Lock, Mail, User, KeyRound, AlertCircle, CheckCircle, ArrowRight, ShieldCheck, RotateCw } from 'lucide-react';
+import { X, Lock, Mail, User, KeyRound, AlertCircle, CheckCircle, ArrowRight, ShieldCheck, RotateCw, Inbox, Copy } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -37,6 +37,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [forgotConfirmPassword, setForgotConfirmPassword] = useState('');
   const [resetToken, setResetToken] = useState<string | null>(null);
 
+  // Email Inbox Drawer state
+  const [inboxMessage, setInboxMessage] = useState<any | null>(null);
+  const [showInbox, setShowInbox] = useState(false);
+  const [inboxLoading, setInboxLoading] = useState(false);
+
   // States
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -55,8 +60,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setForgotNewPassword('');
     setForgotConfirmPassword('');
     setResetToken(null);
+    setInboxMessage(null);
+    setShowInbox(false);
     setError(null);
     setMessage(null);
+  };
+
+  const fetchLatestEmail = async () => {
+    if (!email) return;
+    setInboxLoading(true);
+    try {
+      const res = await fetch(`http://localhost:5000/api/auth/inbox/${encodeURIComponent(email.trim())}`);
+      const data = await res.json();
+      if (data.messages && data.messages.length > 0) {
+        setInboxMessage(data.messages[0]);
+      } else {
+        setInboxMessage(null);
+      }
+      setShowInbox(true);
+    } catch (err) {
+      console.error('Failed to fetch inbox:', err);
+    } finally {
+      setInboxLoading(false);
+    }
   };
 
   const switchMode = (newMode: 'login' | 'register' | 'forgot') => {
@@ -586,6 +612,46 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 Request New OTP
               </button>
             </div>
+
+            {/* In-app Mailbox Link to read dispatched email */}
+            <div className="inbox-launcher-card">
+              <button
+                type="button"
+                className="btn btn-secondary btn-block btn-inbox"
+                id="btn-open-inbox"
+                onClick={fetchLatestEmail}
+                disabled={inboxLoading}
+              >
+                <Inbox size={15} />
+                {inboxLoading ? 'Checking Mailbox...' : 'Open Registered Mailbox (Received Email)'}
+              </button>
+            </div>
+
+            {/* Simulated Mailbox Drawer/Card */}
+            {showInbox && inboxMessage && (
+              <div className="mailbox-card" id="mailbox-preview">
+                <div className="mailbox-header">
+                  <span className="mailbox-subject">{inboxMessage.subject}</span>
+                  <span className="mailbox-time">{new Date(inboxMessage.sentAt).toLocaleTimeString()}</span>
+                </div>
+                <div className="mailbox-meta">
+                  <span><strong>From:</strong> {inboxMessage.from}</span>
+                  <span><strong>To:</strong> {inboxMessage.to}</span>
+                </div>
+                <div className="mailbox-body">
+                  <pre>{inboxMessage.body}</pre>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm btn-autofill-otp"
+                  id="btn-autofill-otp"
+                  onClick={() => setOtp(inboxMessage.otp)}
+                >
+                  <Copy size={13} />
+                  Insert OTP: {inboxMessage.otp}
+                </button>
+              </div>
+            )}
           </form>
         )}
 

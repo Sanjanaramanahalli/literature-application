@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../index.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { sendOtpEmail, getInbox } from '../services/emailService.js';
 
 export const authRouter = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'classic_literature_super_secret_jwt_key_2026';
@@ -230,12 +231,30 @@ authRouter.post('/forgot-password', async (req: Request, res: Response): Promise
     attempts: 0,
   });
 
-  console.log(`[AUTH EMAIL DISPATCH] Forgot Password OTP for ${normalizedEmail}: ${otp} (expires in 10m)`);
+  // Dispatches email directly to reader's registered email inbox
+  // Plaintext OTP is NEVER exposed or printed to terminal/console logs
+  await sendOtpEmail(normalizedEmail, otp);
 
   res.json({
     message: 'A 6-digit OTP has been dispatched to your registered email address.',
     email: normalizedEmail,
-    otpDemo: otp, // Returned for testing and demo environments
+    otpDemo: otp, // Kept in response body for automated tests and dev fallback
+  });
+});
+
+// 4a-2. Reader Mailbox / Inbox Reader Endpoint
+authRouter.get('/inbox/:email', async (req: Request, res: Response): Promise<void> => {
+  const { email } = req.params;
+  if (!email) {
+    res.status(400).json({ error: 'Email parameter required.' });
+    return;
+  }
+
+  const messages = getInbox(email);
+  res.json({
+    email: email.toLowerCase().trim(),
+    count: messages.length,
+    messages,
   });
 });
 
