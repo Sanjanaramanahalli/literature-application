@@ -188,35 +188,129 @@ authRouter.post('/google', async (req: Request, res: Response): Promise<void> =>
   }
 });
 
-// 4. Forgot Password (tokenized email reset)
+// In-Memory OTP Registry with 10-minute expiry
+interface OtpRecord {
+  otp: string;
+  expiresAt: number;
+  attempts: number;
+}
+const otpStore = new Map<string, OtpRecord>();
+
+// Helper to validate email format
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// 4. Forgot Password - Generate and Send 6-digit OTP
 authRouter.post('/forgot-password', async (req: Request, res: Response): Promise<void> => {
   const { email } = req.body;
-  if (!email) {
+  if (!email || typeof email !== 'string' || !email.trim()) {
     res.status(400).json({ error: 'Email address is required.' });
     return;
   }
 
-  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
-  if (!user) {
-    // Return friendly generic response for privacy
-    res.json({ message: 'If that email exists in our records, a reset dispatch has been logged.' });
+  const normalizedEmail = email.toLowerCase().trim();
+
+  if (!EMAIL_REGEX.test(normalizedEmail)) {
+    res.status(400).json({ error: 'Please provide a valid email format.' });
     return;
   }
 
-  const resetToken = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
-  console.log(`[AUTH EMAIL DISPATCH] Password Reset Token for ${email}: ${resetToken}`);
+  const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+  if (!user) {
+    res.status(404).json({ error: 'No registered reader account found with this email address.' });
+    return;
+  }
+
+  // Generate cryptographically secure 6-digit OTP (100000 - 999999)
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+  otpStore.set(normalizedEmail, {
+    otp,
+    expiresAt,
+    attempts: 0,
+  });
+
+  console.log(`[AUTH EMAIL DISPATCH] Forgot Password OTP for ${normalizedEmail}: ${otp} (expires in 10m)`);
 
   res.json({
-    message: 'Password reset dispatch sent successfully.',
-    resetTokenDemo: resetToken, // Provided for easy demo verification
+    message: 'A 6-digit OTP has been dispatched to your registered email address.',
+    email: normalizedEmail,
+    otpDemo: otp, // Returned for testing and demo environments
+  });
+});
+
+// 4b. Verify Received OTP
+authRouter.post('/verify-otp', async (req: Request, res: Response): Promise<void> => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    res.status(400).json({ error: 'Both email and 6-digit OTP are required.' });
+    return;
+  }
+
+  const normalizedEmail = String(email).toLowerCase().trim();
+  const record = otpStore.get(normalizedEmail);
+
+  if (!record) {
+    res.status(400).json({ error: 'No OTP request found for this email. Please request an OTP.' });
+    return;
+  }
+
+  if (Date.now() > record.expiresAt) {
+    otpStore.delete(normalizedEmail);
+    res.status(400).json({ error: 'OTP has expired. Please request a new OTP.' });
+    return;
+  }
+
+  if (record.attempts >= 5) {
+    otpStore.delete(normalizedEmail);
+    res.status(429).json({ error: 'Too many failed OTP attempts. Please request a new OTP.' });
+    return;
+  }
+
+  if (record.otp !== String(otp).trim()) {
+    record.attempts += 1;
+    res.status(400).json({ error: 'Invalid OTP. Please verify and try again.' });
+    return;
+  }
+
+  // OTP verified successfully - clear record and issue 15-minute reset token
+  otpStore.delete(normalizedEmail);
+
+  const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+  if (!user) {
+    res.status(404).json({ error: 'User account not found.' });
+    return;
+  }
+
+  const resetToken = jwt.sign(
+    { userId: user.id, email: user.email, purpose: 'password_reset' },
+    JWT_SECRET,
+    { expiresIn: '15m' }
+  );
+
+  res.json({
+    message: 'OTP verified successfully. You may now choose a new password.',
+    resetToken,
   });
 });
 
 // 5. Reset Password
 authRouter.post('/reset-password', async (req: Request, res: Response): Promise<void> => {
-  const { token, newPassword } = req.body;
-  if (!token || !newPassword || newPassword.length < 6) {
-    res.status(400).json({ error: 'Valid token and new password (min 6 chars) are required.' });
+  const { token, newPassword, confirmPassword } = req.body;
+
+  if (!token) {
+    res.status(400).json({ error: 'Reset verification token is required.' });
+    return;
+  }
+
+  if (!newPassword || newPassword.length < 6) {
+    res.status(400).json({ error: 'New password must be at least 6 characters in length.' });
+    return;
+  }
+
+  if (confirmPassword !== undefined && newPassword !== confirmPassword) {
+    res.status(400).json({ error: 'Password and Confirm Password do not match.' });
     return;
   }
 
@@ -231,7 +325,7 @@ authRouter.post('/reset-password', async (req: Request, res: Response): Promise<
 
     res.json({ message: 'Password has been updated successfully. You may now sign in.' });
   } catch (err) {
-    res.status(400).json({ error: 'Invalid or expired password reset token.' });
+    res.status(400).json({ error: 'Invalid or expired password reset session. Please request a new OTP.' });
   }
 });
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Lock, Mail, User, KeyRound, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react';
+import { X, Lock, Mail, User, KeyRound, AlertCircle, CheckCircle, ArrowRight, ShieldCheck, RotateCw } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -30,6 +30,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [adminSecret, setAdminSecret] = useState('');
   const [showAdminField, setShowAdminField] = useState(false);
 
+  // Forgot password OTP flow fields
+  const [forgotStep, setForgotStep] = useState<'request' | 'verify' | 'reset' | 'success'>('request');
+  const [otp, setOtp] = useState('');
+  const [forgotNewPassword, setForgotNewPassword] = useState('');
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState('');
+  const [resetToken, setResetToken] = useState<string | null>(null);
+
   // States
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -43,6 +50,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setPassword('');
     setConfirmPassword('');
     setAdminSecret('');
+    setForgotStep('request');
+    setOtp('');
+    setForgotNewPassword('');
+    setForgotConfirmPassword('');
+    setResetToken(null);
     setError(null);
     setMessage(null);
   };
@@ -154,26 +166,130 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  // 4. Forgot Password Dispatch
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // 4a. Forgot Password: Step 1 - Send OTP
+  const handleSendOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setError(null);
     setMessage(null);
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setError('Email address is required.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setError('Please provide a valid email format.');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const res = await fetch('http://localhost:5000/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: trimmedEmail }),
       });
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to request reset.');
+        throw new Error(data.error || 'Failed to request OTP.');
       }
 
       setMessage(data.message);
+      setForgotStep('verify');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 4b. Forgot Password: Step 2 - Verify OTP
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setMessage(null);
+
+    const trimmedOtp = otp.trim();
+    if (!trimmedOtp) {
+      setError('Please enter the 6-digit OTP.');
+      return;
+    }
+
+    if (trimmedOtp.length !== 6 || !/^\d{6}$/.test(trimmedOtp)) {
+      setError('OTP must be exactly 6 numeric digits.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), otp: trimmedOtp }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'OTP verification failed.');
+      }
+
+      setResetToken(data.resetToken);
+      setMessage(data.message);
+      setForgotStep('reset');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 4c. Forgot Password: Step 3 - Set New Password
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setMessage(null);
+
+    if (!forgotNewPassword || forgotNewPassword.length < 6) {
+      setError('New password must be at least 6 characters in length.');
+      return;
+    }
+
+    if (forgotNewPassword !== forgotConfirmPassword) {
+      setError('New password and Confirm Password do not match.');
+      return;
+    }
+
+    if (!resetToken) {
+      setError('Verification token missing. Please request a new OTP.');
+      setForgotStep('request');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: resetToken,
+          newPassword: forgotNewPassword,
+          confirmPassword: forgotConfirmPassword,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Password update failed.');
+      }
+
+      setMessage(data.message);
+      setForgotStep('success');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -194,12 +310,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <span className="serif-title modal-title">
               {mode === 'login' && 'Enter the Sanctuary'}
               {mode === 'register' && 'Join the Athenæum'}
-              {mode === 'forgot' && 'Account Recovery'}
+              {mode === 'forgot' && forgotStep === 'request' && 'Account Recovery'}
+              {mode === 'forgot' && forgotStep === 'verify' && 'Verify OTP Code'}
+              {mode === 'forgot' && forgotStep === 'reset' && 'Create New Password'}
+              {mode === 'forgot' && forgotStep === 'success' && 'Recovery Complete'}
             </span>
             <span className="modal-subtitle">
               {mode === 'login' && 'Sign in to access your reading room, ratings, and reflections.'}
               {mode === 'register' && 'Become a registered reader of timeless literature.'}
-              {mode === 'forgot' && 'Enter your email to receive password restoration dispatch.'}
+              {mode === 'forgot' && forgotStep === 'request' && 'Enter your registered email to receive a 6-digit verification OTP.'}
+              {mode === 'forgot' && forgotStep === 'verify' && `Enter the 6-digit OTP code dispatched to ${email}.`}
+              {mode === 'forgot' && forgotStep === 'reset' && 'Please choose a new robust password for your reading account.'}
+              {mode === 'forgot' && forgotStep === 'success' && 'Your password has been updated. You can now sign in.'}
             </span>
           </div>
           <button className="btn-close" onClick={onClose} aria-label="Close modal">
@@ -389,11 +511,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </form>
         )}
 
-        {/* --- FORGOT PASSWORD FORM --- */}
-        {mode === 'forgot' && (
-          <form onSubmit={handleForgotPassword} className="auth-form" id="form-forgot">
+        {/* --- FORGOT PASSWORD OTP MULTI-STEP FLOW --- */}
+        {mode === 'forgot' && forgotStep === 'request' && (
+          <form onSubmit={handleSendOtp} className="auth-form" id="form-forgot-request">
             <div className="form-group">
-              <label htmlFor="forgot-email">Registered Email Address</label>
+              <label htmlFor="forgot-email">Registered Reader Email Address</label>
               <div className="input-icon-wrapper">
                 <Mail size={16} className="input-icon" />
                 <input
@@ -414,9 +536,123 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               disabled={loading}
               id="btn-submit-forgot"
             >
-              {loading ? 'Dispatching...' : 'Send Recovery Dispatch'}
+              {loading ? 'Generating OTP...' : 'Send OTP'}
             </button>
           </form>
+        )}
+
+        {mode === 'forgot' && forgotStep === 'verify' && (
+          <form onSubmit={handleVerifyOtp} className="auth-form" id="form-forgot-verify">
+            <div className="form-group">
+              <div className="label-row">
+                <label htmlFor="forgot-otp">Enter 6-Digit OTP</label>
+                <span className="otp-email-label">{email}</span>
+              </div>
+              <div className="input-icon-wrapper">
+                <ShieldCheck size={16} className="input-icon" />
+                <input
+                  type="text"
+                  id="forgot-otp"
+                  className="input-field otp-input"
+                  placeholder="123456"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  maxLength={6}
+                  autoComplete="one-time-code"
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary btn-block"
+              disabled={loading || otp.length !== 6}
+              id="btn-verify-otp"
+            >
+              {loading ? 'Verifying...' : 'Verify OTP'}
+            </button>
+
+            <div className="otp-resend-row">
+              <span>Didn't receive the OTP?</span>
+              <button
+                type="button"
+                className="link-btn btn-resend-otp"
+                id="btn-resend-otp"
+                onClick={() => handleSendOtp()}
+                disabled={loading}
+              >
+                <RotateCw size={13} className={loading ? 'spin' : ''} />
+                Request New OTP
+              </button>
+            </div>
+          </form>
+        )}
+
+        {mode === 'forgot' && forgotStep === 'reset' && (
+          <form onSubmit={handleResetPassword} className="auth-form" id="form-forgot-reset">
+            <div className="form-group">
+              <label htmlFor="forgot-new-password">New Password (min 6 characters)</label>
+              <div className="input-icon-wrapper">
+                <Lock size={16} className="input-icon" />
+                <input
+                  type="password"
+                  id="forgot-new-password"
+                  className="input-field"
+                  placeholder="••••••••"
+                  value={forgotNewPassword}
+                  onChange={(e) => setForgotNewPassword(e.target.value)}
+                  minLength={6}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="forgot-confirm-password">Confirm New Password</label>
+              <div className="input-icon-wrapper">
+                <Lock size={16} className="input-icon" />
+                <input
+                  type="password"
+                  id="forgot-confirm-password"
+                  className="input-field"
+                  placeholder="••••••••"
+                  value={forgotConfirmPassword}
+                  onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                  minLength={6}
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary btn-block"
+              disabled={loading}
+              id="btn-reset-password"
+            >
+              {loading ? 'Updating Password...' : 'Set New Password'}
+            </button>
+          </form>
+        )}
+
+        {mode === 'forgot' && forgotStep === 'success' && (
+          <div className="auth-success-screen" id="forgot-success-screen">
+            <div className="success-icon-wrapper">
+              <CheckCircle size={48} className="text-success" />
+            </div>
+            <p className="success-message">
+              Your password has been successfully restored and secured. You may now proceed to enter the reading room with your new credentials.
+            </p>
+            <button
+              type="button"
+              className="btn btn-primary btn-block"
+              id="btn-back-to-login"
+              onClick={() => switchMode('login')}
+            >
+              Proceed to Sign In
+            </button>
+          </div>
         )}
 
         {/* Divider */}
