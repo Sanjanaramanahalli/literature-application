@@ -2,7 +2,7 @@
  * Email Dispatch Service for Classical Literature Application
  * Decouples OTP delivery from terminal logs and delivers real emails via Nodemailer (SMTP / Ethereal).
  */
-import nodemailer from 'nodemailer';
+import nodemailer, { type Transporter } from 'nodemailer';
 
 export interface EmailMessage {
   id: string;
@@ -18,9 +18,9 @@ export interface EmailMessage {
 const emailInboxStore = new Map<string, EmailMessage[]>();
 
 // Cached transporter
-let transporter: nodemailer.Transporter | null = null;
+let transporter: Transporter | null = null;
 
-async function getTransporter(): Promise<nodemailer.Transporter> {
+async function getTransporter(): Promise<Transporter> {
   if (transporter) return transporter;
 
   // 1. Direct Gmail Transporter via GMAIL_USER and GMAIL_APP_PASSWORD
