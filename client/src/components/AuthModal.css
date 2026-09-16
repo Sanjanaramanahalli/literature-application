@@ -385,11 +385,12 @@
   margin-top: 0.35rem;
 }
 
-.external-mail-link {
-  font-size: 0.78rem;
-  color: var(--accent-burgundy);
-  text-decoration: underline;
-  cursor: pointer;
+.mailbox-privacy-notice {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 .btn-autofill-otp {

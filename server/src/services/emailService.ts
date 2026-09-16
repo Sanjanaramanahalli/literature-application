@@ -12,7 +12,6 @@ export interface EmailMessage {
   body: string;
   otp: string;
   sentAt: string;
-  previewUrl?: string | false;
 }
 
 // In-memory inbox store: email address -> array of EmailMessages (most recent first)
@@ -24,7 +23,20 @@ let transporter: nodemailer.Transporter | null = null;
 async function getTransporter(): Promise<nodemailer.Transporter> {
   if (transporter) return transporter;
 
-  // 1. If custom SMTP configured in environment
+  // 1. Direct Gmail Transporter via GMAIL_USER and GMAIL_APP_PASSWORD
+  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+    transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    });
+    console.log(`[EMAIL SERVICE] Connected directly to Gmail SMTP Gateway (${process.env.GMAIL_USER})`);
+    return transporter;
+  }
+
+  // 2. Custom Standard SMTP Configuration
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
     transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -35,29 +47,16 @@ async function getTransporter(): Promise<nodemailer.Transporter> {
         pass: process.env.SMTP_PASS,
       },
     });
+    console.log(`[EMAIL SERVICE] Connected to Custom SMTP Host (${process.env.SMTP_HOST})`);
     return transporter;
   }
 
-  // 2. Fallback: Automatically create test ethereal account (real internet email testing with web inbox)
-  try {
-    const testAccount = await nodemailer.createTestAccount();
-    transporter = nodemailer.createTransport({
-      host: 'smtp.ethereal.email',
-      port: 587,
-      secure: false,
-      auth: {
-        user: testAccount.user,
-        pass: testAccount.pass,
-      },
-    });
-    console.log(`[EMAIL SERVICE] Connected to real email testing gateway (Ethereal: ${testAccount.user})`);
-  } catch (err) {
-    console.warn('[EMAIL SERVICE] Ethereal initialization fallback. Using stream transport.', err);
-    transporter = nodemailer.createTransport({
-      streamTransport: true,
-      newline: 'windows',
-    });
-  }
+  // 3. Fallback: Secure Private In-Memory Stream Transport (Zero public Ethereal URLs)
+  transporter = nodemailer.createTransport({
+    streamTransport: true,
+    newline: 'windows',
+  });
+  console.log('[EMAIL SERVICE] Initialized private in-app email dispatcher (Ethereal disabled)');
 
   return transporter;
 }
@@ -106,11 +105,9 @@ The Athenæum Registry
     </div>
   `;
 
-  let previewUrl: string | false = false;
-
   try {
     const mailer = await getTransporter();
-    const info = await mailer.sendMail({
+    await mailer.sendMail({
       from: sender,
       to: normalizedEmail,
       subject,
@@ -118,12 +115,7 @@ The Athenæum Registry
       html: htmlBody,
     });
 
-    previewUrl = nodemailer.getTestMessageUrl(info);
-    if (previewUrl) {
-      console.log(`[EMAIL DISPATCH] Real email preview link for ${normalizedEmail}: ${previewUrl}`);
-    } else {
-      console.log(`[EMAIL DISPATCH] Password Reset email successfully dispatched to ${normalizedEmail} via SMTP`);
-    }
+    console.log(`[EMAIL DISPATCH] Password Reset email successfully dispatched directly to ${normalizedEmail}`);
   } catch (err) {
     console.error(`[EMAIL DISPATCH ERROR] Failed to send email via SMTP to ${normalizedEmail}:`, err);
   }
@@ -136,7 +128,6 @@ The Athenæum Registry
     body: textBody,
     otp,
     sentAt: new Date().toISOString(),
-    previewUrl,
   };
 
   const currentInbox = emailInboxStore.get(normalizedEmail) || [];

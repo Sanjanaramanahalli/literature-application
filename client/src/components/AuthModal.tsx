@@ -642,17 +642,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <pre>{inboxMessage.body}</pre>
                 </div>
                 <div className="mailbox-actions-row">
-                  {inboxMessage.previewUrl && (
-                    <a
-                      href={inboxMessage.previewUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="link-btn external-mail-link"
-                      id="link-web-mailbox"
-                    >
-                      View in Web Mailbox ↗
-                    </a>
-                  )}
+                  <span className="mailbox-privacy-notice">🔒 Delivered to registered email address</span>
                   <button
                     type="button"
                     className="btn btn-primary btn-sm btn-autofill-otp"
