@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import process from 'node:process';
 
 const prisma = new PrismaClient();
 
@@ -347,7 +346,8 @@ I am in mourning for my life. I am unhappy.`,
 main()
   .catch((e) => {
     console.error(e);
-    process.exit(1);
+    const proc = (globalThis as { process?: { exit?: (code: number) => void } }).process;
+    proc?.exit?.(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
