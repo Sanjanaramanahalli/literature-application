@@ -316,80 +316,103 @@ adminRouter.delete(
   }
 );
 
-// 5. Real-Time Admin Dashboard with 8 Live KPI Cards & Analytics
-adminRouter.get(
-  '/dashboard/kpis',
-  authenticateToken,
-  requireRole('ADMIN'),
-  async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-      // 1. Total Literature
-      const totalLiterature = await prisma.literature.count();
+// 5. Real-Time Admin Dashboard with Live KPI Cards & Analytics (LIT-10 & LIT-15)
+const handleDashboardStats = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 1. Total Literature
+    const totalLiterature = await prisma.literature.count();
 
-      // 2. Published Literature
-      const publishedLiterature = await prisma.literature.count({
-        where: { publicationStatus: 'PUBLISHED' },
-      });
+    // 2. Published Literature
+    const publishedLiterature = await prisma.literature.count({
+      where: { publicationStatus: 'PUBLISHED' },
+    });
 
-      // 3. Draft Literature
-      const draftLiterature = await prisma.literature.count({
-        where: { publicationStatus: 'DRAFT' },
-      });
+    // 3. Draft Literature
+    const draftLiterature = await prisma.literature.count({
+      where: { publicationStatus: 'DRAFT' },
+    });
 
-      // 4. Registered Readers (strictly excluding Admins)
-      const registeredReaders = await prisma.user.count({
-        where: { role: 'READER' },
-      });
+    // 4. Registered Readers (strictly excluding Admins)
+    const registeredReaders = await prisma.user.count({
+      where: { role: 'READER' },
+    });
 
-      // 5. Total Ratings
-      const totalRatings = await prisma.rating.count();
+    // 5. Total Ratings
+    const totalRatings = await prisma.rating.count();
 
-      // 6. Average Rating
-      const allRatings = await prisma.rating.findMany({ select: { value: true } });
-      const averageRating =
-        allRatings.length > 0
-          ? Number((allRatings.reduce((acc, r) => acc + r.value, 0) / allRatings.length).toFixed(1))
-          : 0;
+    // 6. Average Rating
+    const allRatings = await prisma.rating.findMany({ select: { value: true } });
+    const averageRating =
+      allRatings.length > 0
+        ? Number((allRatings.reduce((acc, r) => acc + r.value, 0) / allRatings.length).toFixed(1))
+        : 0;
 
-      // 7. Total Comments (Comments + Replies)
-      const totalComments = await prisma.comment.count();
+    // 7. Total Comments (Comments + Replies)
+    const totalComments = await prisma.comment.count();
 
-      // 8. Total Saves
-      const totalSaves = await prisma.save.count();
+    // 8. Total Saves
+    const totalSaves = await prisma.save.count();
 
-      // Secondary Analytics: Recent Activity
-      const recentComments = await prisma.comment.findMany({
-        take: 5,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: { select: { name: true, role: true } },
-          literature: { select: { title: true } },
-        },
-      });
+    // 9. New Users This Month
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
 
-      const recentLiterature = await prisma.literature.findMany({
-        take: 5,
-        orderBy: { createdAt: 'desc' },
-        include: { creator: true, category: true },
-      });
+    const newUsersThisMonth = await prisma.user.count({
+      where: {
+        role: 'READER',
+        createdAt: { gte: startOfMonth },
+      },
+    });
 
-      res.json({
-        kpis: {
-          totalLiterature,
-          publishedLiterature,
-          draftLiterature,
-          registeredReaders,
-          totalRatings,
-          averageRating,
-          totalComments,
-          totalSaves,
-        },
-        recentComments,
-        recentLiterature,
-      });
-    } catch (err) {
-      console.error('Admin KPI fetch error:', err);
-      res.status(500).json({ error: 'Failed to retrieve dashboard analytics.' });
-    }
+    // 10. New Releases This Month
+    const newReleasesThisMonth = await prisma.literature.count({
+      where: {
+        publicationStatus: 'PUBLISHED',
+        publicationDate: { gte: startOfMonth },
+      },
+    });
+
+    // Secondary Analytics: Recent Activity
+    const recentComments = await prisma.comment.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { name: true, role: true } },
+        literature: { select: { title: true } },
+      },
+    });
+
+    const recentLiterature = await prisma.literature.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      include: { creator: true, category: true },
+    });
+
+    const statsPayload = {
+      totalLiterature,
+      publishedLiterature,
+      draftLiterature,
+      registeredReaders,
+      totalRatings,
+      averageRating,
+      totalComments,
+      totalSaves,
+      newUsersThisMonth,
+      newReleasesThisMonth,
+    };
+
+    res.json({
+      ...statsPayload,
+      kpis: statsPayload,
+      recentComments,
+      recentLiterature,
+    });
+  } catch (err) {
+    console.error('Admin KPI fetch error:', err);
+    res.status(500).json({ error: 'Failed to retrieve dashboard analytics.' });
   }
-);
+};
+
+adminRouter.get('/dashboard/kpis', authenticateToken, requireRole('ADMIN'), handleDashboardStats);
+adminRouter.get('/dashboard/stats', authenticateToken, requireRole('ADMIN'), handleDashboardStats);

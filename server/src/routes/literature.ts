@@ -6,7 +6,7 @@ export const literatureRouter = Router();
 // 1. Get all published literature (with creator, category, tags, average rating, rating counts)
 literatureRouter.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { category, search, creatorId } = req.query;
+    const { category, search, creatorId, language } = req.query;
 
     const whereClause: any = {
       publicationStatus: 'PUBLISHED',
@@ -20,6 +20,12 @@ literatureRouter.get('/', async (req: Request, res: Response): Promise<void> => 
 
     if (creatorId) {
       whereClause.creatorId = String(creatorId);
+    }
+
+    if (language && String(language).toLowerCase() !== 'all') {
+      whereClause.language = {
+        contains: String(language),
+      };
     }
 
     if (search) {

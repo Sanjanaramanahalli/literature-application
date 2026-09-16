@@ -39,6 +39,8 @@ interface KpiData {
   averageRating: number;
   totalComments: number;
   totalSaves: number;
+  newUsersThisMonth?: number;
+  newReleasesThisMonth?: number;
 }
 
 interface SecondaryComment {
@@ -195,18 +197,21 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
     setKpiLoading(true);
     const token = localStorage.getItem('literature_token');
     try {
-      const res = await fetch('http://localhost:5000/api/admin/dashboard/kpis', {
+      const res = await fetch('http://localhost:5000/api/admin/dashboard/stats', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         const data = await res.json();
-        setKpiData(data.kpis);
+        setKpiData(data.kpis || data);
         setRecentComments(data.recentComments || []);
         setRecentLiterature(data.recentLiterature || []);
         setLastRefreshedTime(new Date().toLocaleTimeString());
+      } else {
+        throw new Error('Failed to retrieve dashboard metrics.');
       }
     } catch (err) {
       console.error('Failed to fetch dashboard KPIs:', err);
+      setAlertMsg({ type: 'error', text: 'Failed to retrieve real-time dashboard metrics.' });
     } finally {
       setKpiLoading(false);
     }
@@ -719,6 +724,38 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                 <span>Sanctuary bookmarked works</span>
               </div>
             </div>
+
+            {/* 9. New Readers This Month */}
+            <div className="kpi-card" id="kpi-new-users" data-testid="kpi-card-new-users">
+              <div className="kpi-card-top">
+                <span className="kpi-card-label">New Readers (This Month)</span>
+                <div className="kpi-card-icon-wrap blue">
+                  <Users size={18} />
+                </div>
+              </div>
+              <div className="kpi-card-value" id="kpi-val-new-users">
+                {kpiData && kpiData.newUsersThisMonth !== undefined ? kpiData.newUsersThisMonth : '0'}
+              </div>
+              <div className="kpi-card-subtext">
+                <span>Enrolled this calendar cycle</span>
+              </div>
+            </div>
+
+            {/* 10. New Releases This Month */}
+            <div className="kpi-card" id="kpi-new-releases" data-testid="kpi-card-new-releases">
+              <div className="kpi-card-top">
+                <span className="kpi-card-label">New Releases (This Month)</span>
+                <div className="kpi-card-icon-wrap green">
+                  <CheckCircle2 size={18} />
+                </div>
+              </div>
+              <div className="kpi-card-value" id="kpi-val-new-releases">
+                {kpiData && kpiData.newReleasesThisMonth !== undefined ? kpiData.newReleasesThisMonth : '0'}
+              </div>
+              <div className="kpi-card-subtext">
+                <span>Preserved manuscripts this month</span>
+              </div>
+            </div>
           </div>
 
           {/* SECONDARY ANALYTICS WIDGETS */}
@@ -964,16 +1001,23 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
               <div className="form-group-inline">
                 <div className="form-group">
                   <label className="form-label" htmlFor="lit-language">
-                    Primary Language
+                    Primary Language <span style={{ color: 'var(--accent-burgundy)' }}>*</span>
                   </label>
-                  <input
+                  <select
                     id="lit-language"
-                    className="form-input"
-                    type="text"
-                    placeholder="e.g., English, Ancient Greek, Latin"
+                    className="form-select"
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
-                  />
+                  >
+                    <option value="English">English</option>
+                    <option value="Hindi">Hindi (हिंदी साहित्य)</option>
+                    <option value="Kannada">Kannada (ಕನ್ನಡ ಸಾಹಿತ್ಯ)</option>
+                    <option value="Sanskrit">Sanskrit (संस्कृतम्)</option>
+                    <option value="Tamil">Tamil (தமிழ்)</option>
+                    <option value="Bengali">Bengali (বাংলা)</option>
+                    <option value="Ancient Greek">Ancient Greek</option>
+                    <option value="Latin">Latin</option>
+                  </select>
                 </div>
                 <div className="form-group">
                   <label className="form-label" htmlFor="lit-genre">

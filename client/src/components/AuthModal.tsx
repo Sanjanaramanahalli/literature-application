@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Lock, Mail, User, KeyRound, AlertCircle, CheckCircle, ArrowRight, ShieldCheck, RotateCw, Inbox, Copy } from 'lucide-react';
+import { X, Lock, Mail, User, KeyRound, AlertCircle, CheckCircle, ArrowRight, ShieldCheck, RotateCw, Inbox, Copy, Eye, EyeOff } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -29,6 +29,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [adminSecret, setAdminSecret] = useState('');
   const [showAdminField, setShowAdminField] = useState(false);
+
+  // Password Visibility States (LIT-15)
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegPassword, setShowRegPassword] = useState(false);
+  const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [showResetConfirmPassword, setShowResetConfirmPassword] = useState(false);
 
   // Forgot password OTP flow fields
   const [forgotStep, setForgotStep] = useState<'request' | 'verify' | 'reset' | 'success'>('request');
@@ -400,10 +407,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   Forgot Password?
                 </button>
               </div>
-              <div className="input-icon-wrapper">
+              <div className="input-icon-wrapper password-toggle-wrapper">
                 <Lock size={16} className="input-icon" />
                 <input
-                  type="password"
+                  type={showLoginPassword ? 'text' : 'password'}
                   id="login-password"
                   className="input-field"
                   placeholder="••••••••"
@@ -411,6 +418,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  id="toggle-login-password"
+                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+                  title={showLoginPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showLoginPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 
@@ -464,10 +481,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <div className="form-row">
               <div className="form-group half">
                 <label htmlFor="reg-password">Password</label>
-                <div className="input-icon-wrapper">
+                <div className="input-icon-wrapper password-toggle-wrapper">
                   <Lock size={16} className="input-icon" />
                   <input
-                    type="password"
+                    type={showRegPassword ? 'text' : 'password'}
                     id="reg-password"
                     className="input-field"
                     placeholder="Min 6 characters"
@@ -476,15 +493,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     required
                     minLength={6}
                   />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    id="toggle-reg-password"
+                    onClick={() => setShowRegPassword(!showRegPassword)}
+                    aria-label={showRegPassword ? 'Hide password' : 'Show password'}
+                    title={showRegPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showRegPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
               </div>
 
               <div className="form-group half">
                 <label htmlFor="reg-confirm">Confirm Password</label>
-                <div className="input-icon-wrapper">
+                <div className="input-icon-wrapper password-toggle-wrapper">
                   <Lock size={16} className="input-icon" />
                   <input
-                    type="password"
+                    type={showRegConfirmPassword ? 'text' : 'password'}
                     id="reg-confirm"
                     className="input-field"
                     placeholder="Repeat password"
@@ -492,6 +519,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                   />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    id="toggle-reg-confirm"
+                    onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
+                    aria-label={showRegConfirmPassword ? 'Hide password' : 'Show password'}
+                    title={showRegConfirmPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showRegConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
               </div>
             </div>
@@ -662,10 +699,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <form onSubmit={handleResetPassword} className="auth-form" id="form-forgot-reset">
             <div className="form-group">
               <label htmlFor="forgot-new-password">New Password (min 6 characters)</label>
-              <div className="input-icon-wrapper">
+              <div className="input-icon-wrapper password-toggle-wrapper">
                 <Lock size={16} className="input-icon" />
                 <input
-                  type="password"
+                  type={showResetPassword ? 'text' : 'password'}
                   id="forgot-new-password"
                   className="input-field"
                   placeholder="••••••••"
@@ -674,15 +711,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   minLength={6}
                   required
                 />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  id="toggle-forgot-password"
+                  onClick={() => setShowResetPassword(!showResetPassword)}
+                  aria-label={showResetPassword ? 'Hide password' : 'Show password'}
+                  title={showResetPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showResetPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 
             <div className="form-group">
               <label htmlFor="forgot-confirm-password">Confirm New Password</label>
-              <div className="input-icon-wrapper">
+              <div className="input-icon-wrapper password-toggle-wrapper">
                 <Lock size={16} className="input-icon" />
                 <input
-                  type="password"
+                  type={showResetConfirmPassword ? 'text' : 'password'}
                   id="forgot-confirm-password"
                   className="input-field"
                   placeholder="••••••••"
@@ -691,6 +738,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   minLength={6}
                   required
                 />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  id="toggle-forgot-confirm-password"
+                  onClick={() => setShowResetConfirmPassword(!showResetConfirmPassword)}
+                  aria-label={showResetConfirmPassword ? 'Hide password' : 'Show password'}
+                  title={showResetConfirmPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showResetConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 

@@ -121,9 +121,23 @@ async function main() {
         roleType: 'BOTH',
       },
     }),
+    prisma.creator.create({
+      data: {
+        name: 'Munshi Premchand',
+        bio: 'Pioneering Hindi and Urdu novelist, regarded as the Upanyas Samrat (Emperor of Novels) of Indian literature.',
+        roleType: 'AUTHOR',
+      },
+    }),
+    prisma.creator.create({
+      data: {
+        name: 'Kuvempu (K. V. Puttappa)',
+        bio: 'Celebrated Kannada poet and author, widely regarded as the greatest Kannada literary titan of the 20th century.',
+        roleType: 'BOTH',
+      },
+    }),
   ]);
 
-  const [shakes, tolstoy, woolf, chekhov] = creators;
+  const [shakes, tolstoy, woolf, chekhov, premchand, kuvempu] = creators;
 
   // 5. Create Tags
   const tagNames = ['Tragedy', 'Philosophy', 'Morality', 'Modernism', 'Victorian', 'Existentialism'];
@@ -261,6 +275,48 @@ I am in mourning for my life. I am unhappy.`,
     },
   });
 
+  const lit5Hindi = await prisma.literature.create({
+    data: {
+      title: 'गोदान (Godan)',
+      subheading: 'भारतीय ग्रामीण जीवन एवं किसान चेतना का अमर महाकाव्य',
+      brief: 'मुंशी प्रेमचंद का कालजयी उपन्यास जो भारतीय ग्रामीण समाज, आर्थिक संघर्ष, और मानवीय गरिमा का जीवंत चित्रण करता है।',
+      content: `होरी महतो ने बैलों को सानी-पानी देकर अपने छोटे भाई सोभा के घर की ओर देखा। सोभा अपने द्वार पर बैठा चिलम पी रहा था।
+
+होरी ने कहा — क्यों भाई, आज कुछ काम-धंधा नहीं है क्या?
+
+सोभा ने चिलम का कश खींचते हुए उत्तर दिया — काम-धंधा क्या करें महतो, जब खेती में बरक्कत ही न रही। लगान चुकाते-चुकाते देह की खाल खिंच गई।
+
+होरी मन ही मन सोचने लगा कि किसान का धर्म केवल धरती को सींचना और मर्यादा की रक्षा करना है। एक गाय की लालसा उसके हृदय में वर्षों से पल रही थी। गोदान केवल एक दान नहीं, अपितु जीवन की अंतिम आकांक्षा और मुक्ति का प्रतीक था। हिंदी साहित्य का यह कालजयी उपन्यास भारतीय किसान के अदम्य साहस और संवेदना का शाश्वत प्रमाण है।`,
+      language: 'Hindi',
+      subject: 'सामाजिक यथार्थ एवं ग्रामीण जीवन',
+      genre: 'Classic Realism',
+      coverImage: '/uploads/covers/godan.jpg',
+      publicationStatus: 'PUBLISHED',
+      publicationDate: new Date('2026-09-12T10:00:00Z'),
+      creatorId: premchand.id,
+      categoryId: catClassics.id,
+    },
+  });
+
+  const lit6Kannada = await prisma.literature.create({
+    data: {
+      title: 'ಮಲೆಗಳಲ್ಲಿ ಮದುಮಗಳು (Malegalalli Madumagalu)',
+      subheading: 'ಮಲೆನಾಡಿನ ಪ್ರಕೃತಿ, ಸಂಸ್ಕೃತಿ ಮತ್ತು ಜೀವಸ್ಪಂದನದ ಮಹಾಕಾವ್ಯ',
+      brief: 'ರಾಷ್ಟ್ರಕವಿ ಕುವೆಂಪು ಅವರ ಮೇರು ಕೃತಿ, ಮಲೆನಾಡಿನ ಗಿರಿ-ಕಂದರಗಳ ನಡುವಿನ ಮನುಷ್ಯ ಬದುಕಿನ ಅನನ್ಯ ಚಿತ್ರಣವನ್ನು ಕಟ್ಟಿಕೊಡುತ್ತದೆ.',
+      content: `ಮಲೆನಾಡಿನ ಹಸುರು ಕಾನನದ ನಡುವೆ ಕಾವೇರಿಯಂತೆ ಹರಿಯುವ ನಿಸರ್ಗದ ಸಿರಿಯಲ್ಲಿ ಬದುಕು ಒಂದು ಸುಂದರ ವಿಸ್ಮಯ. ತೀರ್ಥಹಳ್ಳಿಯ ಸುತ್ತಲಿನ ಗುಡ್ಡ-ಬೆಟ್ಟಗಳ ನಡುವೆ, ಮಳೆಗಾಲದ ಮಂಜು ಮುಸುಕಿದ ಬೆಟ್ಟಗಳ ಸಾಲಿನಲ್ಲಿ ಹುಟ್ಟಿದ ಕಥೆ ಇದು.
+
+ಚಿನ್ನಮ್ಮ ಮತ್ತು ಮುಕುಂದಯ್ಯನ ಪ್ರೇಮ ಕಥೆಯು ಕೇವಲ ಇಬ್ಬರ ಹೃದಯದ ಮಿಡಿತವಲ್ಲ; ಅದು ಮಲೆನಾಡಿನ ಸಮಗ್ರ ಸಂಸ್ಕೃತಿ, ಪರಿಸರ ಮತ್ತು ನಿತ್ಯ ನೂತನ ಚೇತನದ ಅನಾವರಣ. ಮನುಷ್ಯನ ಆಸೆ-ನಿರಾಶೆಗಳು ಪ್ರಕೃತಿಯ ಮಹಾ ಲಯದೊಂದಿಗೆ ಹೇಗೆ ಒಂದಾಗುತ್ತವೆ ಎಂಬುದನ್ನು ಕುವೆಂಪು ಅವರು ತಮ್ಮ ಅಪೂರ್ವ ಲೇಖನಿಯಿಂದ ಜಾದೂವಿನಂತೆ ಮೂಡಿಸಿದ್ದಾರೆ. ಕನ್ನಡ ಸಾಹಿತ್ಯ ಲೋಕದಲ್ಲಿ ಈ ಕೃತಿ ಚಿರಂತನ ತಾರೆ.`,
+      language: 'Kannada',
+      subject: 'ಪರಿಸರ ಪ್ರಜ್ಞೆ ಮತ್ತು ಮಾನವೀಯ ಸಂಬಂಧಗಳು',
+      genre: 'Epic Novel',
+      coverImage: '/uploads/covers/malegalalli.jpg',
+      publicationStatus: 'PUBLISHED',
+      publicationDate: new Date('2026-09-14T11:00:00Z'),
+      creatorId: kuvempu.id,
+      categoryId: catClassics.id,
+    },
+  });
+
   // Attach Tags
   await prisma.literatureTag.createMany({
     data: [
@@ -269,6 +325,8 @@ I am in mourning for my life. I am unhappy.`,
       { literatureId: lit2.id, tagId: tags[1].id }, // Philosophy
       { literatureId: lit2.id, tagId: tags[2].id }, // Morality
       { literatureId: lit3.id, tagId: tags[3].id }, // Modernism
+      { literatureId: lit5Hindi.id, tagId: tags[2].id }, // Morality
+      { literatureId: lit6Kannada.id, tagId: tags[1].id }, // Philosophy
     ],
   });
 
@@ -292,6 +350,20 @@ I am in mourning for my life. I am unhappy.`,
       value: 5,
       userId: reader1.id,
       literatureId: lit2.id,
+    },
+  });
+  await prisma.rating.create({
+    data: {
+      value: 5,
+      userId: reader2.id,
+      literatureId: lit5Hindi.id,
+    },
+  });
+  await prisma.rating.create({
+    data: {
+      value: 5,
+      userId: reader1.id,
+      literatureId: lit6Kannada.id,
     },
   });
 

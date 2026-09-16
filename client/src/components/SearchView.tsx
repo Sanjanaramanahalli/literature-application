@@ -208,17 +208,23 @@ export const SearchView: React.FC<SearchViewProps> = ({
               />
             </div>
 
-            {/* Language */}
+            {/* Language (LIT-15 Indian Languages) */}
             <div className="filter-field">
               <label htmlFor="search-input-language" className="filter-label">Language</label>
-              <input
-                type="text"
+              <select
                 id="search-input-language"
-                className="input-field"
-                placeholder="e.g. English, Latin"
+                className="input-field select-field"
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
-              />
+              >
+                <option value="">All Languages</option>
+                <option value="English">English</option>
+                <option value="Hindi">Hindi (हिंदी)</option>
+                <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
+                <option value="Sanskrit">Sanskrit (संस्कृतम्)</option>
+                <option value="Tamil">Tamil (தமிழ்)</option>
+                <option value="Bengali">Bengali (বাংলা)</option>
+              </select>
             </div>
           </div>
 

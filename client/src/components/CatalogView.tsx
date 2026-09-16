@@ -26,6 +26,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [allLiteratures, setAllLiteratures] = useState<LiteratureItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,14 +73,16 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     }
   };
 
-  // Filter all catalog works based on selected category
-  const filteredCatalog =
-    selectedCategory === 'all'
-      ? allLiteratures
-      : allLiteratures.filter(
-          (item) =>
-            item.category?.slug.toLowerCase() === selectedCategory.toLowerCase()
-        );
+  // Filter all catalog works based on selected category and language
+  const filteredCatalog = allLiteratures.filter((item) => {
+    const matchesCategory =
+      selectedCategory === 'all' ||
+      item.category?.slug.toLowerCase() === selectedCategory.toLowerCase();
+    const matchesLanguage =
+      selectedLanguage === 'all' ||
+      item.language?.toLowerCase().includes(selectedLanguage.toLowerCase());
+    return matchesCategory && matchesLanguage;
+  });
 
   return (
     <div className="catalog-container" id="catalog-view">
@@ -267,6 +270,41 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               {cat.name} {cat.literatureCount !== undefined ? `(${cat.literatureCount})` : ''}
             </button>
           ))}
+        </div>
+
+        {/* Language Filter Pills (LIT-15) */}
+        <div className="language-filter-bar" id="language-filter-bar" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', margin: '0.75rem 0 1.5rem' }}>
+          <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-burgundy)', alignSelf: 'center', marginRight: '0.25rem' }}>
+            Language:
+          </span>
+          <button
+            className={`category-filter-btn ${selectedLanguage === 'all' ? 'active' : ''}`}
+            id="lang-filter-all"
+            onClick={() => setSelectedLanguage('all')}
+          >
+            All Languages
+          </button>
+          <button
+            className={`category-filter-btn ${selectedLanguage === 'English' ? 'active' : ''}`}
+            id="lang-filter-english"
+            onClick={() => setSelectedLanguage('English')}
+          >
+            English
+          </button>
+          <button
+            className={`category-filter-btn ${selectedLanguage === 'Hindi' ? 'active' : ''}`}
+            id="lang-filter-hindi"
+            onClick={() => setSelectedLanguage('Hindi')}
+          >
+            हिंदी (Hindi)
+          </button>
+          <button
+            className={`category-filter-btn ${selectedLanguage === 'Kannada' ? 'active' : ''}`}
+            id="lang-filter-kannada"
+            onClick={() => setSelectedLanguage('Kannada')}
+          >
+            ಕನ್ನಡ (Kannada)
+          </button>
         </div>
 
         {/* Filtered Grid */}
