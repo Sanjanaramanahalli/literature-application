@@ -641,15 +641,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <div className="mailbox-body">
                   <pre>{inboxMessage.body}</pre>
                 </div>
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm btn-autofill-otp"
-                  id="btn-autofill-otp"
-                  onClick={() => setOtp(inboxMessage.otp)}
-                >
-                  <Copy size={13} />
-                  Insert OTP: {inboxMessage.otp}
-                </button>
+                <div className="mailbox-actions-row">
+                  {inboxMessage.previewUrl && (
+                    <a
+                      href={inboxMessage.previewUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="link-btn external-mail-link"
+                      id="link-web-mailbox"
+                    >
+                      View in Web Mailbox ↗
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm btn-autofill-otp"
+                    id="btn-autofill-otp"
+                    onClick={() => setOtp(inboxMessage.otp)}
+                  >
+                    <Copy size={13} />
+                    Insert OTP: {inboxMessage.otp}
+                  </button>
+                </div>
               </div>
             )}
           </form>

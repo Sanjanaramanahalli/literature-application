@@ -378,8 +378,21 @@
   line-height: 1.4;
 }
 
+.mailbox-actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.35rem;
+}
+
+.external-mail-link {
+  font-size: 0.78rem;
+  color: var(--accent-burgundy);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .btn-autofill-otp {
-  align-self: flex-end;
   display: flex;
   align-items: center;
   gap: 0.35rem;
