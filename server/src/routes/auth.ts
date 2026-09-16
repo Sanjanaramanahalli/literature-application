@@ -7,12 +7,53 @@ import { sendOtpEmail, getInbox } from '../services/emailService.js';
 
 export const authRouter = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'classic_literature_super_secret_jwt_key_2026';
-const ADMIN_INVITATION_SECRET = process.env.ADMIN_INVITATION_SECRET || 'LITERATURE_ADMIN_MASTER_KEY_2026';
+const ADMIN_INVITATION_KEY = process.env.ADMIN_INVITATION_KEY || process.env.ADMIN_INVITATION_SECRET || 'LITERATURE_ADMIN_MASTER_KEY_2026';
+
+// In-Memory Rate Limiter for failed Admin Invitation Key attempts
+interface AttemptRecord {
+  count: number;
+  resetAt: number;
+}
+const adminInvitationAttempts = new Map<string, AttemptRecord>();
+const MAX_ADMIN_KEY_ATTEMPTS = 5;
+const ADMIN_KEY_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+const checkAdminRateLimit = (ip: string): boolean => {
+  const now = Date.now();
+  const record = adminInvitationAttempts.get(ip);
+  if (!record || now > record.resetAt) {
+    return false; // Not rate-limited
+  }
+  return record.count >= MAX_ADMIN_KEY_ATTEMPTS;
+};
+
+const recordFailedAdminAttempt = (ip: string): void => {
+  const now = Date.now();
+  const record = adminInvitationAttempts.get(ip);
+  if (!record || now > record.resetAt) {
+    adminInvitationAttempts.set(ip, { count: 1, resetAt: now + ADMIN_KEY_WINDOW_MS });
+  } else {
+    record.count += 1;
+  }
+};
+
+const clearAdminAttempts = (ip: string): void => {
+  adminInvitationAttempts.delete(ip);
+};
+
+// Test helper: reset rate limit attempts
+if (process.env.NODE_ENV !== 'production') {
+  authRouter.post('/reset-admin-rate-limit', (req: Request, res: Response) => {
+    adminInvitationAttempts.clear();
+    res.json({ message: 'Admin invitation rate limit counters cleared.' });
+  });
+}
 
 // 1. Register Reader or Admin (with invitation secret)
 authRouter.post('/register', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password, confirmPassword, adminSecret } = req.body;
+    const { name, email, password, confirmPassword, adminSecret, adminInvitationKey, role } = req.body;
+    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
 
     if (!name || !email || !password || !confirmPassword) {
       res.status(400).json({ error: 'All registration fields are required.' });
@@ -29,6 +70,34 @@ authRouter.post('/register', async (req: Request, res: Response): Promise<void> 
       return;
     }
 
+    const providedKey = (adminInvitationKey || adminSecret || '').trim();
+    const isRequestingAdmin = role === 'ADMIN' || !!providedKey;
+
+    // Strict Rate Limiting on failed Admin Invitation Key attempts
+    if (isRequestingAdmin && checkAdminRateLimit(clientIp)) {
+      res.status(429).json({
+        error: 'Too many failed Admin invitation attempts. Security protection active. Please try again later.',
+      });
+      return;
+    }
+
+    // Role determination: Admin only if providedKey matches server-side ADMIN_INVITATION_KEY
+    let assignedRole = 'READER';
+    if (isRequestingAdmin) {
+      if (!providedKey) {
+        res.status(400).json({ error: 'Admin Secret Invitation Key is required to create an Admin account.' });
+        return;
+      }
+      if (providedKey === ADMIN_INVITATION_KEY) {
+        assignedRole = 'ADMIN';
+        clearAdminAttempts(clientIp);
+      } else {
+        recordFailedAdminAttempt(clientIp);
+        res.status(403).json({ error: 'Invalid Admin invitation key.' });
+        return;
+      }
+    }
+
     const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase().trim() },
     });
@@ -36,17 +105,6 @@ authRouter.post('/register', async (req: Request, res: Response): Promise<void> 
     if (existingUser) {
       res.status(409).json({ error: 'An account with this email address already exists.' });
       return;
-    }
-
-    // Role determination: Admin only if adminSecret matches
-    let assignedRole = 'READER';
-    if (adminSecret) {
-      if (adminSecret.trim() === ADMIN_INVITATION_SECRET) {
-        assignedRole = 'ADMIN';
-      } else {
-        res.status(403).json({ error: 'Invalid Admin Invitation Secret key.' });
-        return;
-      }
     }
 
     const passwordHash = await bcrypt.hash(password, 10);

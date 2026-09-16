@@ -2,7 +2,11 @@
 node_modules/
 dist/
 .env
+.env.*
+server/.env
+server/.env.*
 .env.local
+
 
 # Database
 server/prisma/*.db

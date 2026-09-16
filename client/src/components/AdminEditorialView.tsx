@@ -21,8 +21,18 @@ import {
   BookmarkCheck,
   TrendingUp,
   RefreshCw,
+  Activity,
+  Archive,
+  Settings,
+  FolderKanban,
+  MessageCircle,
+  ShieldCheck,
+  Flame,
+  Tag,
 } from 'lucide-react';
+
 import './AdminEditorialView.css';
+
 
 interface Creator {
   id: string;
@@ -34,6 +44,7 @@ interface KpiData {
   totalLiterature: number;
   publishedLiterature: number;
   draftLiterature: number;
+  unpublishedLiterature: number;
   registeredReaders: number;
   totalRatings: number;
   averageRating: number;
@@ -47,17 +58,43 @@ interface SecondaryComment {
   id: string;
   content: string;
   createdAt: string;
-  user: { name: string; role: string };
-  literature: { title: string };
+  readerName?: string;
+  literatureTitle?: string;
+  moderationStatus?: string;
+  user?: { name: string; role: string };
+  literature?: { title: string };
 }
 
 interface SecondaryLiterature {
   id: string;
   title: string;
+  language?: string;
   publicationStatus: string;
   createdAt: string;
+  updatedAt?: string;
   creator: { name: string };
   category: { name: string };
+}
+
+interface PopularLiteratureItem {
+  id: string;
+  title: string;
+  author: string;
+  category: string;
+  rating: number;
+  ratingCount: number;
+  saveCount: number;
+  commentCount: number;
+  popularityScore: number;
+}
+
+interface ActivityItem {
+  id: string;
+  actionType: string;
+  description: string;
+  target: string;
+  actor: string;
+  timestamp: string;
 }
 
 interface Category {
@@ -95,14 +132,20 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
   onViewLiterature,
 }) => {
   // Navigation tabs: 'create' | 'manage' | 'analytics'
-  const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'analytics'>('create');
+  const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'analytics'>('analytics');
 
-  // Executive KPI Dashboard State
+  // Executive KPI Dashboard State (LIT-16)
   const [kpiData, setKpiData] = useState<KpiData | null>(null);
   const [recentComments, setRecentComments] = useState<SecondaryComment[]>([]);
   const [recentLiterature, setRecentLiterature] = useState<SecondaryLiterature[]>([]);
+  const [popularLiterature, setPopularLiterature] = useState<PopularLiteratureItem[]>([]);
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [kpiLoading, setKpiLoading] = useState(false);
   const [lastRefreshedTime, setLastRefreshedTime] = useState<string>('');
+
+  // Quick Action Modal States
+  const [quickActionModal, setQuickActionModal] = useState<'users' | 'categories' | 'settings' | null>(null);
+
 
   // Form State
   const [title, setTitle] = useState('');
@@ -205,6 +248,8 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
         setKpiData(data.kpis || data);
         setRecentComments(data.recentComments || []);
         setRecentLiterature(data.recentLiterature || []);
+        setPopularLiterature(data.popularLiterature || []);
+        setRecentActivity(data.recentActivity || []);
         setLastRefreshedTime(new Date().toLocaleTimeString());
       } else {
         throw new Error('Failed to retrieve dashboard metrics.');
@@ -595,7 +640,64 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
             </button>
           </div>
 
-          {/* 8 LIVE KPI CARDS */}
+          {/* QUICK ACTIONS BAR */}
+          <div className="admin-quick-actions-bar" id="admin-quick-actions">
+            <span className="quick-actions-title">
+              <ShieldCheck size={18} /> Quick Actions:
+            </span>
+            <div className="quick-actions-buttons">
+              <button
+                className="btn-quick-action"
+                id="btn-qa-add-literature"
+                onClick={() => setActiveTab('create')}
+              >
+                <Plus size={15} /> Add Literature
+              </button>
+              <button
+                className="btn-quick-action"
+                id="btn-qa-manage-literature"
+                onClick={() => {
+                  setActiveTab('manage');
+                  fetchArchivalWorks();
+                }}
+              >
+                <FolderKanban size={15} /> Manage Literature
+              </button>
+              <button
+                className="btn-quick-action"
+                id="btn-qa-manage-categories"
+                onClick={() => setQuickActionModal('categories')}
+              >
+                <Tag size={15} /> Manage Categories
+              </button>
+              <button
+                className="btn-quick-action"
+                id="btn-qa-manage-users"
+                onClick={() => setQuickActionModal('users')}
+              >
+                <Users size={15} /> Manage Users
+              </button>
+              <button
+                className="btn-quick-action"
+                id="btn-qa-manage-comments"
+                onClick={() => {
+                  const commentsPanel = document.getElementById('panel-recent-comments');
+                  if (commentsPanel) commentsPanel.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                <MessageCircle size={15} /> Manage Comments
+              </button>
+              <button
+                className="btn-quick-action"
+                id="btn-qa-settings"
+                onClick={() => setQuickActionModal('settings')}
+              >
+                <Settings size={15} /> Application Settings
+              </button>
+            </div>
+          </div>
+
+          {/* 11 LIVE KPI CARDS (RESPONSIVE 4 / 2 / 1) */}
           <div className="kpis-grid" id="kpi-cards-container">
             {/* 1. Total Literature */}
             <div className="kpi-card" id="kpi-total-literature" data-testid="kpi-card-total-literature">
@@ -632,7 +734,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
             {/* 3. Draft Literature */}
             <div className="kpi-card" id="kpi-draft-literature" data-testid="kpi-card-draft-literature">
               <div className="kpi-card-top">
-                <span className="kpi-card-label">Draft Manuscripts</span>
+                <span className="kpi-card-label">Draft Literature</span>
                 <div className="kpi-card-icon-wrap amber">
                   <Feather size={18} />
                 </div>
@@ -645,7 +747,23 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
               </div>
             </div>
 
-            {/* 4. Registered Readers (Strictly Excluding Admins) */}
+            {/* 4. Unpublished Literature */}
+            <div className="kpi-card" id="kpi-unpublished-literature" data-testid="kpi-card-unpublished-literature">
+              <div className="kpi-card-top">
+                <span className="kpi-card-label">Unpublished Literature</span>
+                <div className="kpi-card-icon-wrap purple">
+                  <Archive size={18} />
+                </div>
+              </div>
+              <div className="kpi-card-value" id="kpi-val-unpublished-literature">
+                {kpiData ? kpiData.unpublishedLiterature : '0'}
+              </div>
+              <div className="kpi-card-subtext">
+                <span>Withdrawn or decommissioned</span>
+              </div>
+            </div>
+
+            {/* 5. Registered Readers (Strictly Excluding Admins) */}
             <div className="kpi-card" id="kpi-registered-readers" data-testid="kpi-card-registered-readers">
               <div className="kpi-card-top">
                 <span className="kpi-card-label">Registered Readers</span>
@@ -661,7 +779,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
               </div>
             </div>
 
-            {/* 5. Total Ratings */}
+            {/* 6. Total Ratings */}
             <div className="kpi-card" id="kpi-total-ratings" data-testid="kpi-card-total-ratings">
               <div className="kpi-card-top">
                 <span className="kpi-card-label">Total Ratings</span>
@@ -677,7 +795,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
               </div>
             </div>
 
-            {/* 6. Average Rating */}
+            {/* 7. Average Rating */}
             <div className="kpi-card" id="kpi-average-rating" data-testid="kpi-card-average-rating">
               <div className="kpi-card-top">
                 <span className="kpi-card-label">Average Rating</span>
@@ -693,7 +811,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
               </div>
             </div>
 
-            {/* 7. Total Comments */}
+            {/* 8. Total Comments */}
             <div className="kpi-card" id="kpi-total-comments" data-testid="kpi-card-total-comments">
               <div className="kpi-card-top">
                 <span className="kpi-card-label">Total Comments</span>
@@ -709,7 +827,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
               </div>
             </div>
 
-            {/* 8. Total Saves */}
+            {/* 9. Total Saves */}
             <div className="kpi-card" id="kpi-total-saves" data-testid="kpi-card-total-saves">
               <div className="kpi-card-top">
                 <span className="kpi-card-label">Total Saves</span>
@@ -725,10 +843,10 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
               </div>
             </div>
 
-            {/* 9. New Readers This Month */}
+            {/* 10. New Users This Month */}
             <div className="kpi-card" id="kpi-new-users" data-testid="kpi-card-new-users">
               <div className="kpi-card-top">
-                <span className="kpi-card-label">New Readers (This Month)</span>
+                <span className="kpi-card-label">New Users This Month</span>
                 <div className="kpi-card-icon-wrap blue">
                   <Users size={18} />
                 </div>
@@ -741,10 +859,10 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
               </div>
             </div>
 
-            {/* 10. New Releases This Month */}
+            {/* 11. New Releases This Month */}
             <div className="kpi-card" id="kpi-new-releases" data-testid="kpi-card-new-releases">
               <div className="kpi-card-top">
-                <span className="kpi-card-label">New Releases (This Month)</span>
+                <span className="kpi-card-label">New Releases This Month</span>
                 <div className="kpi-card-icon-wrap green">
                   <CheckCircle2 size={18} />
                 </div>
@@ -758,51 +876,18 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
             </div>
           </div>
 
-          {/* SECONDARY ANALYTICS WIDGETS */}
+          {/* DASHBOARD SECTIONS GRID (RECENT, POPULAR, COMMENTS, ACTIVITY) */}
           <div className="secondary-analytics-grid" id="secondary-analytics-container">
-            {/* Recent Scholar Discussions */}
-            <div className="analytics-panel" id="panel-recent-comments">
-              <div className="analytics-panel-header">
-                <h3 className="serif-title analytics-panel-title">
-                  <MessageSquare size={18} />
-                  Recent Scholar Discourse
-                </h3>
-                <span className="tag-badge burgundy" style={{ fontSize: '0.75rem' }}>Live Stream</span>
-              </div>
-              <div className="recent-item-list">
-                {recentComments.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontStyle: 'italic', padding: '1rem 0' }}>
-                    No comments recorded in the sanctuary yet.
-                  </p>
-                ) : (
-                  recentComments.map((c) => (
-                    <div key={c.id} className="recent-comment-item" data-testid={`recent-comment-${c.id}`}>
-                      <div className="recent-comment-meta">
-                        <span className="recent-comment-author">
-                          {c.user?.name} ({c.user?.role})
-                        </span>
-                        <span>{new Date(c.createdAt).toLocaleDateString()}</span>
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--accent-burgundy)', marginBottom: '0.35rem', fontWeight: 600 }}>
-                        On: {c.literature?.title}
-                      </div>
-                      <p className="recent-comment-text">"{c.content}"</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Recently Cataloged Works */}
+            {/* SECTION 1: RECENT LITERATURE */}
             <div className="analytics-panel" id="panel-recent-literature">
               <div className="analytics-panel-header">
                 <h3 className="serif-title analytics-panel-title">
                   <BookOpen size={18} />
-                  Recent Archival Ingestions
+                  Recent Literature
                 </h3>
                 <span className="tag-badge gold" style={{ fontSize: '0.75rem' }}>Registry</span>
               </div>
-              <div className="recent-item-list">
+              <div className="recent-item-list" id="recent-literature-list">
                 {recentLiterature.length === 0 ? (
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontStyle: 'italic', padding: '1rem 0' }}>
                     No literature recorded in the archive yet.
@@ -813,7 +898,10 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                       <div className="recent-literature-info">
                         <span className="recent-literature-title">{lit.title}</span>
                         <span className="recent-literature-author">
-                          By {lit.creator?.name} • {lit.category?.name}
+                          By {lit.creator?.name} • {lit.language || 'English'} • {lit.category?.name}
+                        </span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                          Updated: {new Date(lit.updatedAt || lit.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                       <span className={`status-badge ${lit.publicationStatus.toLowerCase()}`}>
@@ -824,7 +912,200 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                 )}
               </div>
             </div>
+
+            {/* SECTION 2: POPULAR LITERATURE */}
+            <div className="analytics-panel" id="panel-popular-literature">
+              <div className="analytics-panel-header">
+                <h3 className="serif-title analytics-panel-title">
+                  <Flame size={18} />
+                  Popular Literature
+                </h3>
+                <span className="tag-badge burgundy" style={{ fontSize: '0.75rem' }}>Top Curated</span>
+              </div>
+              <div className="recent-item-list" id="popular-literature-list">
+                {popularLiterature.length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontStyle: 'italic', padding: '1rem 0' }}>
+                    No popularity metrics available yet.
+                  </p>
+                ) : (
+                  popularLiterature.map((pop) => (
+                    <div key={pop.id} className="recent-literature-item" data-testid={`popular-lit-${pop.id}`}>
+                      <div className="recent-literature-info">
+                        <span className="recent-literature-title">{pop.title}</span>
+                        <span className="recent-literature-author">
+                          By {pop.author} • {pop.category}
+                        </span>
+                        <div style={{ display: 'flex', gap: '0.85rem', marginTop: '0.25rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                          <span>⭐ <strong>{pop.rating.toFixed(1)}</strong> ({pop.ratingCount} ratings)</span>
+                          <span>🔖 <strong>{pop.saveCount}</strong> saves</span>
+                        </div>
+                      </div>
+                      <span className="tag-badge gold" style={{ fontSize: '0.75rem' }}>
+                        Score: {pop.popularityScore}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* SECTION 3: RECENT COMMENTS & MODERATION */}
+            <div className="analytics-panel" id="panel-recent-comments">
+              <div className="analytics-panel-header">
+                <h3 className="serif-title analytics-panel-title">
+                  <MessageSquare size={18} />
+                  Recent Comments
+                </h3>
+                <span className="tag-badge burgundy" style={{ fontSize: '0.75rem' }}>Discussion</span>
+              </div>
+              <div className="recent-item-list" id="recent-comments-list">
+                {recentComments.length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontStyle: 'italic', padding: '1rem 0' }}>
+                    No comments recorded in the sanctuary yet.
+                  </p>
+                ) : (
+                  recentComments.map((c) => (
+                    <div key={c.id} className="recent-comment-item" data-testid={`recent-comment-${c.id}`}>
+                      <div className="recent-comment-meta">
+                        <span className="recent-comment-author">
+                          {c.readerName || c.user?.name}
+                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span className="status-badge published" style={{ fontSize: '0.7rem', padding: '0.15rem 0.5rem' }}>
+                            {c.moderationStatus || 'APPROVED'}
+                          </span>
+                          <span>{new Date(c.createdAt).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--accent-burgundy)', marginBottom: '0.35rem', fontWeight: 600 }}>
+                        On: {c.literatureTitle || c.literature?.title}
+                      </div>
+                      <p className="recent-comment-text">"{c.content}"</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* SECTION 4: RECENT ACTIVITY (AUDIT TRAIL) */}
+            <div className="analytics-panel" id="panel-recent-activity">
+              <div className="analytics-panel-header">
+                <h3 className="serif-title analytics-panel-title">
+                  <Activity size={18} />
+                  Recent Activity
+                </h3>
+                <span className="tag-badge gold" style={{ fontSize: '0.75rem' }}>Audit Log</span>
+              </div>
+              <div className="recent-item-list" id="recent-activity-list">
+                {recentActivity.length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontStyle: 'italic', padding: '1rem 0' }}>
+                    No system activity recorded yet.
+                  </p>
+                ) : (
+                  recentActivity.map((act) => (
+                    <div key={act.id} className="activity-audit-item" data-testid={`activity-${act.id}`}>
+                      <div className="activity-icon-badge">
+                        {act.actionType.includes('LITERATURE') ? (
+                          <BookOpen size={14} />
+                        ) : act.actionType.includes('USER') ? (
+                          <Users size={14} />
+                        ) : (
+                          <MessageSquare size={14} />
+                        )}
+                      </div>
+                      <div className="activity-info">
+                        <span className="activity-desc">{act.description}</span>
+                        <div className="activity-meta">
+                          <span>By {act.actor}</span> • <span>{new Date(act.timestamp).toLocaleTimeString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
+
+          {/* Quick Action Interactive Modals */}
+          {quickActionModal && (
+            <div className="modal-overlay" onClick={() => setQuickActionModal(null)}>
+              <div className="modal-plate" style={{ maxWidth: '520px' }} onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <div className="modal-title-group">
+                    <span className="serif-title modal-title">
+                      {quickActionModal === 'categories' && 'Manage Curatorial Categories'}
+                      {quickActionModal === 'users' && 'Manage Athenæum Scholars'}
+                      {quickActionModal === 'settings' && 'Athenæum Application Settings'}
+                    </span>
+                    <span className="modal-subtitle">
+                      {quickActionModal === 'categories' && 'Review and organize literature categories.'}
+                      {quickActionModal === 'users' && 'View registered readers and roles.'}
+                      {quickActionModal === 'settings' && 'Configure sanctuary registry settings.'}
+                    </span>
+                  </div>
+                  <button className="btn-close" onClick={() => setQuickActionModal(null)}>
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div style={{ padding: '1rem 0' }}>
+                  {quickActionModal === 'categories' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {categories.map((cat) => (
+                        <div key={cat.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.65rem 1rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)' }}>
+                          <span style={{ fontWeight: 600 }}>{cat.name}</span>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>/{cat.slug}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {quickActionModal === 'users' && (
+                    <div>
+                      <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                        Current Readers enrolled in sanctuary: <strong>{kpiData?.registeredReaders || 0}</strong>
+                      </p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <div style={{ padding: '0.75rem 1rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Julian Croft (julian@literature.org)</span>
+                          <span className="tag-badge burgundy">READER</span>
+                        </div>
+                        <div style={{ padding: '0.75rem 1rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Clara Oswald (clara@literature.org)</span>
+                          <span className="tag-badge burgundy">READER</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {quickActionModal === 'settings' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+                          Repository Name
+                        </label>
+                        <input className="form-input" defaultValue="Athenæum Classic Literature Repository" readOnly />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+                          Admin Invitation Security Status
+                        </label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#166534', fontWeight: 600, fontSize: '0.88rem' }}>
+                          <ShieldCheck size={18} /> Cryptographic Server Validation & Rate Limiting Active
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                  <button className="btn btn-secondary" onClick={() => setQuickActionModal(null)}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

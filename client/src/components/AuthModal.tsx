@@ -30,10 +30,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [adminSecret, setAdminSecret] = useState('');
   const [showAdminField, setShowAdminField] = useState(false);
 
-  // Password Visibility States (LIT-15)
+  // Password Visibility States (LIT-15 & LIT-16)
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
+  const [showAdminKey, setShowAdminKey] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [showResetConfirmPassword, setShowResetConfirmPassword] = useState(false);
 
@@ -43,6 +44,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [forgotNewPassword, setForgotNewPassword] = useState('');
   const [forgotConfirmPassword, setForgotConfirmPassword] = useState('');
   const [resetToken, setResetToken] = useState<string | null>(null);
+
 
   // Email Inbox Drawer state
   const [inboxMessage, setInboxMessage] = useState<any | null>(null);
@@ -136,6 +138,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
+    if (showAdminField && !adminSecret.trim()) {
+      setError('Admin Secret Invitation Key is required to create an Admin account.');
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch('http://localhost:5000/api/auth/register', {
@@ -146,7 +153,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           email,
           password,
           confirmPassword,
-          adminSecret: adminSecret || undefined,
+          role: showAdminField ? 'ADMIN' : 'READER',
+          adminInvitationKey: showAdminField ? adminSecret.trim() : undefined,
+          adminSecret: showAdminField ? adminSecret.trim() : undefined,
         }),
       });
       const data = await res.json();
@@ -541,24 +550,41 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 onClick={() => setShowAdminField(!showAdminField)}
                 id="toggle-admin-secret"
               >
-                {showAdminField ? '– Hide Curatorial Access Key' : '+ Have an Admin Invitation Key?'}
+                {showAdminField ? '– Register as Normal Reader' : '+ Create Admin Account (Requires Invitation Key)'}
               </button>
             </div>
 
             {showAdminField && (
               <div className="form-group admin-field-group">
-                <label htmlFor="reg-admin-secret">Admin Secret Invitation Key</label>
-                <div className="input-icon-wrapper">
+                <label htmlFor="reg-admin-secret">
+                  Admin Secret Invitation Key <span style={{ color: 'var(--accent-burgundy)' }}>*</span>
+                </label>
+                <div className="input-icon-wrapper password-toggle-wrapper">
                   <KeyRound size={16} className="input-icon" />
                   <input
-                    type="password"
+                    type={showAdminKey ? 'text' : 'password'}
                     id="reg-admin-secret"
                     className="input-field"
                     placeholder="Enter curatorial passkey"
                     value={adminSecret}
                     onChange={(e) => setAdminSecret(e.target.value)}
+                    required={showAdminField}
+                    autoComplete="off"
                   />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    id="toggle-admin-key"
+                    onClick={() => setShowAdminKey(!showAdminKey)}
+                    aria-label={showAdminKey ? 'Hide key' : 'Show key'}
+                    title={showAdminKey ? 'Hide key' : 'Show key'}
+                  >
+                    {showAdminKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>
+                  Restricted to authorized curatorial administrators with a cryptographically verified invitation key.
+                </span>
               </div>
             )}
 
@@ -568,11 +594,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               disabled={loading}
               id="btn-submit-register"
             >
-              {loading ? 'Inscribing Account...' : 'Create Reader Account'}
+              {loading ? 'Inscribing Account...' : showAdminField ? 'Create Admin Account' : 'Create Reader Account'}
               <ArrowRight size={16} />
             </button>
           </form>
         )}
+
 
         {/* --- FORGOT PASSWORD OTP MULTI-STEP FLOW --- */}
         {mode === 'forgot' && forgotStep === 'request' && (

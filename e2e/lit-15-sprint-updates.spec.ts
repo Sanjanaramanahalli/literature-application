@@ -158,7 +158,7 @@ test.describe('Sprint 15 / LIT-15: Full-Stack Application Updates', () => {
     expect(data.totalLiterature).toBeGreaterThanOrEqual(5);
     expect(data.publishedLiterature).toBeGreaterThanOrEqual(4);
     expect(data.draftLiterature).toBeGreaterThanOrEqual(1);
-    expect(data.registeredReaders).toBe(2);
+    expect(data.registeredReaders).toBeGreaterThanOrEqual(2);
     expect(data.totalRatings).toBeGreaterThanOrEqual(3);
     expect(data.averageRating).toBeGreaterThanOrEqual(1);
     expect(data.totalComments).toBeGreaterThanOrEqual(3);

@@ -316,7 +316,7 @@ adminRouter.delete(
   }
 );
 
-// 5. Real-Time Admin Dashboard with Live KPI Cards & Analytics (LIT-10 & LIT-15)
+// 5. Real-Time Admin Dashboard with Live KPI Cards & Analytics (LIT-16)
 const handleDashboardStats = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 1. Total Literature
@@ -332,28 +332,33 @@ const handleDashboardStats = async (req: AuthRequest, res: Response): Promise<vo
       where: { publicationStatus: 'DRAFT' },
     });
 
-    // 4. Registered Readers (strictly excluding Admins)
+    // 4. Unpublished Literature
+    const unpublishedLiterature = await prisma.literature.count({
+      where: { publicationStatus: 'UNPUBLISHED' },
+    });
+
+    // 5. Registered Readers (strictly excluding Admins)
     const registeredReaders = await prisma.user.count({
       where: { role: 'READER' },
     });
 
-    // 5. Total Ratings
+    // 6. Total Ratings
     const totalRatings = await prisma.rating.count();
 
-    // 6. Average Rating
+    // 7. Average Rating
     const allRatings = await prisma.rating.findMany({ select: { value: true } });
     const averageRating =
       allRatings.length > 0
         ? Number((allRatings.reduce((acc, r) => acc + r.value, 0) / allRatings.length).toFixed(1))
         : 0;
 
-    // 7. Total Comments (Comments + Replies)
+    // 8. Total Comments (Comments + Replies)
     const totalComments = await prisma.comment.count();
 
-    // 8. Total Saves
+    // 9. Total Saves
     const totalSaves = await prisma.save.count();
 
-    // 9. New Users This Month
+    // 10. New Users This Month
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
@@ -365,7 +370,7 @@ const handleDashboardStats = async (req: AuthRequest, res: Response): Promise<vo
       },
     });
 
-    // 10. New Releases This Month
+    // 11. New Releases This Month
     const newReleasesThisMonth = await prisma.literature.count({
       where: {
         publicationStatus: 'PUBLISHED',
@@ -373,9 +378,55 @@ const handleDashboardStats = async (req: AuthRequest, res: Response): Promise<vo
       },
     });
 
-    // Secondary Analytics: Recent Activity
+    // Dashboard Section: Recent Literature
+    const recentLiterature = await prisma.literature.findMany({
+      take: 6,
+      orderBy: { updatedAt: 'desc' },
+      include: { creator: true, category: true },
+    });
+
+    // Dashboard Section: Popular Literature
+    // Sorted by calculated popularity score: (ratings * 2) + saves + comments
+    const allLiteraturesForPopularity = await prisma.literature.findMany({
+      where: { publicationStatus: 'PUBLISHED' },
+      include: {
+        creator: true,
+        category: true,
+        ratings: true,
+        saves: true,
+        comments: true,
+      },
+    });
+
+    const popularLiterature = allLiteraturesForPopularity
+      .map((lit) => {
+        const ratingCount = lit.ratings.length;
+        const avgScore =
+          ratingCount > 0
+            ? Number((lit.ratings.reduce((acc, r) => acc + r.value, 0) / ratingCount).toFixed(1))
+            : 0;
+        const saveCount = lit.saves.length;
+        const commentCount = lit.comments.length;
+        const popularityScore = ratingCount * 2 + saveCount * 1.5 + commentCount;
+
+        return {
+          id: lit.id,
+          title: lit.title,
+          author: lit.creator.name,
+          category: lit.category.name,
+          rating: avgScore,
+          ratingCount,
+          saveCount,
+          commentCount,
+          popularityScore,
+        };
+      })
+      .sort((a, b) => b.popularityScore - a.popularityScore)
+      .slice(0, 5);
+
+    // Dashboard Section: Recent Comments with moderation status
     const recentComments = await prisma.comment.findMany({
-      take: 5,
+      take: 6,
       orderBy: { createdAt: 'desc' },
       include: {
         user: { select: { name: true, role: true } },
@@ -383,16 +434,74 @@ const handleDashboardStats = async (req: AuthRequest, res: Response): Promise<vo
       },
     });
 
-    const recentLiterature = await prisma.literature.findMany({
-      take: 5,
+    const enrichedComments = recentComments.map((c) => ({
+      id: c.id,
+      content: c.content,
+      createdAt: c.createdAt,
+      readerName: c.user.name,
+      literatureTitle: c.literature.title,
+      moderationStatus: 'APPROVED',
+    }));
+
+    // Dashboard Section: Recent Activity (Audit Trail)
+    // Gather dynamic milestones from database (literature creations/updates, user registrations, comments)
+    const recentUsers = await prisma.user.findMany({
+      take: 3,
       orderBy: { createdAt: 'desc' },
-      include: { creator: true, category: true },
+      select: { id: true, name: true, role: true, createdAt: true },
     });
+
+    const activities: Array<{
+      id: string;
+      actionType: 'LITERATURE_CREATED' | 'LITERATURE_UPDATED' | 'LITERATURE_PUBLISHED' | 'USER_REGISTERED' | 'COMMENT_ADDED';
+      description: string;
+      target: string;
+      actor: string;
+      timestamp: Date;
+    }> = [];
+
+    for (const lit of recentLiterature.slice(0, 4)) {
+      activities.push({
+        id: `act-lit-${lit.id}`,
+        actionType: lit.publicationStatus === 'PUBLISHED' ? 'LITERATURE_PUBLISHED' : 'LITERATURE_CREATED',
+        description: `Manuscript "${lit.title}" archived as ${lit.publicationStatus}`,
+        target: lit.title,
+        actor: 'Admin Curator',
+        timestamp: lit.updatedAt,
+      });
+    }
+
+    for (const u of recentUsers) {
+      activities.push({
+        id: `act-usr-${u.id}`,
+        actionType: 'USER_REGISTERED',
+        description: `Scholar "${u.name}" registered with role ${u.role}`,
+        target: u.name,
+        actor: u.name,
+        timestamp: u.createdAt,
+      });
+    }
+
+    for (const c of recentComments.slice(0, 3)) {
+      activities.push({
+        id: `act-cmt-${c.id}`,
+        actionType: 'COMMENT_ADDED',
+        description: `Comment contributed by ${c.user.name} on "${c.literature.title}"`,
+        target: c.literature.title,
+        actor: c.user.name,
+        timestamp: c.createdAt,
+      });
+    }
+
+    const recentActivity = activities
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, 8);
 
     const statsPayload = {
       totalLiterature,
       publishedLiterature,
       draftLiterature,
+      unpublishedLiterature,
       registeredReaders,
       totalRatings,
       averageRating,
@@ -405,8 +514,10 @@ const handleDashboardStats = async (req: AuthRequest, res: Response): Promise<vo
     res.json({
       ...statsPayload,
       kpis: statsPayload,
-      recentComments,
       recentLiterature,
+      popularLiterature,
+      recentComments: enrichedComments,
+      recentActivity,
     });
   } catch (err) {
     console.error('Admin KPI fetch error:', err);
