@@ -233,6 +233,12 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       setVoteLoading(true);
       setFeedbackMessage(null);
       const token = localStorage.getItem('literature_token');
+      if (!token) {
+        setFeedbackMessage(`Please sign in to ${type === 'LIKE' ? 'like' : 'downvote'} this classical work.`);
+        onOpenAuth('login');
+        return;
+      }
+
       const res = await fetch(`/api/reader/literature/${literatureId}/vote`, {
         method: 'POST',
         headers: {
@@ -242,9 +248,18 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
         body: JSON.stringify({ type }),
       });
 
+      if (res.status === 401 || res.status === 403) {
+        // Session token is invalid or expired
+        localStorage.removeItem('literature_token');
+        localStorage.removeItem('literature_user');
+        setFeedbackMessage('Your session has expired. Please sign in again to record your vote.');
+        onOpenAuth('login');
+        return;
+      }
+
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to register vote.');
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to record vote.');
       }
 
       const data = await res.json();

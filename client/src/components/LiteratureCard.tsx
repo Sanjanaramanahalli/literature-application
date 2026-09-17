@@ -77,6 +77,11 @@ export const LiteratureCard: React.FC<LiteratureCardProps> = ({
     try {
       setVoteLoading(true);
       const token = localStorage.getItem('literature_token');
+      if (!token) {
+        if (onOpenAuth) onOpenAuth('login');
+        return;
+      }
+
       const res = await fetch(`/api/reader/literature/${item.id}/vote`, {
         method: 'POST',
         headers: {
@@ -85,6 +90,13 @@ export const LiteratureCard: React.FC<LiteratureCardProps> = ({
         },
         body: JSON.stringify({ type }),
       });
+
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('literature_token');
+        localStorage.removeItem('literature_user');
+        if (onOpenAuth) onOpenAuth('login');
+        return;
+      }
 
       if (!res.ok) {
         throw new Error('Vote request failed');
