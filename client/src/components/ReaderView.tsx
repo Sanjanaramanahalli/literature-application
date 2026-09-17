@@ -317,10 +317,20 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                   <div className="book-spine-shadow" />
                   <div className="book-cover-hardcover">
                     <img
-                      src={literature.coverImage}
+                      src={
+                        literature.coverImage.startsWith('http') || literature.coverImage.startsWith('data:')
+                          ? literature.coverImage
+                          : literature.coverImage.startsWith('/uploads')
+                          ? `http://localhost:5000${literature.coverImage}`
+                          : literature.coverImage
+                      }
                       alt={`Cover artwork for ${literature.title}`}
                       className="cover-page-main-img"
                       id="reader-cover-image"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=85';
+                      }}
                     />
                     <div className="book-spine-ridge" />
                     <div className="book-glare-overlay" />

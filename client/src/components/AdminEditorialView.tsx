@@ -1578,9 +1578,20 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                           <div className="work-cell-title">
                             {work.coverImage ? (
                               <img
-                                src={`http://localhost:5000${work.coverImage}`}
+                                src={
+                                  work.coverImage.startsWith('http') || work.coverImage.startsWith('data:')
+                                    ? work.coverImage
+                                    : work.coverImage.startsWith('/uploads')
+                                    ? `http://localhost:5000${work.coverImage}`
+                                    : work.coverImage
+                                }
                                 alt={work.title}
                                 className="work-mini-cover"
+                                onError={(e) => {
+                                  // Fallback to placeholder if failed to load
+                                  (e.target as HTMLImageElement).src =
+                                    'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80';
+                                }}
                               />
                             ) : (
                               <div className="work-mini-cover-placeholder">
