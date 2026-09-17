@@ -161,6 +161,12 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       setFeedbackMessage(null);
 
       const token = localStorage.getItem('literature_token');
+      if (!token) {
+        setFeedbackMessage('Please sign in to register your scholarly rating.');
+        onOpenAuth('login');
+        return;
+      }
+
       const res = await fetch(`/api/reader/literature/${literatureId}/ratings`, {
         method: 'POST',
         headers: {
@@ -170,8 +176,16 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
         body: JSON.stringify({ value: stars }),
       });
 
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('literature_token');
+        localStorage.removeItem('literature_user');
+        setFeedbackMessage('Your session has expired. Please sign in again to submit your rating.');
+        onOpenAuth('login');
+        return;
+      }
+
       if (!res.ok) {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error || 'Failed to submit rating.');
       }
 
@@ -198,12 +212,26 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
     try {
       setSaveLoading(true);
       const token = localStorage.getItem('literature_token');
+      if (!token) {
+        setFeedbackMessage('Please sign in to save this work to your personal sanctuary.');
+        onOpenAuth('login');
+        return;
+      }
+
       const res = await fetch(`/api/reader/literature/${literatureId}/save`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('literature_token');
+        localStorage.removeItem('literature_user');
+        setFeedbackMessage('Your session has expired. Please sign in again to save this work.');
+        onOpenAuth('login');
+        return;
+      }
 
       if (!res.ok) {
         throw new Error('Failed to toggle save.');
