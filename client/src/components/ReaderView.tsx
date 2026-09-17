@@ -466,18 +466,18 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                 className={`view-mode-tab ${displayMode === 'full' ? 'active' : ''}`}
                 onClick={() => setDisplayMode('full')}
                 id="tab-mode-full"
+                title="Reads the entire work in continuous, scrollable layout"
               >
-                <AlignLeft size={15} />
-                <span>Full Literature ({totalPages} Cantos / Folios)</span>
+                <span>📜 Full Literature View</span>
               </button>
               <button
                 type="button"
                 className={`view-mode-tab ${displayMode === 'paginated' ? 'active' : ''}`}
                 onClick={() => setDisplayMode('paginated')}
                 id="tab-mode-paginated"
+                title="Interactive 3D physical book page-turn animation with flip transitions"
               >
-                <BookOpen size={15} />
-                <span>Page-by-Page Book View</span>
+                <span>📖 Page-by-Page Book View</span>
               </button>
             </div>
           </div>
