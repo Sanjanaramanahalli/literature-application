@@ -50,12 +50,28 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   // 'content' = user has opened the manuscript to read pages
   const [viewingMode, setViewingMode] = useState<'cover' | 'content'>('cover');
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isFlipping, setIsFlipping] = useState<boolean>(false);
+  const [flipDirection, setFlipDirection] = useState<'next' | 'prev'>('next');
+
+  const handlePageChange = (newPage: number, direction: 'next' | 'prev', scroll: boolean = false) => {
+    if (newPage === currentPage || isFlipping) return;
+    setFlipDirection(direction);
+    setIsFlipping(true);
+    setTimeout(() => {
+      setCurrentPage(newPage);
+      setIsFlipping(false);
+      if (scroll) {
+        window.scrollTo({ top: 180, behavior: 'smooth' });
+      }
+    }, 280);
+  };
 
   useEffect(() => {
     fetchLiteratureDetail();
     // Reset to cover page when switching literature
     setViewingMode('cover');
     setCurrentPage(1);
+    setIsFlipping(false);
   }, [literatureId, user]);
 
   const fetchLiteratureDetail = async () => {
@@ -408,8 +424,8 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
             <button
               type="button"
               className="btn btn-secondary btn-sm"
-              disabled={currentPage <= 1}
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage <= 1 || isFlipping}
+              onClick={() => handlePageChange(currentPage - 1, 'prev')}
               id="btn-prev-page"
             >
               <ChevronLeft size={16} />
@@ -423,8 +439,8 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
             <button
               type="button"
               className="btn btn-secondary btn-sm"
-              disabled={currentPage >= totalPages}
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={currentPage >= totalPages || isFlipping}
+              onClick={() => handlePageChange(currentPage + 1, 'next')}
               id="btn-next-page"
             >
               <span>Next Page</span>
@@ -432,23 +448,37 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
             </button>
           </div>
 
-          {/* Current Page Literary Content */}
-          <div className="reader-content-body" id="reader-body-paragraphs">
-            {currentContentPageText.split('\n\n').map((para, index) => (
-              <p key={index}>{para}</p>
-            ))}
+          {/* Current Page Literary Content with 3D Physical Parchment Page Turn Animation */}
+          <div className="book-page-viewport">
+            <div className={`book-page-sheet ${isFlipping ? (flipDirection === 'next' ? 'flipping-next' : 'flipping-prev') : 'page-settled'}`}>
+              <div className="book-page-inner-folio">
+                <div className="folio-header-indicator">
+                  <span>Folio {currentPage}</span>
+                  <span>{literature.title}</span>
+                  <span>{literature.language}</span>
+                </div>
+
+                <div className="reader-content-body" id="reader-body-paragraphs">
+                  {currentContentPageText.split('\n\n').map((para, index) => (
+                    <p key={index}>{para}</p>
+                  ))}
+                </div>
+
+                <div className="folio-footer-indicator">
+                  <span>Athenæum Classic Manuscript Edition</span>
+                  <span>— {currentPage} —</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Pagination Controls Bottom */}
-          <div className="reader-page-controls" id="reader-page-controls-bottom" style={{ marginTop: '2rem' }}>
+          <div className="reader-page-controls" id="reader-page-controls-bottom" style={{ marginTop: '2.5rem' }}>
             <button
               type="button"
               className="btn btn-secondary btn-sm"
-              disabled={currentPage <= 1}
-              onClick={() => {
-                setCurrentPage((prev) => Math.max(1, prev - 1));
-                window.scrollTo({ top: 100, behavior: 'smooth' });
-              }}
+              disabled={currentPage <= 1 || isFlipping}
+              onClick={() => handlePageChange(currentPage - 1, 'prev', true)}
               id="btn-prev-page-bottom"
             >
               <ChevronLeft size={16} />
@@ -456,17 +486,14 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
             </button>
 
             <span className="reader-page-indicator">
-              Page {currentPage} of {totalPages}
+              Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
             </span>
 
             <button
               type="button"
               className="btn btn-secondary btn-sm"
-              disabled={currentPage >= totalPages}
-              onClick={() => {
-                setCurrentPage((prev) => Math.min(totalPages, prev + 1));
-                window.scrollTo({ top: 100, behavior: 'smooth' });
-              }}
+              disabled={currentPage >= totalPages || isFlipping}
+              onClick={() => handlePageChange(currentPage + 1, 'next', true)}
               id="btn-next-page-bottom"
             >
               <span>Next Page</span>

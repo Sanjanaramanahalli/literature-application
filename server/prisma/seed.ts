@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { hamletPages, godanPages, malegalalliPages } from './classicalLiteratureTexts.js';
 
 const prisma = new PrismaClient();
 
@@ -160,23 +161,7 @@ async function main() {
       title: 'Hamlet, Prince of Denmark',
       subheading: 'A Tragedy of Solitude, Betrayal, and the Burden of Vengeance',
       brief: 'Shakespeare’s quintessential tragedy explores the psychological fracture of Denmark’s grieving prince confronted by spectral revelation.',
-      content: create15PageContent(
-        'Hamlet, Prince of Denmark',
-        `ACT I. SCENE I. Elsinore. A platform before the Castle.
-FRANCISCO at his post. Enter to him BERNARDO.
-BERNARDO: Who’s there?
-FRANCISCO: Nay, answer me. Stand and unfold yourself.
-BERNARDO: Long live the king!
-HAMLET: To be, or not to be, that is the question:
-Whether ’tis nobler in the mind to suffer
-The slings and arrows of outrageous fortune,
-Or to take arms against a sea of troubles
-And by opposing end them. To die—to sleep,
-No more; and by a sleep to say we end
-The heart-ache and the thousand natural shocks
-That flesh is heir to: ’tis a consummation
-Devoutly to be wish’d.`
-      ),
+      content: hamletPages.join('\n\n---page---\n\n'),
       language: 'English',
       subject: 'Morality and Revenge',
       genre: 'Tragedy',
@@ -254,13 +239,7 @@ MASHA: I am in mourning for my life. I am unhappy.`,
       title: 'गोदान (Godan)',
       subheading: 'भारतीय ग्रामीण जीवन एवं किसान चेतना का अमर महाकाव्य',
       brief: 'मुंशी प्रेमचंद का कालजयी उपन्यास जो भारतीय ग्रामीण समाज, आर्थिक संघर्ष, और मानवीय गरिमा का जीवंत चित्रण करता है।',
-      content: create15PageContent(
-        'गोदान (Godan)',
-        `होरी महतो ने बैलों को सानी-पानी देकर अपने छोटे भाई सोभा के घर की ओर देखा। सोभा अपने द्वार पर बैठा चिलम पी रहा था।
-होरी ने कहा — क्यों भाई, आज कुछ काम-धंधा नहीं है क्या?
-सोभा ने चिलम का कश खींचते हुए उत्तर दिया — काम-धंधा क्या करें महतो, जब खेती में बरक्कत ही न रही। लगान चुकाते-चुकाते देह की खाल खिंच गई।
-होरी मन ही मन सोचने लगा कि किसान का धर्म केवल धरती को सींचना और मर्यादा की रक्षा करना है। एक गाय की लालसा उसके हृदय में वर्षों से पल रही थी। गोदान केवल एक दान नहीं, अपितु जीवन की अंतिम आकांक्षा और मुक्ति का प्रतीक था।`
-      ),
+      content: godanPages.join('\n\n---page---\n\n'),
       language: 'Hindi',
       subject: 'सामाजिक यथार्थ एवं ग्रामीण जीवन',
       genre: 'Classic Realism',
@@ -277,11 +256,7 @@ MASHA: I am in mourning for my life. I am unhappy.`,
       title: 'ಮಲೆಗಳಲ್ಲಿ ಮದುಮಗಳು (Malegalalli Madumagalu)',
       subheading: 'ಮಲೆನಾಡಿನ ಪ್ರಕೃತಿ, ಸಂಸ್ಕೃತಿ ಮತ್ತು ಜೀವಸ್ಪಂದನದ ಮಹಾಕಾವ್ಯ',
       brief: 'ರಾಷ್ಟ್ರಕವಿ ಕುವೆಂಪು ಅವರ ಮೇರು ಕೃತಿ, ಮಲೆನಾಡಿನ ಗಿರಿ-ಕಂದರಗಳ ನಡುವಿನ ಮನುಷ್ಯ ಬದುಕಿನ ಅನನ್ಯ ಚಿತ್ರಣವನ್ನು ಕಟ್ಟಿಕೊಡುತ್ತದೆ.',
-      content: create15PageContent(
-        'ಮಲೆಗಳಲ್ಲಿ ಮದುಮಗಳು (Malegalalli Madumagalu)',
-        `ಮಲೆನಾಡಿನ ಹಸುರು ಕಾನನದ ನಡುವೆ ಕಾವೇರಿಯಂತೆ ಹರಿಯುವ ನಿಸರ್ಗದ ಸಿರಿಯಲ್ಲಿ ಬದುಕು ಒಂದು ಸುಂದರ ವಿಸ್ಮಯ. ತೀರ್ಥಹಳ್ಳಿಯ ಸುತ್ತಲಿನ ಗುಡ್ಡ-ಬೆಟ್ಟಗಳ ನಡುವೆ, ಮಳೆಗಾಲದ ಮಂಜು ಮುಸುಕಿದ ಬೆಟ್ಟಗಳ ಸಾಲಿನಲ್ಲಿ ಹುಟ್ಟಿದ ಕಥೆ ಇದು.
-ಚಿನ್ನಮ್ಮ ಮತ್ತು ಮುಕುಂದಯ್ಯನ ಪ್ರೇಮ ಕಥೆಯು ಕೇವಲ ಇಬ್ಬರ ಹೃದಯದ ಮಿಡಿತವಲ್ಲ; ಅದು ಮಲೆನಾಡಿನ ಸಮಗ್ರ ಸಂಸ್ಕೃತಿ, ಪರಿಸರ ಮತ್ತು ನಿತ್ಯ ನೂತನ ಚೇತನದ ಅನಾವರಣ. ಮನುಷ್ಯನ ಆಸೆ-ನಿರಾಶೆಗಳು ಪ್ರಕೃತಿಯ ಮಹಾ ಲಯದೊಂದಿಗೆ ಹೇಗೆ ಒಂದಾಗುತ್ತವೆ ಎಂಬುದನ್ನು ಕುವೆಂಪು ಅವರು ತಮ್ಮ ಅಪೂರ್ವ ಲೇಖನಿಯಿಂದ ಜಾದೂವಿನಂತೆ ಮೂಡಿಸಿದ್ದಾರೆ.`
-      ),
+      content: malegalalliPages.join('\n\n---page---\n\n'),
       language: 'Kannada',
       subject: 'ಪರಿಸರ ಪ್ರಜ್ಞೆ ಮತ್ತು ಮಾನವೀಯ ಸಂಬಂಧಗಳು',
       genre: 'Epic Novel',
