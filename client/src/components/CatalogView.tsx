@@ -41,11 +41,11 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
       // Fetch featured, popular, new releases, all literature, and categories in parallel
       const [featRes, popRes, newRes, allRes, catRes] = await Promise.all([
-        fetch('http://localhost:5000/api/literature/featured'),
-        fetch('http://localhost:5000/api/literature/popular'),
-        fetch('http://localhost:5000/api/literature/new-releases?limit=6'),
-        fetch('http://localhost:5000/api/literature'),
-        fetch('http://localhost:5000/api/literature/categories'),
+        fetch('/api/literature/featured'),
+        fetch('/api/literature/popular'),
+        fetch('/api/literature/new-releases?limit=6'),
+        fetch('/api/literature'),
+        fetch('/api/literature/categories'),
       ]);
 
       if (!featRes.ok || !popRes.ok || !newRes.ok || !allRes.ok || !catRes.ok) {

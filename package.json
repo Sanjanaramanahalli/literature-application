@@ -8,7 +8,8 @@
     "dev:server": "npm --prefix server run dev",
     "dev:client": "npm --prefix client run dev",
     "seed": "npm --prefix server run seed",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "vercel-build": "npm --prefix server run prisma:generate && npm --prefix server run build && npm --prefix client run build"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",

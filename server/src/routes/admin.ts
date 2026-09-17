@@ -7,10 +7,20 @@ import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.
 
 export const adminRouter = Router();
 
-// Configure local multer storage in server/uploads
-const uploadDir = path.join(process.cwd(), 'uploads');
+import os from 'os';
+
+// Configure local multer storage in server/uploads (or os.tmpdir() in serverless environments like Vercel)
+const isVercel = !!process.env.VERCEL;
+export const uploadDir = isVercel
+  ? path.join(os.tmpdir(), 'uploads')
+  : path.join(process.cwd(), 'uploads');
+
 if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+  try {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  } catch (e) {
+    console.warn('Could not create uploads directory:', e);
+  }
 }
 
 const storage = multer.diskStorage({

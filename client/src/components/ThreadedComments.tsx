@@ -67,7 +67,7 @@ export const ThreadedComments: React.FC<ThreadedCommentsProps> = ({
       setErrorMsg(null);
       const token = localStorage.getItem('literature_token');
 
-      const res = await fetch(`http://localhost:5000/api/reader/literature/${literatureId}/comments`, {
+      const res = await fetch(`/api/reader/literature/${literatureId}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,7 +105,7 @@ export const ThreadedComments: React.FC<ThreadedCommentsProps> = ({
       setErrorMsg(null);
       const token = localStorage.getItem('literature_token');
 
-      const res = await fetch(`http://localhost:5000/api/reader/literature/${literatureId}/comments`, {
+      const res = await fetch(`/api/reader/literature/${literatureId}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -139,7 +139,7 @@ export const ThreadedComments: React.FC<ThreadedCommentsProps> = ({
       setErrorMsg(null);
       const token = localStorage.getItem('literature_token');
 
-      const res = await fetch(`http://localhost:5000/api/reader/comments/${commentId}`, {
+      const res = await fetch(`/api/reader/comments/${commentId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

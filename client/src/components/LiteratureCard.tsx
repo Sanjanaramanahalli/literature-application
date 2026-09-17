@@ -53,7 +53,7 @@ export const LiteratureCard: React.FC<LiteratureCardProps> = ({
   // Fallback cover if image fails or not provided
   let coverSrc = item.coverImage || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80';
   if (coverSrc.startsWith('/uploads')) {
-    coverSrc = `http://localhost:5000${coverSrc}`;
+    coverSrc = `${coverSrc}`;
   }
 
   return (

@@ -84,7 +84,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch(`http://localhost:5000/api/reader/literature/${literatureId}`, { headers });
+      const res = await fetch(`/api/reader/literature/${literatureId}`, { headers });
       if (!res.ok) {
         throw new Error('Failed to retrieve archival manuscript.');
       }
@@ -99,7 +99,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       // Check if item is saved in user's library if authenticated
       if (token && user) {
         try {
-          const savedRes = await fetch('http://localhost:5000/api/reader/saved', {
+          const savedRes = await fetch('/api/reader/saved', {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (savedRes.ok) {
@@ -131,7 +131,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       setFeedbackMessage(null);
 
       const token = localStorage.getItem('literature_token');
-      const res = await fetch(`http://localhost:5000/api/reader/literature/${literatureId}/ratings`, {
+      const res = await fetch(`/api/reader/literature/${literatureId}/ratings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -168,7 +168,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
     try {
       setSaveLoading(true);
       const token = localStorage.getItem('literature_token');
-      const res = await fetch(`http://localhost:5000/api/reader/literature/${literatureId}/save`, {
+      const res = await fetch(`/api/reader/literature/${literatureId}/save`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -321,7 +321,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                         literature.coverImage.startsWith('http') || literature.coverImage.startsWith('data:')
                           ? literature.coverImage
                           : literature.coverImage.startsWith('/uploads')
-                          ? `http://localhost:5000${literature.coverImage}`
+                          ? `${literature.coverImage}`
                           : literature.coverImage
                       }
                       alt={`Cover artwork for ${literature.title}`}

@@ -193,10 +193,10 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
     const token = localStorage.getItem('literature_token');
     try {
       const [creatorRes, catRes] = await Promise.all([
-        fetch('http://localhost:5000/api/admin/creators', {
+        fetch('/api/admin/creators', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:5000/api/admin/categories', {
+        fetch('/api/admin/categories', {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -225,7 +225,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
     if (!isAdmin) return;
     const token = localStorage.getItem('literature_token');
     try {
-      const res = await fetch('http://localhost:5000/api/admin/literature', {
+      const res = await fetch('/api/admin/literature', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -242,7 +242,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
     setKpiLoading(true);
     const token = localStorage.getItem('literature_token');
     try {
-      const res = await fetch('http://localhost:5000/api/admin/dashboard/stats', {
+      const res = await fetch('/api/admin/dashboard/stats', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -321,7 +321,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
     formData.append('coverImage', coverFile);
 
     try {
-      const res = await fetch('http://localhost:5000/api/admin/upload-cover', {
+      const res = await fetch('/api/admin/upload-cover', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -425,7 +425,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
         tags,
       };
 
-      const res = await fetch('http://localhost:5000/api/admin/literature', {
+      const res = await fetch('/api/admin/literature', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -468,7 +468,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
     if (!newCreatorName.trim()) return;
     const token = localStorage.getItem('literature_token');
     try {
-      const res = await fetch('http://localhost:5000/api/admin/creators', {
+      const res = await fetch('/api/admin/creators', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -500,7 +500,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
   const handleUpdateStatus = async (id: string, newStatus: 'PUBLISHED' | 'UNPUBLISHED' | 'DRAFT') => {
     const token = localStorage.getItem('literature_token');
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/literature/${id}`, {
+      const res = await fetch(`/api/admin/literature/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -529,7 +529,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
     }
     const token = localStorage.getItem('literature_token');
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/literature/${id}`, {
+      const res = await fetch(`/api/admin/literature/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -1582,7 +1582,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                                   work.coverImage.startsWith('http') || work.coverImage.startsWith('data:')
                                     ? work.coverImage
                                     : work.coverImage.startsWith('/uploads')
-                                    ? `http://localhost:5000${work.coverImage}`
+                                    ? `${work.coverImage}`
                                     : work.coverImage
                                 }
                                 alt={work.title}

@@ -32,7 +32,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
 
   // Fetch available categories for dropdown
   useEffect(() => {
-    fetch('http://localhost:5000/api/literature/categories')
+    fetch('/api/literature/categories')
       .then((res) => res.json())
       .then((data) => {
         if (data.categories) setCategoriesList(data.categories);
@@ -59,7 +59,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
       if (language.trim()) params.append('language', language.trim());
       if (tag.trim()) params.append('tag', tag.trim());
 
-      const res = await fetch(`http://localhost:5000/api/search/advanced?${params.toString()}`);
+      const res = await fetch(`/api/search/advanced?${params.toString()}`);
       if (!res.ok) {
         throw new Error('Search request was rejected by server.');
       }
@@ -88,7 +88,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
     setLanguage('');
     setTag('');
     // Trigger immediate clean search
-    fetch('http://localhost:5000/api/search/advanced')
+    fetch('/api/search/advanced')
       .then((res) => res.json())
       .then((data) => setResults(data.results || []))
       .catch((err) => console.error('Reset error:', err));

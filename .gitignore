@@ -9,8 +9,10 @@ server/.env.*
 
 
 # Database
-server/prisma/*.db
 server/prisma/*.db-journal
+server/prisma/*.db.tmp*
+!server/prisma/dev.db
+
 
 # Uploads
 server/uploads/*

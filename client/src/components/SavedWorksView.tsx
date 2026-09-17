@@ -49,7 +49,7 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
       setError(null);
       const token = localStorage.getItem('literature_token');
 
-      const res = await fetch('http://localhost:5000/api/reader/saved', {
+      const res = await fetch('/api/reader/saved', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -73,7 +73,7 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
     e.stopPropagation();
     try {
       const token = localStorage.getItem('literature_token');
-      const res = await fetch(`http://localhost:5000/api/reader/literature/${literatureId}/save`, {
+      const res = await fetch(`/api/reader/literature/${literatureId}/save`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

@@ -6,15 +6,22 @@ import { PrismaClient } from '@prisma/client';
 
 dotenv.config();
 
-export const prisma = new PrismaClient();
+import { prisma } from './db.js';
+export { prisma };
 export const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
 
+import os from 'os';
+
 // Serve local cover uploads statically
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+const isVercel = !!process.env.VERCEL;
+const uploadsPath = isVercel
+  ? path.join(os.tmpdir(), 'uploads')
+  : path.join(__dirname, '../uploads');
+app.use('/uploads', express.static(uploadsPath));
 
 // Routes
 import { authRouter } from './routes/auth.js';
@@ -55,8 +62,12 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
-if (process.env.NODE_ENV !== 'test') {
+// Export for Vercel serverless functions
+export default app;
+
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`[API Server] Running gracefully on http://localhost:${PORT}`);
   });
 }
+
