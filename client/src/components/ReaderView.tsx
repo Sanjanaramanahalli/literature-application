@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Star, Bookmark, Calendar, Globe, Tag, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Star, Bookmark, Calendar, Globe, Tag, BookOpen, ChevronLeft, ChevronRight, AlignLeft, Layers } from 'lucide-react';
 import { ThreadedComments } from './ThreadedComments';
 import type { LiteratureItem } from './LiteratureCard';
 import './ReaderView.css';
@@ -49,6 +49,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   // 'cover' = initial view showing Cover Page first
   // 'content' = user has opened the manuscript to read pages
   const [viewingMode, setViewingMode] = useState<'cover' | 'content'>('cover');
+  const [displayMode, setDisplayMode] = useState<'paginated' | 'full'>('full');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isFlipping, setIsFlipping] = useState<boolean>(false);
   const [flipDirection, setFlipDirection] = useState<'next' | 'prev'>('next');
@@ -256,15 +257,36 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
 
         <div className="reader-actions-quick">
           {viewingMode === 'content' && (
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={() => setViewingMode('cover')}
-              id="btn-return-cover-page"
-              title="Return to Manuscript Cover Page"
-            >
-              <BookOpen size={14} style={{ marginRight: '4px' }} />
-              <span>Cover Page</span>
-            </button>
+            <>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setDisplayMode(displayMode === 'full' ? 'paginated' : 'full')}
+                id="btn-toggle-display-mode"
+                title={displayMode === 'full' ? 'Switch to 3D Page-by-Page View' : 'Switch to Full Literature View'}
+              >
+                {displayMode === 'full' ? (
+                  <>
+                    <BookOpen size={14} style={{ marginRight: '4px' }} />
+                    <span>Page-by-Page View</span>
+                  </>
+                ) : (
+                  <>
+                    <AlignLeft size={14} style={{ marginRight: '4px' }} />
+                    <span>Full Literature View</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setViewingMode('cover')}
+                id="btn-return-cover-page"
+                title="Return to Manuscript Cover Page"
+              >
+                <Layers size={14} style={{ marginRight: '4px' }} />
+                <span>Cover Page</span>
+              </button>
+            </>
           )}
 
           <button
@@ -367,18 +389,35 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                 </div>
               )}
 
-              <div className="cover-page-actions">
+              <div className="cover-page-actions" style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   className="btn btn-primary btn-open-manuscript"
                   onClick={() => {
                     setViewingMode('content');
+                    setDisplayMode('full');
+                    setCurrentPage(1);
+                  }}
+                  id="btn-open-full-literature"
+                  title="Open and read the entire literary work in continuous folio view"
+                >
+                  <AlignLeft size={18} />
+                  <span>Read Full Literature</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-open-manuscript"
+                  onClick={() => {
+                    setViewingMode('content');
+                    setDisplayMode('paginated');
                     setCurrentPage(1);
                   }}
                   id="btn-open-manuscript"
+                  title="Open manuscript in traditional 3D page-by-page physical book view"
                 >
                   <BookOpen size={18} />
-                  <span>Begin Reading Manuscript</span>
+                  <span>Begin Reading Manuscript (Page by Page)</span>
                 </button>
               </div>
             </div>
@@ -419,87 +458,165 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
             )}
           </header>
 
-          {/* Pagination Controls Top */}
-          <div className="reader-page-controls" id="reader-page-controls-top">
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              disabled={currentPage <= 1 || isFlipping}
-              onClick={() => handlePageChange(currentPage - 1, 'prev')}
-              id="btn-prev-page"
-            >
-              <ChevronLeft size={16} />
-              <span>Previous Page</span>
-            </button>
-
-            <div className="reader-page-indicator" id="reader-page-indicator">
-              Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
+          {/* View Mode Banner / Selector inside Article */}
+          <div className="reader-view-mode-bar" id="reader-view-mode-bar">
+            <div className="view-mode-tab-group">
+              <button
+                type="button"
+                className={`view-mode-tab ${displayMode === 'full' ? 'active' : ''}`}
+                onClick={() => setDisplayMode('full')}
+                id="tab-mode-full"
+              >
+                <AlignLeft size={15} />
+                <span>Full Literature ({totalPages} Cantos / Folios)</span>
+              </button>
+              <button
+                type="button"
+                className={`view-mode-tab ${displayMode === 'paginated' ? 'active' : ''}`}
+                onClick={() => setDisplayMode('paginated')}
+                id="tab-mode-paginated"
+              >
+                <BookOpen size={15} />
+                <span>Page-by-Page Book View</span>
+              </button>
             </div>
-
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              disabled={currentPage >= totalPages || isFlipping}
-              onClick={() => handlePageChange(currentPage + 1, 'next')}
-              id="btn-next-page"
-            >
-              <span>Next Page</span>
-              <ChevronRight size={16} />
-            </button>
           </div>
 
-          {/* Current Page Literary Content with 3D Physical Parchment Page Turn Animation */}
-          <div className="book-page-viewport">
-            <div className={`book-page-sheet ${isFlipping ? (flipDirection === 'next' ? 'flipping-next' : 'flipping-prev') : 'page-settled'}`}>
-              <div className="book-page-inner-folio">
-                <div className="folio-header-indicator">
-                  <span>Folio {currentPage}</span>
-                  <span>{literature.title}</span>
-                  <span>{literature.language}</span>
+          {displayMode === 'paginated' ? (
+            <>
+              {/* Pagination Controls Top */}
+              <div className="reader-page-controls" id="reader-page-controls-top">
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  disabled={currentPage <= 1 || isFlipping}
+                  onClick={() => handlePageChange(currentPage - 1, 'prev')}
+                  id="btn-prev-page"
+                >
+                  <ChevronLeft size={16} />
+                  <span>Previous Page</span>
+                </button>
+
+                <div className="reader-page-indicator" id="reader-page-indicator">
+                  Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
                 </div>
 
-                <div className="reader-content-body" id="reader-body-paragraphs">
-                  {currentContentPageText.split('\n\n').map((para, index) => (
-                    <p key={index}>{para}</p>
-                  ))}
-                </div>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  disabled={currentPage >= totalPages || isFlipping}
+                  onClick={() => handlePageChange(currentPage + 1, 'next')}
+                  id="btn-next-page"
+                >
+                  <span>Next Page</span>
+                  <ChevronRight size={16} />
+                </button>
+              </div>
 
-                <div className="folio-footer-indicator">
-                  <span>Athenæum Classic Manuscript Edition</span>
-                  <span>— {currentPage} —</span>
+              {/* Current Page Literary Content with 3D Physical Parchment Page Turn Animation */}
+              <div className="book-page-viewport">
+                <div className={`book-page-sheet ${isFlipping ? (flipDirection === 'next' ? 'flipping-next' : 'flipping-prev') : 'page-settled'}`}>
+                  <div className="book-page-inner-folio">
+                    <div className="folio-header-indicator">
+                      <span>Folio {currentPage}</span>
+                      <span>{literature.title}</span>
+                      <span>{literature.language}</span>
+                    </div>
+
+                    <div className="reader-content-body" id="reader-body-paragraphs">
+                      {currentContentPageText.split('\n\n').map((para, index) => (
+                        <p key={index}>{para}</p>
+                      ))}
+                    </div>
+
+                    <div className="folio-footer-indicator">
+                      <span>Athenæum Classic Manuscript Edition</span>
+                      <span>— {currentPage} —</span>
+                    </div>
+                  </div>
                 </div>
               </div>
+
+              {/* Pagination Controls Bottom */}
+              <div className="reader-page-controls" id="reader-page-controls-bottom" style={{ marginTop: '2.5rem' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  disabled={currentPage <= 1 || isFlipping}
+                  onClick={() => handlePageChange(currentPage - 1, 'prev', true)}
+                  id="btn-prev-page-bottom"
+                >
+                  <ChevronLeft size={16} />
+                  <span>Previous Page</span>
+                </button>
+
+                <span className="reader-page-indicator">
+                  Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
+                </span>
+
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  disabled={currentPage >= totalPages || isFlipping}
+                  onClick={() => handlePageChange(currentPage + 1, 'next', true)}
+                  id="btn-next-page-bottom"
+                >
+                  <span>Next Page</span>
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </>
+          ) : (
+            /* FULL LITERATURE CONTINUOUS DISPLAY: Displays all pages/chapters in chronological manuscript sequence */
+            <div className="full-literature-container" id="full-literature-container">
+              {/* Quick Jump Index Pill Bar */}
+              <div className="folio-quick-index-bar">
+                <span className="quick-index-label">Folios & Chapters:</span>
+                <div className="quick-index-chips">
+                  {pages.map((_, idx) => (
+                    <a
+                      key={idx}
+                      href={`#folio-section-${idx + 1}`}
+                      className="folio-chip-link"
+                    >
+                      {idx + 1}
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {/* All Pages Rendered Chronologically */}
+              <div className="full-literature-folios-list" id="reader-body-paragraphs">
+                {pages.map((pageText, pageIndex) => (
+                  <section
+                    key={pageIndex}
+                    id={`folio-section-${pageIndex + 1}`}
+                    className="full-literature-folio-card"
+                  >
+                    <div className="full-folio-header">
+                      <div className="full-folio-badge">
+                        <span>Folio {pageIndex + 1} of {totalPages}</span>
+                      </div>
+                      <div className="full-folio-title-mini">
+                        <span>{literature.title}</span>
+                      </div>
+                    </div>
+
+                    <div className="reader-content-body full-mode-body">
+                      {pageText.split('\n\n').map((para, pIdx) => (
+                        <p key={pIdx}>{para}</p>
+                      ))}
+                    </div>
+
+                    <div className="full-folio-footer">
+                      <span className="full-folio-rule">❦</span>
+                      <span className="full-folio-page-num">— {pageIndex + 1} —</span>
+                    </div>
+                  </section>
+                ))}
+              </div>
             </div>
-          </div>
-
-          {/* Pagination Controls Bottom */}
-          <div className="reader-page-controls" id="reader-page-controls-bottom" style={{ marginTop: '2.5rem' }}>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              disabled={currentPage <= 1 || isFlipping}
-              onClick={() => handlePageChange(currentPage - 1, 'prev', true)}
-              id="btn-prev-page-bottom"
-            >
-              <ChevronLeft size={16} />
-              <span>Previous Page</span>
-            </button>
-
-            <span className="reader-page-indicator">
-              Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
-            </span>
-
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              disabled={currentPage >= totalPages || isFlipping}
-              onClick={() => handlePageChange(currentPage + 1, 'next', true)}
-              id="btn-next-page-bottom"
-            >
-              <span>Next Page</span>
-              <ChevronRight size={16} />
-            </button>
-          </div>
+          )}
 
           {/* Thematic Tags */}
           {literature.tags && literature.tags.length > 0 && (
