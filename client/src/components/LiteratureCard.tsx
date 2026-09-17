@@ -36,6 +36,9 @@ interface LiteratureCardProps {
   badge?: string;
   badgeType?: 'popularity' | 'release' | 'category';
   onSelect?: (item: LiteratureItem) => void;
+  user?: any;
+  onOpenAuth?: (mode: 'login' | 'register') => void;
+  onVoteUpdated?: (updatedItem: Partial<LiteratureItem>) => void;
   layout?: 'card' | 'plate' | 'compact';
 }
 
@@ -44,8 +47,68 @@ export const LiteratureCard: React.FC<LiteratureCardProps> = ({
   badge,
   badgeType = 'category',
   onSelect,
+  user,
+  onOpenAuth,
+  onVoteUpdated,
   layout = 'card',
 }) => {
+  const [currentLikes, setCurrentLikes] = React.useState<number>(item.likesCount || 0);
+  const [currentDownvotes, setCurrentDownvotes] = React.useState<number>(item.downvotesCount || 0);
+  const [currentUserVote, setCurrentUserVote] = React.useState<'LIKE' | 'DOWNVOTE' | null>(item.userVote || null);
+  const [voteLoading, setVoteLoading] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    setCurrentLikes(item.likesCount || 0);
+    setCurrentDownvotes(item.downvotesCount || 0);
+    setCurrentUserVote(item.userVote || null);
+  }, [item.likesCount, item.downvotesCount, item.userVote]);
+
+  const handleCardVote = async (e: React.MouseEvent, type: 'LIKE' | 'DOWNVOTE') => {
+    e.stopPropagation();
+    if (!user) {
+      if (onOpenAuth) {
+        onOpenAuth('login');
+      } else if (onSelect) {
+        onSelect(item);
+      }
+      return;
+    }
+
+    try {
+      setVoteLoading(true);
+      const token = localStorage.getItem('literature_token');
+      const res = await fetch(`/api/reader/literature/${item.id}/vote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ type }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Vote request failed');
+      }
+
+      const data = await res.json();
+      setCurrentUserVote(data.userVote);
+      setCurrentLikes(data.likesCount);
+      setCurrentDownvotes(data.downvotesCount);
+
+      if (onVoteUpdated) {
+        onVoteUpdated({
+          id: item.id,
+          userVote: data.userVote,
+          likesCount: data.likesCount,
+          downvotesCount: data.downvotesCount,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to register vote from card:', err);
+    } finally {
+      setVoteLoading(false);
+    }
+  };
   const formattedDate = item.publicationDate
     ? new Date(item.publicationDate).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -161,28 +224,24 @@ export const LiteratureCard: React.FC<LiteratureCardProps> = ({
         <div className="card-quick-actions" onClick={(e) => e.stopPropagation()}>
           <button
             type="button"
-            className="card-action-btn"
-            title={`Read and like ${item.title}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onSelect) onSelect(item);
-            }}
+            className={`card-action-btn ${currentUserVote === 'LIKE' ? 'active-vote-like' : ''}`}
+            title={user ? (currentUserVote === 'LIKE' ? 'Remove like' : `Like ${item.title}`) : 'Sign in to like'}
+            disabled={voteLoading}
+            onClick={(e) => handleCardVote(e, 'LIKE')}
           >
             <span>👍 Like</span>
-            {item.likesCount ? <span className="action-pill-count">{item.likesCount}</span> : null}
+            {currentLikes > 0 ? <span className="action-pill-count">{currentLikes}</span> : null}
           </button>
 
           <button
             type="button"
-            className="card-action-btn"
-            title={`Read and downvote ${item.title}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onSelect) onSelect(item);
-            }}
+            className={`card-action-btn ${currentUserVote === 'DOWNVOTE' ? 'active-vote-downvote' : ''}`}
+            title={user ? (currentUserVote === 'DOWNVOTE' ? 'Remove downvote' : `Downvote ${item.title}`) : 'Sign in to downvote'}
+            disabled={voteLoading}
+            onClick={(e) => handleCardVote(e, 'DOWNVOTE')}
           >
             <span>👎 Downvote</span>
-            {item.downvotesCount ? <span className="action-pill-count">{item.downvotesCount}</span> : null}
+            {currentDownvotes > 0 ? <span className="action-pill-count">{currentDownvotes}</span> : null}
           </button>
 
           <button

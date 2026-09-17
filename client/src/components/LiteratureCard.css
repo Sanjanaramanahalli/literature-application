@@ -272,6 +272,33 @@
   border-radius: 999px;
 }
 
+.card-action-btn.active-vote-like {
+  background-color: var(--accent-burgundy);
+  color: #ffffff;
+  border-color: var(--accent-burgundy);
+}
+
+.card-action-btn.active-vote-like .action-pill-count {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.card-action-btn.active-vote-downvote {
+  background-color: #4a2828;
+  color: #ffffff;
+  border-color: #4a2828;
+}
+
+.card-action-btn.active-vote-downvote .action-pill-count {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.card-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Plate / Horizontal Layout */
 .literature-card.layout-plate {
   flex-direction: row;

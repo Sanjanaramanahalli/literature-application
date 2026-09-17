@@ -460,6 +460,42 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
         </div>
       </div>
 
+      {/* Floating / Sticky Alert Toast for Reader Reactions & Actions */}
+      {feedbackMessage && (
+        <div
+          style={{
+            maxWidth: '680px',
+            margin: '0 auto 1.5rem',
+            padding: '0.75rem 1.25rem',
+            backgroundColor: '#fcf8e3',
+            border: '1px solid #faebcc',
+            borderLeft: '4px solid var(--accent-burgundy)',
+            borderRadius: 'var(--radius-sm)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            boxShadow: '0 4px 12px rgba(44, 24, 16, 0.08)',
+            animation: 'fadeIn 0.2s ease',
+          }}
+          id="reader-floating-feedback"
+        >
+          <span style={{ color: 'var(--accent-burgundy)', fontSize: '0.92rem', fontWeight: 500 }}>
+            {feedbackMessage}
+          </span>
+          {!user && (
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={() => onOpenAuth('login')}
+              style={{ padding: '0.35rem 0.85rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+            >
+              Sign In
+            </button>
+          )}
+        </div>
+      )}
+
       {/* VIEWING MODE 1: DEDICATED COVER PAGE (Appears First) */}
       {viewingMode === 'cover' && (
         <section className="reader-cover-page-card" id="reader-cover-page" data-testid="reader-cover-page">

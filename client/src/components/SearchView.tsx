@@ -6,6 +6,8 @@ import './SearchView.css';
 
 interface SearchViewProps {
   onSelectLiterature?: (item: LiteratureItem) => void;
+  user?: any;
+  onOpenAuth?: (mode: 'login' | 'register') => void;
   initialFilters?: {
     category?: string;
     tag?: string;
@@ -15,6 +17,8 @@ interface SearchViewProps {
 
 export const SearchView: React.FC<SearchViewProps> = ({
   onSelectLiterature,
+  user,
+  onOpenAuth,
   initialFilters,
 }) => {
   const [title, setTitle] = useState('');
@@ -304,6 +308,8 @@ export const SearchView: React.FC<SearchViewProps> = ({
               key={`search-${item.id}`}
               item={item}
               onSelect={onSelectLiterature}
+              user={user}
+              onOpenAuth={onOpenAuth}
             />
           ))}
         </div>

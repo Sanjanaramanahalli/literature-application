@@ -109,6 +109,8 @@ export const App: React.FC = () => {
             {(currentTab === 'home' || currentTab === 'explore' || currentTab === 'categories') && (
               <CatalogView
                 currentTab={currentTab}
+                user={user}
+                onOpenAuth={handleOpenAuth}
                 onSelectLiterature={(item) => {
                   setSelectedLiteratureId(item.id);
                 }}
@@ -117,6 +119,8 @@ export const App: React.FC = () => {
 
             {currentTab === 'search' && (
               <SearchView
+                user={user}
+                onOpenAuth={handleOpenAuth}
                 onSelectLiterature={(item) => {
                   setSelectedLiteratureId(item.id);
                 }}

@@ -14,11 +14,15 @@ interface Category {
 interface CatalogViewProps {
   currentTab: string;
   onSelectLiterature?: (item: LiteratureItem) => void;
+  user?: any;
+  onOpenAuth?: (mode: 'login' | 'register') => void;
 }
 
 export const CatalogView: React.FC<CatalogViewProps> = ({
   currentTab,
   onSelectLiterature,
+  user,
+  onOpenAuth,
 }) => {
   const [featured, setFeatured] = useState<LiteratureItem | null>(null);
   const [popular, setPopular] = useState<LiteratureItem[]>([]);
@@ -210,6 +214,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                 badge={`#${index + 1} Popular`}
                 badgeType="popularity"
                 onSelect={onSelectLiterature}
+                user={user}
+                onOpenAuth={onOpenAuth}
               />
             ))}
           </div>
@@ -235,6 +241,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                 badge="New Edition"
                 badgeType="release"
                 onSelect={onSelectLiterature}
+                user={user}
+                onOpenAuth={onOpenAuth}
               />
             ))}
           </div>
@@ -315,6 +323,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                 key={`all-${item.id}`}
                 item={item}
                 onSelect={onSelectLiterature}
+                user={user}
+                onOpenAuth={onOpenAuth}
               />
             ))}
           </div>
