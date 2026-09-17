@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { randomInt } from 'crypto';
 import { prisma } from '../index.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { sendOtpEmail, getInbox } from '../services/emailService.js';
@@ -299,6 +300,16 @@ authRouter.post('/google', async (req: Request, res: Response): Promise<void> =>
   }
 });
 
+// Rate Limiter for Forgot Password OTP requests (Email & IP)
+interface OtpRateLimitRecord {
+  lastRequestedAt: number;
+  requestCount: number;
+}
+const forgotPasswordRateLimits = new Map<string, OtpRateLimitRecord>();
+const OTP_COOLDOWN_MS = 60 * 1000; // 60-second cooldown between requests for same email
+const OTP_MAX_REQUESTS_WINDOW = 5; // Max 5 requests in 15 minutes
+const OTP_WINDOW_MS = 15 * 60 * 1000;
+
 // In-Memory OTP Registry with 10-minute expiry
 interface OtpRecord {
   otp: string;
@@ -314,15 +325,46 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 authRouter.post('/forgot-password', async (req: Request, res: Response): Promise<void> => {
   const { email } = req.body;
   if (!email || typeof email !== 'string' || !email.trim()) {
-    res.status(400).json({ error: 'Email address is required.' });
+    res.status(400).json({ error: 'Please enter a valid email address.' });
     return;
   }
 
   const normalizedEmail = email.toLowerCase().trim();
 
   if (!EMAIL_REGEX.test(normalizedEmail)) {
-    res.status(400).json({ error: 'Please provide a valid email format.' });
+    res.status(400).json({ error: 'Please enter a valid email address.' });
     return;
+  }
+
+  // Rate Limiting & Cooldown Check
+  const now = Date.now();
+  const rateKey = `${req.ip || 'ip'}_${normalizedEmail}`;
+  const rateLimit = forgotPasswordRateLimits.get(rateKey);
+
+  if (rateLimit) {
+    // Check 60s cooldown
+    if (now - rateLimit.lastRequestedAt < OTP_COOLDOWN_MS) {
+      const waitSeconds = Math.ceil((OTP_COOLDOWN_MS - (now - rateLimit.lastRequestedAt)) / 1000);
+      res.status(429).json({
+        error: `Please wait ${waitSeconds} second${waitSeconds > 1 ? 's' : ''} before requesting another OTP.`
+      });
+      return;
+    }
+    // Check max requests within window
+    if (now - rateLimit.lastRequestedAt < OTP_WINDOW_MS && rateLimit.requestCount >= OTP_MAX_REQUESTS_WINDOW) {
+      res.status(429).json({
+        error: 'Too many OTP requests. Please try again in 15 minutes.'
+      });
+      return;
+    }
+    // Reset window if older than 15 mins
+    if (now - rateLimit.lastRequestedAt >= OTP_WINDOW_MS) {
+      forgotPasswordRateLimits.set(rateKey, { lastRequestedAt: now, requestCount: 1 });
+    } else {
+      forgotPasswordRateLimits.set(rateKey, { lastRequestedAt: now, requestCount: rateLimit.requestCount + 1 });
+    }
+  } else {
+    forgotPasswordRateLimits.set(rateKey, { lastRequestedAt: now, requestCount: 1 });
   }
 
   const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
@@ -331,10 +373,11 @@ authRouter.post('/forgot-password', async (req: Request, res: Response): Promise
     return;
   }
 
-  // Generate cryptographically secure 6-digit OTP (100000 - 999999)
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  // Cryptographically secure 6-digit OTP generation (100000 - 999999)
+  const otp = randomInt(100000, 1000000).toString();
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
 
+  // Replace any existing OTP with newly generated single-use OTP
   otpStore.set(normalizedEmail, {
     otp,
     expiresAt,
@@ -342,14 +385,29 @@ authRouter.post('/forgot-password', async (req: Request, res: Response): Promise
   });
 
   // Dispatches email directly to reader's registered email inbox
-  // Plaintext OTP is NEVER exposed or printed to terminal/console logs
-  await sendOtpEmail(normalizedEmail, otp);
+  // Plaintext OTP is NEVER printed in console/terminal logs
+  try {
+    await sendOtpEmail(normalizedEmail, otp);
+  } catch (deliveryError: any) {
+    console.error(`[AUTH] Failed to send OTP email: ${deliveryError.message || deliveryError}`);
+    otpStore.delete(normalizedEmail);
+    res.status(500).json({ error: 'Unable to send OTP. Please try again later.' });
+    return;
+  }
 
-  res.json({
-    message: 'A 6-digit OTP has been dispatched to your registered email address.',
+  console.log('[AUTH] Password reset OTP request processed');
+
+  const responsePayload: Record<string, any> = {
+    message: 'OTP has been sent to your registered email address.',
     email: normalizedEmail,
-    otpDemo: otp, // Kept in response body for automated tests and dev fallback
-  });
+  };
+
+  // NEVER expose OTP in production responses
+  if (process.env.NODE_ENV !== 'production') {
+    responsePayload.otpDemo = otp;
+  }
+
+  res.json(responsePayload);
 });
 
 // 4a-2. Reader Mailbox / Inbox Reader Endpoint

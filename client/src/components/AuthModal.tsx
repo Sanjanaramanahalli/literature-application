@@ -673,26 +673,42 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 disabled={loading}
               >
                 <RotateCw size={13} className={loading ? 'spin' : ''} />
-                Request New OTP
+                Resend OTP
               </button>
             </div>
 
-            {/* In-app Mailbox Link to read dispatched email */}
-            <div className="inbox-launcher-card">
-              <button
-                type="button"
-                className="btn btn-secondary btn-block btn-inbox"
-                id="btn-open-inbox"
-                onClick={fetchLatestEmail}
-                disabled={inboxLoading}
-              >
-                <Inbox size={15} />
-                {inboxLoading ? 'Checking Mailbox...' : 'Open Registered Mailbox (Received Email)'}
-              </button>
+            <div style={{
+              marginTop: '1rem',
+              padding: '0.85rem 1rem',
+              background: 'var(--bg-parchment-subtle, rgba(243, 238, 230, 0.6))',
+              border: '1px solid var(--border-parchment, #E5DFD5)',
+              borderRadius: '6px',
+              fontSize: '0.85rem',
+              color: 'var(--text-muted, #736B63)',
+              lineHeight: 1.5,
+              textAlign: 'center'
+            }}>
+              📧 A 6-digit OTP has been delivered to your registered email address. Please check your inbox (and spam folder if not found in primary).
             </div>
 
-            {/* Simulated Mailbox Drawer/Card */}
-            {showInbox && inboxMessage && (
+            {/* Development-only Simulated Mailbox Link (Hidden in Production) */}
+            {import.meta.env.DEV && (
+              <div className="inbox-launcher-card" style={{ marginTop: '0.75rem' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-block btn-inbox"
+                  id="btn-open-inbox"
+                  onClick={fetchLatestEmail}
+                  disabled={inboxLoading}
+                >
+                  <Inbox size={15} />
+                  {inboxLoading ? 'Checking Local Mailbox...' : 'Local Dev Mailbox (Dev Mode Only)'}
+                </button>
+              </div>
+            )}
+
+            {/* Simulated Mailbox Drawer/Card in DEV */}
+            {import.meta.env.DEV && showInbox && inboxMessage && (
               <div className="mailbox-card" id="mailbox-preview">
                 <div className="mailbox-header">
                   <span className="mailbox-subject">{inboxMessage.subject}</span>
