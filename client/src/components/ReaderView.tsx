@@ -275,13 +275,24 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
           <div className="cover-page-inner">
             {literature.coverImage ? (
               <div className="cover-page-artwork-container">
-                <img
-                  src={literature.coverImage}
-                  alt={`Cover artwork for ${literature.title}`}
-                  className="cover-page-main-img"
-                  id="reader-cover-image"
-                />
-                <div className="cover-page-folio-tag">Athenæum Folio Edition</div>
+                <div className="book-3d-wrapper">
+                  <div className="book-spine-shadow" />
+                  <div className="book-cover-hardcover">
+                    <img
+                      src={literature.coverImage}
+                      alt={`Cover artwork for ${literature.title}`}
+                      className="cover-page-main-img"
+                      id="reader-cover-image"
+                    />
+                    <div className="book-spine-ridge" />
+                    <div className="book-glare-overlay" />
+                  </div>
+                </div>
+                <div className="cover-page-folio-tag">
+                  {literature.language === 'Kannada' ? 'ಕನ್ನಡ ಸಾಹಿತ್ಯ ಸಂಪುಟ • Athenæum Edition' :
+                   literature.language === 'Hindi' ? 'हिंदी साहित्य निधि • Athenæum Edition' :
+                   'Athenæum Classical Folio Edition'}
+                </div>
               </div>
             ) : (
               <div className="cover-page-placeholder-artwork">
