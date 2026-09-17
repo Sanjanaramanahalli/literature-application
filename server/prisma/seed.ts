@@ -145,45 +145,29 @@ async function main() {
     tagNames.map((name) => prisma.tag.create({ data: { name } }))
   );
 
+  // Helper to generate 15-page canonical manuscript texts
+  const create15PageContent = (headerTitle: string, baseText: string): string => {
+    const pages: string[] = [];
+    for (let p = 1; p <= 15; p++) {
+      pages.push(`[ Folio ${p} — ${headerTitle} ]\n\n${baseText}\n\n[End of Folio ${p} archival entry]`);
+    }
+    return pages.join('\n\n---page---\n\n');
+  };
+
   // 6. Create Literatures
   const lit1 = await prisma.literature.create({
     data: {
       title: 'Hamlet, Prince of Denmark',
       subheading: 'A Tragedy of Solitude, Betrayal, and the Burden of Vengeance',
       brief: 'Shakespeare’s quintessential tragedy explores the psychological fracture of Denmark’s grieving prince confronted by spectral revelation.',
-      content: `ACT I. SCENE I. Elsinore. A platform before the Castle.
-
+      content: create15PageContent(
+        'Hamlet, Prince of Denmark',
+        `ACT I. SCENE I. Elsinore. A platform before the Castle.
 FRANCISCO at his post. Enter to him BERNARDO.
-
-BERNARDO.
-Who’s there?
-
-FRANCISCO.
-Nay, answer me. Stand and unfold yourself.
-
-BERNARDO.
-Long live the king!
-
-FRANCISCO.
-Bernardo?
-
-BERNARDO.
-He.
-
-FRANCISCO.
-You come most carefully upon your hour.
-
-BERNARDO.
-’Tis now struck twelve; get thee to bed, Francisco.
-
-FRANCISCO.
-For this relief much thanks; ’tis bitter cold,
-And I am sick at heart.
-
-...
-
-HAMLET.
-To be, or not to be, that is the question:
+BERNARDO: Who’s there?
+FRANCISCO: Nay, answer me. Stand and unfold yourself.
+BERNARDO: Long live the king!
+HAMLET: To be, or not to be, that is the question:
 Whether ’tis nobler in the mind to suffer
 The slings and arrows of outrageous fortune,
 Or to take arms against a sea of troubles
@@ -191,11 +175,8 @@ And by opposing end them. To die—to sleep,
 No more; and by a sleep to say we end
 The heart-ache and the thousand natural shocks
 That flesh is heir to: ’tis a consummation
-Devoutly to be wish’d. To die, to sleep;
-To sleep, perchance to dream—ay, there’s the rub:
-For in that sleep of death what dreams may come,
-When we have shuffled off this mortal coil,
-Must give us pause.`,
+Devoutly to be wish’d.`
+      ),
       language: 'English',
       subject: 'Morality and Revenge',
       genre: 'Tragedy',
@@ -212,15 +193,11 @@ Must give us pause.`,
       title: 'The Death of Ivan Ilyich',
       subheading: 'An Inquest into an Ordinary Life and the Awakening of the Spirit',
       brief: 'Tolstoy’s novella examining the mortal dread, bureaucratic vanity, and ultimate spiritual grace of a high-court judge.',
-      content: `During an interval in the Melvinski trial in the large building of the Law Courts the members and public prosecutor met in Ivan Egorovich Shebek’s private room, where the conversation turned on the celebrated Krasovski case. Fedor Vasilievich warmly maintained that there was no crime, Ivan Egorovich maintained the contrary, while Peter Ivanovich, not having entered into the discussion at the start, took no part in it but looked through the Gazette which had just been handed in.
-
-“Gentlemen,” he said, “Ivan Ilyich has died!”
-
-“You don’t say so!”
-
-“Here, read it yourself,” replied Peter Ivanovich, handing Fedor Vasilievich the paper still damp from the press.
-
-Ivan Ilyich’s life had been most simple and most ordinary and therefore most terrible. He had been a member of the Court of Justice, and died at the age of forty-five. His father was an official who had made his career in Petersburg in various ministries and departments—a type of man who reaches a position from which they can never be dismissed.`,
+      content: create15PageContent(
+        'The Death of Ivan Ilyich',
+        `During an interval in the Melvinski trial in the large building of the Law Courts the members and public prosecutor met in Ivan Egorovich Shebek’s private room, where the conversation turned on the celebrated Krasovski case.
+Ivan Ilyich’s life had been most simple and most ordinary and therefore most terrible. He had been a member of the Court of Justice, and died at the age of forty-five. His father was an official who had made his career in Petersburg in various ministries and departments.`
+      ),
       language: 'English',
       subject: 'Mortality & Ethics',
       genre: 'Philosophical Fiction',
@@ -237,11 +214,11 @@ Ivan Ilyich’s life had been most simple and most ordinary and therefore most t
       title: 'Modern Fiction & The Common Reader',
       subheading: 'Observations on Form, Consciousness, and the Art of the Novel',
       brief: 'Virginia Woolf dismantles Edwardian materialism to champion an authentic rendering of the luminous halo of lived consciousness.',
-      content: `In making any survey, even the freest and loosest, of modern fiction, it is difficult not to take it for granted that the modern practice of the art is somehow an improvement upon the old. With their simple tools and primitive materials, it might be said, Fielding did well and Jane Austen even better, but compare their opportunities with ours! Their masterpieces certainly have a strange air of simplicity.
-
-Look within and life, it seems, is very far from being “like this”. Examine for a moment an ordinary mind on an ordinary day. The mind receives a myriad impressions—trivial, fantastic, evanescent, or engraved with the sharpness of steel. From all sides they come, an incessant shower of innumerable atoms; and as they fall, as they shape themselves into the life of Monday or Tuesday, the accent falls differently from of old.
-
-Life is not a series of gig lamps symmetrically arranged; life is a luminous halo, a semitransparent envelope surrounding us from the beginning of consciousness to the end. Is it not the task of the novelist to convey this varying, this unknown and uncircumscribed spirit, whatever aberration or complexity it may display, with as little mixture of the alien and external as possible?`,
+      content: create15PageContent(
+        'Modern Fiction & The Common Reader',
+        `In making any survey, even the freest and loosest, of modern fiction, it is difficult not to take it for granted that the modern practice of the art is somehow an improvement upon the old.
+Look within and life, it seems, is very far from being “like this”. Examine for a moment an ordinary mind on an ordinary day. The mind receives a myriad impressions—trivial, fantastic, evanescent, or engraved with the sharpness of steel.`
+      ),
       language: 'English',
       subject: 'Literary Criticism',
       genre: 'Essay',
@@ -260,11 +237,8 @@ Life is not a series of gig lamps symmetrically arranged; life is a luminous hal
       brief: 'Chekhov’s exploration of romantic entanglements, theatrical ambition, and artistic vanity at a Russian country estate.',
       content: `ACT I. The park on SORIN’S estate. A broad avenue leads toward a lake. A makeshift stage has been erected for an outdoor theatrical performance.
 
-MEDVEDENKO.
-Why do you always wear black?
-
-MASHA.
-I am in mourning for my life. I am unhappy.`,
+MEDVEDENKO: Why do you always wear black?
+MASHA: I am in mourning for my life. I am unhappy.`,
       language: 'English',
       subject: 'Art and Unrequited Love',
       genre: 'Drama',
@@ -280,13 +254,13 @@ I am in mourning for my life. I am unhappy.`,
       title: 'गोदान (Godan)',
       subheading: 'भारतीय ग्रामीण जीवन एवं किसान चेतना का अमर महाकाव्य',
       brief: 'मुंशी प्रेमचंद का कालजयी उपन्यास जो भारतीय ग्रामीण समाज, आर्थिक संघर्ष, और मानवीय गरिमा का जीवंत चित्रण करता है।',
-      content: `होरी महतो ने बैलों को सानी-पानी देकर अपने छोटे भाई सोभा के घर की ओर देखा। सोभा अपने द्वार पर बैठा चिलम पी रहा था।
-
+      content: create15PageContent(
+        'गोदान (Godan)',
+        `होरी महतो ने बैलों को सानी-पानी देकर अपने छोटे भाई सोभा के घर की ओर देखा। सोभा अपने द्वार पर बैठा चिलम पी रहा था।
 होरी ने कहा — क्यों भाई, आज कुछ काम-धंधा नहीं है क्या?
-
 सोभा ने चिलम का कश खींचते हुए उत्तर दिया — काम-धंधा क्या करें महतो, जब खेती में बरक्कत ही न रही। लगान चुकाते-चुकाते देह की खाल खिंच गई।
-
-होरी मन ही मन सोचने लगा कि किसान का धर्म केवल धरती को सींचना और मर्यादा की रक्षा करना है। एक गाय की लालसा उसके हृदय में वर्षों से पल रही थी। गोदान केवल एक दान नहीं, अपितु जीवन की अंतिम आकांक्षा और मुक्ति का प्रतीक था। हिंदी साहित्य का यह कालजयी उपन्यास भारतीय किसान के अदम्य साहस और संवेदना का शाश्वत प्रमाण है।`,
+होरी मन ही मन सोचने लगा कि किसान का धर्म केवल धरती को सींचना और मर्यादा की रक्षा करना है। एक गाय की लालसा उसके हृदय में वर्षों से पल रही थी। गोदान केवल एक दान नहीं, अपितु जीवन की अंतिम आकांक्षा और मुक्ति का प्रतीक था।`
+      ),
       language: 'Hindi',
       subject: 'सामाजिक यथार्थ एवं ग्रामीण जीवन',
       genre: 'Classic Realism',
@@ -303,9 +277,11 @@ I am in mourning for my life. I am unhappy.`,
       title: 'ಮಲೆಗಳಲ್ಲಿ ಮದುಮಗಳು (Malegalalli Madumagalu)',
       subheading: 'ಮಲೆನಾಡಿನ ಪ್ರಕೃತಿ, ಸಂಸ್ಕೃತಿ ಮತ್ತು ಜೀವಸ್ಪಂದನದ ಮಹಾಕಾವ್ಯ',
       brief: 'ರಾಷ್ಟ್ರಕವಿ ಕುವೆಂಪು ಅವರ ಮೇರು ಕೃತಿ, ಮಲೆನಾಡಿನ ಗಿರಿ-ಕಂದರಗಳ ನಡುವಿನ ಮನುಷ್ಯ ಬದುಕಿನ ಅನನ್ಯ ಚಿತ್ರಣವನ್ನು ಕಟ್ಟಿಕೊಡುತ್ತದೆ.',
-      content: `ಮಲೆನಾಡಿನ ಹಸುರು ಕಾನನದ ನಡುವೆ ಕಾವೇರಿಯಂತೆ ಹರಿಯುವ ನಿಸರ್ಗದ ಸಿರಿಯಲ್ಲಿ ಬದುಕು ಒಂದು ಸುಂದರ ವಿಸ್ಮಯ. ತೀರ್ಥಹಳ್ಳಿಯ ಸುತ್ತಲಿನ ಗುಡ್ಡ-ಬೆಟ್ಟಗಳ ನಡುವೆ, ಮಳೆಗಾಲದ ಮಂಜು ಮುಸುಕಿದ ಬೆಟ್ಟಗಳ ಸಾಲಿನಲ್ಲಿ ಹುಟ್ಟಿದ ಕಥೆ ಇದು.
-
-ಚಿನ್ನಮ್ಮ ಮತ್ತು ಮುಕುಂದಯ್ಯನ ಪ್ರೇಮ ಕಥೆಯು ಕೇವಲ ಇಬ್ಬರ ಹೃದಯದ ಮಿಡಿತವಲ್ಲ; ಅದು ಮಲೆನಾಡಿನ ಸಮಗ್ರ ಸಂಸ್ಕೃತಿ, ಪರಿಸರ ಮತ್ತು ನಿತ್ಯ ನೂತನ ಚೇತನದ ಅನಾವರಣ. ಮನುಷ್ಯನ ಆಸೆ-ನಿರಾಶೆಗಳು ಪ್ರಕೃತಿಯ ಮಹಾ ಲಯದೊಂದಿಗೆ ಹೇಗೆ ಒಂದಾಗುತ್ತವೆ ಎಂಬುದನ್ನು ಕುವೆಂಪು ಅವರು ತಮ್ಮ ಅಪೂರ್ವ ಲೇಖನಿಯಿಂದ ಜಾದೂವಿನಂತೆ ಮೂಡಿಸಿದ್ದಾರೆ. ಕನ್ನಡ ಸಾಹಿತ್ಯ ಲೋಕದಲ್ಲಿ ಈ ಕೃತಿ ಚಿರಂತನ ತಾರೆ.`,
+      content: create15PageContent(
+        'ಮಲೆಗಳಲ್ಲಿ ಮದುಮಗಳು (Malegalalli Madumagalu)',
+        `ಮಲೆನಾಡಿನ ಹಸುರು ಕಾನನದ ನಡುವೆ ಕಾವೇರಿಯಂತೆ ಹರಿಯುವ ನಿಸರ್ಗದ ಸಿರಿಯಲ್ಲಿ ಬದುಕು ಒಂದು ಸುಂದರ ವಿಸ್ಮಯ. ತೀರ್ಥಹಳ್ಳಿಯ ಸುತ್ತಲಿನ ಗುಡ್ಡ-ಬೆಟ್ಟಗಳ ನಡುವೆ, ಮಳೆಗಾಲದ ಮಂಜು ಮುಸುಕಿದ ಬೆಟ್ಟಗಳ ಸಾಲಿನಲ್ಲಿ ಹುಟ್ಟಿದ ಕಥೆ ಇದು.
+ಚಿನ್ನಮ್ಮ ಮತ್ತು ಮುಕುಂದಯ್ಯನ ಪ್ರೇಮ ಕಥೆಯು ಕೇವಲ ಇಬ್ಬರ ಹೃದಯದ ಮಿಡಿತವಲ್ಲ; ಅದು ಮಲೆನಾಡಿನ ಸಮಗ್ರ ಸಂಸ್ಕೃತಿ, ಪರಿಸರ ಮತ್ತು ನಿತ್ಯ ನೂತನ ಚೇತನದ ಅನಾವರಣ. ಮನುಷ್ಯನ ಆಸೆ-ನಿರಾಶೆಗಳು ಪ್ರಕೃತಿಯ ಮಹಾ ಲಯದೊಂದಿಗೆ ಹೇಗೆ ಒಂದಾಗುತ್ತವೆ ಎಂಬುದನ್ನು ಕುವೆಂಪು ಅವರು ತಮ್ಮ ಅಪೂರ್ವ ಲೇಖನಿಯಿಂದ ಜಾದೂವಿನಂತೆ ಮೂಡಿಸಿದ್ದಾರೆ.`
+      ),
       language: 'Kannada',
       subject: 'ಪರಿಸರ ಪ್ರಜ್ಞೆ ಮತ್ತು ಮಾನವೀಯ ಸಂಬಂಧಗಳು',
       genre: 'Epic Novel',

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import path from 'path';
 
 test.describe('Sprint 16 / LIT-16: Admin Dashboard, KPI Cards & Admin Secret Invitation Key', () => {
   const ADMIN_KEY = 'ath_cur_sec_9f83a27e4b1c8d5062a4192d';
@@ -177,7 +178,15 @@ test.describe('Sprint 16 / LIT-16: Admin Dashboard, KPI Cards & Admin Secret Inv
     const hindiTitle = `निर्मला (Nirmala) - Test ${Date.now()}`;
     await page.fill('#lit-title', hindiTitle);
     await page.fill('#lit-brief', 'मुंशी प्रेमचंद का संवेदनशील उपन्यास।');
-    await page.fill('#lit-content', 'यह एक अनमोल साहित्यिक कृति है जो दहेज और अनमेल विवाह की समस्या को उठाती है।');
+    
+    // Provide >13 pages content and cover image to meet publishing requirement
+    const testCoverPath = path.join(__dirname, 'fixtures', 'sprint17-test-cover.png');
+    await page.locator('#file-input-cover').setInputFiles(testCoverPath);
+    const pages: string[] = [];
+    for (let p = 1; p <= 15; p++) {
+      pages.push(`[ पृष्ठ ${p} ]\nमुंशी प्रेमचंद का कालजयी उपन्यास निर्मला पृष्ठ क्रमांक ${p}। यह अनमोल साहित्यिक कृति दहेज और अनमेल विवाह की समस्या को उठाती है।`);
+    }
+    await page.fill('#lit-content', pages.join('\n\n---page---\n\n'));
     await page.selectOption('#lit-language', 'Hindi');
 
     // Save as Draft first

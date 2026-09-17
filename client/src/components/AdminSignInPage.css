@@ -1,0 +1,143 @@
+.admin-signin-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 280px);
+  padding: 2.5rem 1rem;
+}
+
+.admin-signin-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-classic, #e2dcd2);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 12px 36px rgba(44, 24, 16, 0.08);
+  width: 100%;
+  max-width: 480px;
+  padding: 2.5rem 2.25rem;
+  position: relative;
+}
+
+.admin-signin-back {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #6b645b);
+  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 1.5rem;
+  transition: color 0.15s ease;
+}
+
+.admin-signin-back:hover {
+  color: var(--accent-burgundy, #6b1d2f);
+}
+
+.admin-signin-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.admin-signin-crest {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(107, 29, 47, 0.1) 0%, rgba(184, 134, 11, 0.15) 100%);
+  border: 2px solid var(--accent-gold, #b8860b);
+  color: var(--accent-burgundy, #6b1d2f);
+  margin-bottom: 1rem;
+}
+
+.admin-signin-badge {
+  display: inline-block;
+  background-color: rgba(107, 29, 47, 0.08);
+  color: var(--accent-burgundy, #6b1d2f);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  margin-bottom: 0.5rem;
+  border: 1px solid rgba(107, 29, 47, 0.2);
+}
+
+.admin-signin-title {
+  font-size: 2rem;
+  color: var(--accent-burgundy, #6b1d2f);
+  margin-bottom: 0.5rem;
+}
+
+.admin-signin-subtitle {
+  color: var(--text-secondary, #6b645b);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.admin-signin-error {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.88rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.admin-signin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.admin-signin-meta-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted, #8c827a);
+  background: var(--bg-secondary, #faf7f2);
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px dashed var(--border-classic, #e2dcd2);
+}
+
+.admin-submit-btn {
+  width: 100%;
+  padding: 0.85rem;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  background-color: var(--accent-burgundy, #6b1d2f);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-submit-btn:hover:not(:disabled) {
+  background-color: #521523;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(107, 29, 47, 0.25);
+}
+
+.admin-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}

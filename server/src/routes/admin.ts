@@ -69,6 +69,23 @@ adminRouter.post(
   }
 );
 
+// 1b. Helper: Calculate Page Count
+// Supports explicit page breaks (---page--- or <!-- pagebreak --> or \f) OR standard ~250 words per book page
+export const calculatePageCount = (text: string): number => {
+  if (!text || !text.trim()) return 0;
+  const trimmed = text.trim();
+  
+  // If author/curator explicitly inserted page break markers
+  if (trimmed.includes('---page---') || trimmed.includes('<!-- pagebreak -->') || trimmed.includes('\f')) {
+    const segments = trimmed.split(/---page---|<!-- pagebreak -->|\f/g).filter(s => s.trim().length > 0);
+    return Math.max(1, segments.length);
+  }
+
+  // Standard publication pagination: ~250 words per standard book page
+  const words = trimmed.split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(words / 250));
+};
+
 // 2. Create Literature (Draft or Published)
 adminRouter.post(
   '/literature',
@@ -91,12 +108,47 @@ adminRouter.post(
         tags,
       } = req.body;
 
-      if (!title || !brief || !content || !creatorId || !categoryId) {
-        res.status(400).json({ error: 'Title, brief, content, creator, and category are required.' });
+      if (!title || !title.trim()) {
+        res.status(400).json({ error: 'Title is required.' });
+        return;
+      }
+
+      if (!brief || !brief.trim()) {
+        res.status(400).json({ error: 'Brief summary is required.' });
+        return;
+      }
+
+      if (!content || !content.trim()) {
+        res.status(400).json({ error: 'Literature content is required and cannot be empty.' });
+        return;
+      }
+
+      if (!creatorId || !categoryId) {
+        res.status(400).json({ error: 'Author/Creator and Category are required.' });
         return;
       }
 
       const status = publicationStatus === 'PUBLISHED' ? 'PUBLISHED' : 'DRAFT';
+      const pageCount = calculatePageCount(content);
+
+      // Requirements for PUBLISHED works:
+      // 1. Mandatory Cover Page
+      // 2. More than 13 pages content (> 13 pages, i.e., at least 14 pages)
+      if (status === 'PUBLISHED') {
+        if (!coverImage || !String(coverImage).trim()) {
+          res.status(400).json({ error: 'A dedicated cover page is required before literature can be published.' });
+          return;
+        }
+
+        if (pageCount <= 13) {
+          res.status(400).json({
+            error: `Literature content must contain more than 13 pages to be published (currently contains ${pageCount} pages). Please provide complete literature content.`,
+            pageCount,
+          });
+          return;
+        }
+      }
+
       const publicationDate = status === 'PUBLISHED' ? new Date() : null;
 
       const literature = await prisma.literature.create({
@@ -282,8 +334,34 @@ adminRouter.put(
       const updateData: any = { ...rest };
       if (publicationStatus) {
         updateData.publicationStatus = publicationStatus;
-        if (publicationStatus === 'PUBLISHED' && !existing.publicationDate) {
-          updateData.publicationDate = new Date();
+
+        // If transitioning to or updating as PUBLISHED, enforce requirements
+        if (publicationStatus === 'PUBLISHED') {
+          const checkCover = updateData.coverImage !== undefined ? updateData.coverImage : existing.coverImage;
+          const checkContent = updateData.content !== undefined ? updateData.content : existing.content;
+
+          if (!checkCover || !String(checkCover).trim()) {
+            res.status(400).json({ error: 'A dedicated cover page is required before literature can be published.' });
+            return;
+          }
+
+          if (!checkContent || !checkContent.trim()) {
+            res.status(400).json({ error: 'Literature content cannot be empty.' });
+            return;
+          }
+
+          const pageCount = calculatePageCount(checkContent);
+          if (pageCount <= 13) {
+            res.status(400).json({
+              error: `Literature content must contain more than 13 pages to be published (currently contains ${pageCount} pages). Please provide complete literature content.`,
+              pageCount,
+            });
+            return;
+          }
+
+          if (!existing.publicationDate) {
+            updateData.publicationDate = new Date();
+          }
         }
       }
 

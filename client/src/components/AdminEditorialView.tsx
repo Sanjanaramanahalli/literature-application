@@ -123,12 +123,14 @@ interface LiteratureItem {
 interface AdminEditorialViewProps {
   user: any;
   onOpenAuth: (mode: 'login' | 'register') => void;
+  onNavigateAdminSignIn?: () => void;
   onViewLiterature?: (id: string) => void;
 }
 
 export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
   user,
   onOpenAuth,
+  onNavigateAdminSignIn,
   onViewLiterature,
 }) => {
   // Navigation tabs: 'create' | 'manage' | 'analytics'
@@ -337,6 +339,20 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
     }
   };
 
+  // Calculate Page Count Helper
+  const calculateContentPages = (text: string): number => {
+    if (!text || !text.trim()) return 0;
+    const trimmed = text.trim();
+    if (trimmed.includes('---page---') || trimmed.includes('<!-- pagebreak -->') || trimmed.includes('\f')) {
+      const segments = trimmed.split(/---page---|<!-- pagebreak -->|\f/g).filter((s) => s.trim().length > 0);
+      return Math.max(1, segments.length);
+    }
+    const words = trimmed.split(/\s+/).filter(Boolean).length;
+    return Math.max(1, Math.ceil(words / 250));
+  };
+
+  const currentContentPages = calculateContentPages(content);
+
   // Submit Literature (Draft or Published)
   const handleSubmitLiterature = async (targetStatus: 'DRAFT' | 'PUBLISHED') => {
     if (!title.trim() || !brief.trim() || !content.trim()) {
@@ -355,6 +371,27 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
     if (!categoryId) {
       setAlertMsg({ type: 'error', text: 'Please select a literature category.' });
       return;
+    }
+
+    // Publication Requirements Check:
+    // 1. Cover Page required before publishing
+    // 2. Minimum > 13 pages content required before publishing
+    if (targetStatus === 'PUBLISHED') {
+      if (!coverFile && !coverPreview) {
+        setAlertMsg({
+          type: 'error',
+          text: 'A dedicated Cover Page is required before literature can be published. Please upload a cover image.',
+        });
+        return;
+      }
+
+      if (currentContentPages <= 13) {
+        setAlertMsg({
+          type: 'error',
+          text: `Literature content must contain more than 13 pages to be published (currently contains ${currentContentPages} pages). Please expand the manuscript content.`,
+        });
+        return;
+      }
     }
 
     setLoading(true);
@@ -524,7 +561,13 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
           <button
             className="btn-publish"
             style={{ margin: '0 auto' }}
-            onClick={() => onOpenAuth('login')}
+            onClick={() => {
+              if (onNavigateAdminSignIn) {
+                onNavigateAdminSignIn();
+              } else {
+                onOpenAuth('login');
+              }
+            }}
             id="btn-admin-login-guard"
           >
             Authenticate as Administrator
@@ -1266,17 +1309,32 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
               </div>
 
               <div className="form-group">
-                <label className="form-label" htmlFor="lit-content">
-                  Manuscript Canonical Text <span style={{ color: 'var(--accent-burgundy)' }}>*</span>
-                </label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                  <label className="form-label" htmlFor="lit-content" style={{ margin: 0 }}>
+                    Manuscript Canonical Text <span style={{ color: 'var(--accent-burgundy)' }}>*</span>
+                  </label>
+                  <span
+                    className={`tag-badge ${currentContentPages > 13 ? 'green' : 'burgundy'}`}
+                    id="badge-content-page-count"
+                    title={currentContentPages > 13 ? 'Content meets >13 pages publication requirement' : 'More than 13 pages required to publish'}
+                  >
+                    📄 {currentContentPages} {currentContentPages === 1 ? 'Page' : 'Pages'} (Requirement: &gt;13 Pages)
+                  </span>
+                </div>
                 <textarea
                   id="lit-content"
                   className="form-textarea"
-                  placeholder="Enter canonical text, chapters, cantos, or verses..."
+                  style={{ minHeight: '180px' }}
+                  placeholder="Enter canonical text, chapters, cantos, or verses. Delimit pages using '---page---' or standard ~250 words per page..."
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   required
                 />
+                <p style={{ fontSize: '0.8rem', color: currentContentPages > 13 ? '#166534' : 'var(--accent-burgundy)', marginTop: '0.35rem', fontWeight: 500 }} id="content-page-requirement-hint">
+                  {currentContentPages > 13
+                    ? `✓ Minimum page requirement met (${currentContentPages} pages). Ready for publication review.`
+                    : `⚠️ Publication requirement: Literature must contain more than 13 pages (currently ${currentContentPages} ${currentContentPages === 1 ? 'page' : 'pages'}). Save as Draft is permitted at any length.`}
+                </p>
               </div>
 
               <div className="form-group-inline">
@@ -1348,7 +1406,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
             {/* Right Column: Local Cover Upload & Preview */}
             <div>
               <label className="form-label">
-                Manuscript Cover Art
+                Manuscript Cover Art <span style={{ color: 'var(--accent-burgundy)' }}>* (Required to Publish)</span>
                 <span className="form-label-optional">(JPEG, PNG, WebP ≤ 5MB)</span>
               </label>
 

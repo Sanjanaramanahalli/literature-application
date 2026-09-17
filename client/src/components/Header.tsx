@@ -80,7 +80,7 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          {user?.role === 'ADMIN' && (
+          {user?.role === 'ADMIN' ? (
             <button
               className={`nav-link admin-nav-link ${currentTab === 'admin' ? 'active' : ''}`}
               onClick={() => handleNav('admin')}
@@ -88,6 +88,16 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <ShieldCheck size={16} style={{ marginRight: '4px' }} />
               Admin Dashboard
+            </button>
+          ) : (
+            <button
+              className={`nav-link admin-nav-link ${currentTab === 'admin-signin' ? 'active' : ''}`}
+              onClick={() => handleNav('admin-signin')}
+              id="nav-admin-signin"
+              title="Dedicated Curator / Administrator Sign-In"
+            >
+              <ShieldCheck size={15} style={{ marginRight: '4px' }} />
+              Admin Sign-In
             </button>
           )}
         </nav>
@@ -157,9 +167,13 @@ export const Header: React.FC<HeaderProps> = ({
               Saved Works
             </button>
           )}
-          {user?.role === 'ADMIN' && (
+          {user?.role === 'ADMIN' ? (
             <button className="mobile-nav-link admin-nav-link" onClick={() => handleNav('admin')}>
               Admin Dashboard
+            </button>
+          ) : (
+            <button className="mobile-nav-link admin-nav-link" onClick={() => handleNav('admin-signin')}>
+              Admin Sign-In
             </button>
           )}
         </div>

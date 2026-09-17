@@ -6,6 +6,7 @@ import { SearchView } from './components/SearchView';
 import { ReaderView } from './components/ReaderView';
 import { SavedWorksView } from './components/SavedWorksView';
 import { AdminEditorialView } from './components/AdminEditorialView';
+import { AdminSignInPage } from './components/AdminSignInPage';
 import './components/Header.css';
 import './components/AuthModal.css';
 
@@ -59,17 +60,19 @@ export const App: React.FC = () => {
       />
       <main style={{ flex: 1, padding: '2.5rem 1.5rem', maxWidth: '1240px', margin: '0 auto', width: '100%' }}>
         {/* Welcome Sanctuary Hero Banner */}
-        <div style={{ textAlign: 'center', padding: '2rem 1rem 1.5rem', marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: 'var(--accent-burgundy)' }} id="sanctuary-welcome-heading">
-            Welcome to the Athenæum
-          </h1>
-          <p style={{ maxWidth: '680px', margin: '0 auto', color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: '1.6' }}>
-            A dedicated sanctuary for discovering, reading, and contemplating timeless works of world literature.
-          </p>
-        </div>
+        {currentTab !== 'admin-signin' && (
+          <div style={{ textAlign: 'center', padding: '2rem 1rem 1.5rem', marginBottom: '1.5rem' }}>
+            <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: 'var(--accent-burgundy)' }} id="sanctuary-welcome-heading">
+              Welcome to the Athenæum
+            </h1>
+            <p style={{ maxWidth: '680px', margin: '0 auto', color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: '1.6' }}>
+              A dedicated sanctuary for discovering, reading, and contemplating timeless works of world literature.
+            </p>
+          </div>
+        )}
 
         {/* Active user greeting pill */}
-        {user && (
+        {user && currentTab !== 'admin-signin' && (
           <div
             style={{
               marginBottom: '2rem',
@@ -135,9 +138,20 @@ export const App: React.FC = () => {
           <AdminEditorialView
             user={user}
             onOpenAuth={handleOpenAuth}
+            onNavigateAdminSignIn={() => setCurrentTab('admin-signin')}
             onViewLiterature={(id) => {
               setSelectedLiteratureId(id);
             }}
+          />
+        )}
+
+        {currentTab === 'admin-signin' && (
+          <AdminSignInPage
+            onSuccess={(authenticatedAdmin) => {
+              setUser(authenticatedAdmin);
+              setCurrentTab('admin');
+            }}
+            onNavigateHome={() => setCurrentTab('home')}
           />
         )}
       </main>

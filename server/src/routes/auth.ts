@@ -187,6 +187,58 @@ authRouter.post('/login', async (req: Request, res: Response): Promise<void> => 
   }
 });
 
+// 2b. Dedicated Admin Sign-In Endpoint (strictly enforces ADMIN role)
+authRouter.post('/admin-login', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      res.status(400).json({ error: 'Admin email and password are required.' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase().trim() },
+    });
+
+    if (!user || !user.passwordHash) {
+      res.status(401).json({ error: 'Invalid admin credentials.' });
+      return;
+    }
+
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) {
+      res.status(401).json({ error: 'Invalid admin credentials.' });
+      return;
+    }
+
+    if (user.role !== 'ADMIN') {
+      res.status(403).json({ error: 'Access denied: Reader accounts are not authorized to access the Admin Studio.' });
+      return;
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role, name: user.name },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      message: 'Admin authentication successful',
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err: any) {
+    console.error('Admin login error:', err);
+    res.status(500).json({ error: 'Failed to authenticate administrator.' });
+  }
+});
+
 // 3. Dual-Mode Google OAuth Authentication
 authRouter.post('/google', async (req: Request, res: Response): Promise<void> => {
   try {
