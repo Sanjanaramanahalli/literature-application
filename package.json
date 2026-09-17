@@ -9,8 +9,12 @@
     "dev:client": "npm --prefix client run dev",
     "seed": "npm --prefix server run seed",
     "test:e2e": "playwright test",
-    "vercel-build": "cd server && npm install && npx prisma generate && npm run build && cd ../client && npm install && npm run build"
+    "vercel-build": "npm --prefix server run prisma:generate && npm --prefix server run build && npm --prefix client run build"
   },
+  "workspaces": [
+    "server",
+    "client"
+  ],
   "devDependencies": {
     "@playwright/test": "^1.49.0",
     "@types/node": "^22.20.3",
