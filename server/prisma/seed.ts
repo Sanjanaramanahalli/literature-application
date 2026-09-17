@@ -9,6 +9,10 @@ import {
   samskaraPages,
   beralgeKoralPages,
   kavyaManjariPages,
+  kamayaniPages,
+  madhushalaPages,
+  rashmirathiPages,
+  gabanPages,
 } from './classicalLiteratureTexts.js';
 
 const prisma = new PrismaClient();
@@ -159,9 +163,30 @@ async function main() {
         roleType: 'AUTHOR',
       },
     }),
+    prisma.creator.create({
+      data: {
+        name: 'Jaishankar Prasad (जयशंकर प्रसाद)',
+        bio: 'Major figure of modern Hindi literature and theatre, stalwart of the Chhayavad (Romantic/Mystic) movement.',
+        roleType: 'BOTH',
+      },
+    }),
+    prisma.creator.create({
+      data: {
+        name: 'Harivansh Rai Bachchan (हरिवंश राय बच्चन)',
+        bio: 'Renowned Hindi poet and writer of the Nayi Kavita literary movement, celebrated worldwide for Madhushala.',
+        roleType: 'POET',
+      },
+    }),
+    prisma.creator.create({
+      data: {
+        name: 'Ramdhari Singh Dinkar (रामधारी सिंह दिनकर)',
+        bio: 'Eminent Hindi poet, essayist and freedom fighter, honored as Rashtrakavi for his rousing nationalist and epic poetry.',
+        roleType: 'POET',
+      },
+    }),
   ]);
 
-  const [shakes, tolstoy, woolf, chekhov, premchand, kuvempu, bendre, ananthamurthy] = creators;
+  const [shakes, tolstoy, woolf, chekhov, premchand, kuvempu, bendre, ananthamurthy, prasad, bachchan, dinkar] = creators;
 
   // 5. Create Tags
   const tagNames = ['Tragedy', 'Philosophy', 'Morality', 'Modernism', 'Victorian', 'Existentialism'];
@@ -376,6 +401,74 @@ MASHA: I am in mourning for my life. I am unhappy.`,
     },
   });
 
+  const lit12Kamayani = await prisma.literature.create({
+    data: {
+      title: 'कामायनी (Kamayani)',
+      subheading: 'मानव चेतना, समरसता एवं आनंद का छायावादी अमर महाकाव्य',
+      brief: 'जयशंकर प्रसाद की कालजयी कृति जिसमें मनु, श्रद्धा और इड़ा के माध्यम से मानव मन के द्वंद्व, इच्छा, ज्ञान और कर्म की समरसता का दार्शनिक निरूपण हुआ है।',
+      content: kamayaniPages.join('\n\n---page---\n\n'),
+      language: 'Hindi',
+      subject: 'मानव चेतना एवं समरसता दर्शन',
+      genre: 'Epic Poetry',
+      coverImage: '/covers/hindi-kamayani.jpg',
+      publicationStatus: 'PUBLISHED',
+      publicationDate: new Date('2026-09-17T08:30:00Z'),
+      creatorId: prasad.id,
+      categoryId: catPoetry.id,
+    },
+  });
+
+  const lit13Madhushala = await prisma.literature.create({
+    data: {
+      title: 'मधुशाला (Madhushala)',
+      subheading: 'जीवन, प्रेम और सार्वभौमिक बंधुत्व की अमर रुबाइयों का संसार',
+      brief: 'हरिवंश राय बच्चन की सर्वाधिक लोकप्रिय कृति जिसमें साकी, हाला, प्याला और मधुशाला के रूपकों द्वारा जीवन की क्षणभंगुरता और मस्ती का गान है।',
+      content: madhushalaPages.join('\n\n---page---\n\n'),
+      language: 'Hindi',
+      subject: 'हालावाद, जीवन-दर्शन एवं सार्वभौमिक सद्भाव',
+      genre: 'Philosophical Poetry',
+      coverImage: '/covers/hindi-madhushala.jpg',
+      publicationStatus: 'PUBLISHED',
+      publicationDate: new Date('2026-09-17T09:00:00Z'),
+      creatorId: bachchan.id,
+      categoryId: catPoetry.id,
+    },
+  });
+
+  const lit14Rashmirathi = await prisma.literature.create({
+    data: {
+      title: 'रश्मिरथी (Rashmirathi)',
+      subheading: 'सूर्यपुत्र कर्ण के शौर्य, दानवीरता और न्याय-संघर्ष का ओजस्वी खंडकाव्य',
+      brief: 'राष्ट्रकवि रामधारी सिंह दिनकर रचित यह महाकाव्य कर्ण के संघर्ष, सामाजिक उपेक्षा, अटूट मित्रता और महाभारत में उसके त्याग की गौरवगाथा है।',
+      content: rashmirathiPages.join('\n\n---page---\n\n'),
+      language: 'Hindi',
+      subject: 'शौर्य, दानशीलता एवं न्याय-संघर्ष',
+      genre: 'Heroic Poetry',
+      coverImage: '/covers/hindi-rashmirathi.jpg',
+      publicationStatus: 'PUBLISHED',
+      publicationDate: new Date('2026-09-17T09:30:00Z'),
+      creatorId: dinkar.id,
+      categoryId: catPoetry.id,
+    },
+  });
+
+  const lit15Gaban = await prisma.literature.create({
+    data: {
+      title: 'गबन (Gaban)',
+      subheading: 'मध्यवर्गीय झूठी प्रतिष्ठा, आभूषण-लालसा और नैतिक पतन का यथार्थवादी उपन्यास',
+      brief: 'मुंशी प्रेमचंद का प्रसिद्ध उपन्यास जो जालपा के चंद्रहार-प्रेम, रमानाथ की कमजोरी तथा समाज में व्याप्त दिखावे की विसंगतियों को बेनकाब करता है।',
+      content: gabanPages.join('\n\n---page---\n\n'),
+      language: 'Hindi',
+      subject: 'सामाजिक यथार्थ एवं नैतिक चेतना',
+      genre: 'Classic Realism',
+      coverImage: '/covers/hindi-gaban.jpg',
+      publicationStatus: 'PUBLISHED',
+      publicationDate: new Date('2026-09-17T10:00:00Z'),
+      creatorId: premchand.id,
+      categoryId: catClassics.id,
+    },
+  });
+
   // Attach Tags
   await prisma.literatureTag.createMany({
     data: [
@@ -394,6 +487,12 @@ MASHA: I am in mourning for my life. I am unhappy.`,
       { literatureId: lit10Natakagalu.id, tagId: tags[0].id }, // Tragedy
       { literatureId: lit10Natakagalu.id, tagId: tags[2].id }, // Morality
       { literatureId: lit11Kavya.id, tagId: tags[1].id }, // Philosophy
+      { literatureId: lit12Kamayani.id, tagId: tags[1].id }, // Philosophy
+      { literatureId: lit12Kamayani.id, tagId: tags[3].id }, // Modernism
+      { literatureId: lit13Madhushala.id, tagId: tags[1].id }, // Philosophy
+      { literatureId: lit14Rashmirathi.id, tagId: tags[0].id }, // Tragedy
+      { literatureId: lit14Rashmirathi.id, tagId: tags[2].id }, // Morality
+      { literatureId: lit15Gaban.id, tagId: tags[2].id }, // Morality
     ],
   });
 
@@ -468,6 +567,34 @@ MASHA: I am in mourning for my life. I am unhappy.`,
       literatureId: lit11Kavya.id,
     },
   });
+  await prisma.rating.create({
+    data: {
+      value: 5,
+      userId: reader1.id,
+      literatureId: lit12Kamayani.id,
+    },
+  });
+  await prisma.rating.create({
+    data: {
+      value: 5,
+      userId: reader2.id,
+      literatureId: lit13Madhushala.id,
+    },
+  });
+  await prisma.rating.create({
+    data: {
+      value: 5,
+      userId: reader1.id,
+      literatureId: lit14Rashmirathi.id,
+    },
+  });
+  await prisma.rating.create({
+    data: {
+      value: 5,
+      userId: reader2.id,
+      literatureId: lit15Gaban.id,
+    },
+  });
 
   // 8. Seed Saves
   await prisma.save.create({
@@ -492,6 +619,24 @@ MASHA: I am in mourning for my life. I am unhappy.`,
     data: {
       userId: reader2.id,
       literatureId: lit8Nakutanti.id,
+    },
+  });
+  await prisma.save.create({
+    data: {
+      userId: reader1.id,
+      literatureId: lit12Kamayani.id,
+    },
+  });
+  await prisma.save.create({
+    data: {
+      userId: reader2.id,
+      literatureId: lit13Madhushala.id,
+    },
+  });
+  await prisma.save.create({
+    data: {
+      userId: reader1.id,
+      literatureId: lit14Rashmirathi.id,
     },
   });
 
@@ -543,6 +688,31 @@ MASHA: I am in mourning for my life. I am unhappy.`,
       content: 'ಬೇಂದ್ರೆಯವರ ನಾಕುತಂತಿಯ ಲಯ ಮತ್ತು ನಾದಮಾಧುರ್ಯ ಓದುತ್ತಿದ್ದಂತೆ ಹೊಸ ಅಂತರಂಗ ಲೋಕವನ್ನೇ ತೆರೆಯುತ್ತದೆ.',
       userId: reader2.id,
       literatureId: lit8Nakutanti.id,
+    },
+  });
+
+  const comment5 = await prisma.comment.create({
+    data: {
+      content: '‘कामायनी’ में प्रसाद जी ने ज्ञान, इच्छा और क्रिया के समन्वय का जो दर्शन प्रस्तुत किया है, वह संपूर्ण विश्व साहित्य में अद्वितीय है।',
+      userId: reader1.id,
+      literatureId: lit12Kamayani.id,
+    },
+  });
+
+  await prisma.comment.create({
+    data: {
+      content: 'श्रद्धा का यह कथन ‘नारी तुम केवल श्रद्धा हो, विश्वास-रजत-नग-पग-तल में’ भारतीय चेतना का शाश्वत अमर स्वर है।',
+      userId: reader2.id,
+      literatureId: lit12Kamayani.id,
+      parentId: comment5.id,
+    },
+  });
+
+  const comment6 = await prisma.comment.create({
+    data: {
+      content: '‘रश्मिरथी’ का कृष्ण की चेतावनी प्रसंग रोंगटे खड़े कर देने वाला है — ‘जब नाश मनुज पर छाता है, पहले विवेक मर जाता है।’ दिनकर जी की ओजस्विता बेमिसाल है।',
+      userId: reader1.id,
+      literatureId: lit14Rashmirathi.id,
     },
   });
 
