@@ -31,6 +31,22 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
   });
 };
 
+export const optionalAuthenticateToken = (req: AuthRequest, _res: Response, next: NextFunction): void => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return next();
+  }
+
+  jwt.verify(token, JWT_SECRET, (err: any, decoded: any) => {
+    if (!err && decoded) {
+      req.user = decoded;
+    }
+    next();
+  });
+};
+
 export const requireRole = (requiredRole: 'ADMIN' | 'READER') => {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {

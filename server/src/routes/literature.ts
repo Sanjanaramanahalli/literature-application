@@ -46,6 +46,7 @@ literatureRouter.get('/', async (req: Request, res: Response): Promise<void> => 
         ratings: true,
         saves: true,
         comments: true,
+        votes: true,
       },
       orderBy: { publicationDate: 'desc' },
     });
@@ -56,6 +57,9 @@ literatureRouter.get('/', async (req: Request, res: Response): Promise<void> => 
         totalRatingsCount > 0
           ? Number((item.ratings.reduce((acc, r) => acc + r.value, 0) / totalRatingsCount).toFixed(1))
           : 0;
+
+      const likesCount = item.votes.filter((v) => v.type === 'LIKE').length;
+      const downvotesCount = item.votes.filter((v) => v.type === 'DOWNVOTE').length;
 
       return {
         id: item.id,
@@ -75,7 +79,9 @@ literatureRouter.get('/', async (req: Request, res: Response): Promise<void> => 
         averageRating,
         totalSavesCount: item.saves.length,
         totalCommentsCount: item.comments.length,
-        popularityScore: totalRatingsCount + item.saves.length + item.comments.length,
+        likesCount,
+        downvotesCount,
+        popularityScore: totalRatingsCount + item.saves.length + item.comments.length + likesCount,
       };
     });
 
@@ -147,7 +153,7 @@ literatureRouter.get('/featured', async (req: Request, res: Response): Promise<v
   }
 });
 
-// 3. Get Popular Literature (Strict formula: Total Ratings Count + Total Saves + Total Comments)
+// 3. Get Popular Literature (Strict formula: Total Ratings Count + Total Saves + Total Comments + Likes)
 literatureRouter.get('/popular', async (req: Request, res: Response): Promise<void> => {
   try {
     const items = await prisma.literature.findMany({
@@ -159,6 +165,7 @@ literatureRouter.get('/popular', async (req: Request, res: Response): Promise<vo
         ratings: true,
         saves: true,
         comments: true,
+        votes: true,
       },
     });
 
@@ -168,6 +175,9 @@ literatureRouter.get('/popular', async (req: Request, res: Response): Promise<vo
         totalRatingsCount > 0
           ? Number((item.ratings.reduce((acc, r) => acc + r.value, 0) / totalRatingsCount).toFixed(1))
           : 0;
+
+      const likesCount = item.votes.filter((v) => v.type === 'LIKE').length;
+      const downvotesCount = item.votes.filter((v) => v.type === 'DOWNVOTE').length;
 
       return {
         id: item.id,
@@ -185,7 +195,9 @@ literatureRouter.get('/popular', async (req: Request, res: Response): Promise<vo
         averageRating,
         totalSavesCount: item.saves.length,
         totalCommentsCount: item.comments.length,
-        popularityScore: totalRatingsCount + item.saves.length + item.comments.length,
+        likesCount,
+        downvotesCount,
+        popularityScore: totalRatingsCount + item.saves.length + item.comments.length + likesCount,
       };
     });
 
@@ -218,6 +230,7 @@ literatureRouter.get('/new-releases', async (req: Request, res: Response): Promi
         ratings: true,
         saves: true,
         comments: true,
+        votes: true,
       },
       orderBy: { publicationDate: 'desc' },
       take: limit,
@@ -229,6 +242,9 @@ literatureRouter.get('/new-releases', async (req: Request, res: Response): Promi
         totalRatingsCount > 0
           ? Number((item.ratings.reduce((acc, r) => acc + r.value, 0) / totalRatingsCount).toFixed(1))
           : 0;
+
+      const likesCount = item.votes.filter((v) => v.type === 'LIKE').length;
+      const downvotesCount = item.votes.filter((v) => v.type === 'DOWNVOTE').length;
 
       return {
         id: item.id,
@@ -246,6 +262,8 @@ literatureRouter.get('/new-releases', async (req: Request, res: Response): Promi
         averageRating,
         totalSavesCount: item.saves.length,
         totalCommentsCount: item.comments.length,
+        likesCount,
+        downvotesCount,
       };
     });
 

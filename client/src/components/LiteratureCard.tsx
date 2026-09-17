@@ -25,6 +25,9 @@ export interface LiteratureItem {
   averageRating: number;
   totalSavesCount: number;
   totalCommentsCount: number;
+  likesCount?: number;
+  downvotesCount?: number;
+  userVote?: 'LIKE' | 'DOWNVOTE' | null;
   popularityScore?: number;
 }
 
@@ -139,12 +142,86 @@ export const LiteratureCard: React.FC<LiteratureCardProps> = ({
               <span>{item.totalCommentsCount}</span>
             </span>
 
+            {item.likesCount !== undefined && (
+              <span className="metric-item" title={`${item.likesCount} readers liked this work`}>
+                <span style={{ fontSize: '0.82rem' }}>👍</span>
+                <span>{item.likesCount}</span>
+              </span>
+            )}
+
             {item.popularityScore !== undefined && (
-              <span className="metric-score" title="Popularity Score (Ratings + Saves + Comments)">
+              <span className="metric-score" title="Popularity Score (Ratings + Saves + Comments + Likes)">
                 Score: {item.popularityScore}
               </span>
             )}
           </div>
+        </div>
+
+        {/* Quick Action Interactive Toolbar: Like, Downvote, Share */}
+        <div className="card-quick-actions" onClick={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            className="card-action-btn"
+            title={`Read and like ${item.title}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onSelect) onSelect(item);
+            }}
+          >
+            <span>👍 Like</span>
+            {item.likesCount ? <span className="action-pill-count">{item.likesCount}</span> : null}
+          </button>
+
+          <button
+            type="button"
+            className="card-action-btn"
+            title={`Read and downvote ${item.title}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onSelect) onSelect(item);
+            }}
+          >
+            <span>👎 Downvote</span>
+            {item.downvotesCount ? <span className="action-pill-count">{item.downvotesCount}</span> : null}
+          </button>
+
+          <button
+            type="button"
+            className="card-action-btn btn-card-share"
+            title="Share this literature"
+            onClick={async (e) => {
+              e.stopPropagation();
+              const shareUrl = `${window.location.origin}/#literature-${item.id}`;
+              const shareData = {
+                title: item.title,
+                text: `Read "${item.title}" ${item.creator ? `by ${item.creator.name}` : ''} on Athenæum Classic Literature Sanctuary.`,
+                url: shareUrl,
+              };
+
+              if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+                try {
+                  await navigator.share(shareData);
+                  return;
+                } catch (err) {
+                  // User dismissed or fallback
+                }
+              }
+
+              try {
+                await navigator.clipboard.writeText(shareUrl);
+                const btn = e.currentTarget;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<span>✓ Copied!</span>';
+                setTimeout(() => {
+                  btn.innerHTML = originalText;
+                }, 2000);
+              } catch (err) {
+                alert(`Share URL: ${shareUrl}`);
+              }
+            }}
+          >
+            <span>🔗 Share</span>
+          </button>
         </div>
 
         {formattedDate && (

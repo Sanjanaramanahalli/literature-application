@@ -1,13 +1,14 @@
 import { Router, Response } from 'express';
 import { prisma } from '../index.js';
-import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { authenticateToken, optionalAuthenticateToken, AuthRequest } from '../middleware/auth.js';
 
 export const readerRouter = Router();
 
-// 1. Get literature details by ID (with user-specific rating and save state if authenticated)
-readerRouter.get('/literature/:id', async (req: AuthRequest, res: Response): Promise<void> => {
+// 1. Get literature details by ID (with user-specific rating, save, and vote states if authenticated)
+readerRouter.get('/literature/:id', optionalAuthenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+    const currentUserId = req.user?.userId;
 
     const item = await prisma.literature.findUnique({
       where: { id },
@@ -17,6 +18,7 @@ readerRouter.get('/literature/:id', async (req: AuthRequest, res: Response): Pro
         tags: { include: { tag: true } },
         ratings: true,
         saves: true,
+        votes: true,
         comments: {
           where: { parentId: null }, // Top-level comments
           include: {
@@ -44,6 +46,23 @@ readerRouter.get('/literature/:id', async (req: AuthRequest, res: Response): Pro
         ? Number((item.ratings.reduce((acc, r) => acc + r.value, 0) / totalRatingsCount).toFixed(1))
         : 0;
 
+    const likesCount = item.votes.filter((v) => v.type === 'LIKE').length;
+    const downvotesCount = item.votes.filter((v) => v.type === 'DOWNVOTE').length;
+    
+    let userVote: 'LIKE' | 'DOWNVOTE' | null = null;
+    let isSavedByUser = false;
+    let userRatingVal = 0;
+
+    if (currentUserId) {
+      const foundVote = item.votes.find((v) => v.userId === currentUserId);
+      if (foundVote) userVote = foundVote.type as 'LIKE' | 'DOWNVOTE';
+
+      isSavedByUser = item.saves.some((s) => s.userId === currentUserId);
+
+      const foundRating = item.ratings.find((r) => r.userId === currentUserId);
+      if (foundRating) userRatingVal = foundRating.value;
+    }
+
     res.json({
       literature: {
         id: item.id,
@@ -61,7 +80,12 @@ readerRouter.get('/literature/:id', async (req: AuthRequest, res: Response): Pro
         tags: item.tags.map((t) => t.tag.name),
         totalRatingsCount,
         averageRating,
+        userRating: userRatingVal,
         totalSavesCount: item.saves.length,
+        isSaved: isSavedByUser,
+        likesCount,
+        downvotesCount,
+        userVote,
         comments: item.comments,
       },
     });
@@ -161,6 +185,85 @@ readerRouter.post('/literature/:id/save', authenticateToken, async (req: AuthReq
   } catch (err) {
     console.error('Save toggle error:', err);
     res.status(500).json({ error: 'Failed to toggle save.' });
+  }
+});
+
+// 3b. Like / Downvote Literature Vote System
+readerRouter.post('/literature/:id/vote', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { type } = req.body; // 'LIKE' or 'DOWNVOTE'
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+
+    if (!type || !['LIKE', 'DOWNVOTE'].includes(type)) {
+      res.status(400).json({ error: 'Invalid vote type. Must be LIKE or DOWNVOTE.' });
+      return;
+    }
+
+    const existingVote = await prisma.literatureVote.findUnique({
+      where: {
+        userId_literatureId: {
+          userId,
+          literatureId: id,
+        },
+      },
+    });
+
+    let activeUserVote: 'LIKE' | 'DOWNVOTE' | null = null;
+
+    if (existingVote) {
+      if (existingVote.type === type) {
+        // Toggle off if clicking the same vote button again
+        await prisma.literatureVote.delete({ where: { id: existingVote.id } });
+        activeUserVote = null;
+      } else {
+        // Switch from LIKE to DOWNVOTE or vice versa
+        await prisma.literatureVote.update({
+          where: { id: existingVote.id },
+          data: { type },
+        });
+        activeUserVote = type as 'LIKE' | 'DOWNVOTE';
+      }
+    } else {
+      // Create new vote
+      await prisma.literatureVote.create({
+        data: {
+          userId,
+          literatureId: id,
+          type,
+        },
+      });
+      activeUserVote = type as 'LIKE' | 'DOWNVOTE';
+    }
+
+    // Get updated counts
+    const likesCount = await prisma.literatureVote.count({
+      where: { literatureId: id, type: 'LIKE' },
+    });
+    const downvotesCount = await prisma.literatureVote.count({
+      where: { literatureId: id, type: 'DOWNVOTE' },
+    });
+
+    res.json({
+      success: true,
+      userVote: activeUserVote,
+      likesCount,
+      downvotesCount,
+      message:
+        activeUserVote === 'LIKE'
+          ? 'You liked this literature.'
+          : activeUserVote === 'DOWNVOTE'
+          ? 'You downvoted this literature.'
+          : 'Your vote was removed.',
+    });
+  } catch (err) {
+    console.error('Vote submission error:', err);
+    res.status(500).json({ error: 'Failed to record vote.' });
   }
 });
 

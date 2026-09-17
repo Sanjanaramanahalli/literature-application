@@ -1,5 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Star, Bookmark, Calendar, Globe, Tag, BookOpen, ChevronLeft, ChevronRight, AlignLeft, Layers } from 'lucide-react';
+import {
+  ArrowLeft,
+  Star,
+  Bookmark,
+  Calendar,
+  Globe,
+  Tag,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  AlignLeft,
+  Layers,
+  ThumbsUp,
+  ThumbsDown,
+  Share2,
+  Check,
+} from 'lucide-react';
 import { ThreadedComments } from './ThreadedComments';
 import type { LiteratureItem } from './LiteratureCard';
 import './ReaderView.css';
@@ -44,6 +60,15 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [savesCount, setSavesCount] = useState<number>(0);
   const [saveLoading, setSaveLoading] = useState<boolean>(false);
+
+  // Like & Downvote Reaction States
+  const [userVote, setUserVote] = useState<'LIKE' | 'DOWNVOTE' | null>(null);
+  const [likesCount, setLikesCount] = useState<number>(0);
+  const [downvotesCount, setDownvotesCount] = useState<number>(0);
+  const [voteLoading, setVoteLoading] = useState<boolean>(false);
+
+  // Share notification state
+  const [copiedShare, setCopiedShare] = useState<boolean>(false);
 
   // Dedicated Cover Page & Pagination States
   // 'cover' = initial view showing Cover Page first
@@ -95,6 +120,11 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       setAverageRating(item.averageRating || 0);
       setTotalRatingsCount(item.totalRatingsCount || 0);
       setSavesCount(item.totalSavesCount || 0);
+      setLikesCount(item.likesCount || 0);
+      setDownvotesCount(item.downvotesCount || 0);
+      if (item.userVote) setUserVote(item.userVote);
+      if (item.isSaved !== undefined) setIsSaved(item.isSaved);
+      if (item.userRating) setUserRating(item.userRating);
 
       // Check if item is saved in user's library if authenticated
       if (token && user) {
@@ -188,6 +218,75 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       setFeedbackMessage(err.message || 'Error updating saved status.');
     } finally {
       setSaveLoading(false);
+    }
+  };
+
+  // Vote System: Like and Downvote Handler
+  const handleVote = async (type: 'LIKE' | 'DOWNVOTE') => {
+    if (!user) {
+      setFeedbackMessage(`Please sign in to ${type === 'LIKE' ? 'like' : 'downvote'} this classical work.`);
+      onOpenAuth('login');
+      return;
+    }
+
+    try {
+      setVoteLoading(true);
+      setFeedbackMessage(null);
+      const token = localStorage.getItem('literature_token');
+      const res = await fetch(`/api/reader/literature/${literatureId}/vote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ type }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to register vote.');
+      }
+
+      const data = await res.json();
+      setUserVote(data.userVote);
+      setLikesCount(data.likesCount);
+      setDownvotesCount(data.downvotesCount);
+      setFeedbackMessage(data.message);
+    } catch (err: any) {
+      console.error('Vote error:', err);
+      setFeedbackMessage(err.message || 'Error recording vote.');
+    } finally {
+      setVoteLoading(false);
+    }
+  };
+
+  // Share Handler with Native Web Share API + Clipboard Fallback
+  const handleShare = async () => {
+    if (!literature) return;
+    const shareUrl = `${window.location.origin}/#literature-${literature.id}`;
+    const shareData = {
+      title: literature.title,
+      text: `Read "${literature.title}" ${literature.creator ? `by ${literature.creator.name}` : ''} on Athenæum Classic Literature Sanctuary.`,
+      url: shareUrl,
+    };
+
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        setFeedbackMessage('Shared successfully.');
+        return;
+      } catch (err) {
+        // Dismissed by user
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedShare(true);
+      setFeedbackMessage('Sanctuary share link copied to clipboard!');
+      setTimeout(() => setCopiedShare(false), 2500);
+    } catch (err) {
+      setFeedbackMessage(`Share link: ${shareUrl}`);
     }
   };
 
@@ -288,6 +387,60 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
               </button>
             </>
           )}
+
+          {/* Reader Like Action */}
+          <button
+            className={`btn ${userVote === 'LIKE' ? 'btn-primary' : 'btn-secondary'} btn-sm btn-vote-like`}
+            onClick={() => handleVote('LIKE')}
+            disabled={voteLoading}
+            id="btn-reader-like"
+            title={userVote === 'LIKE' ? 'Unlike this literature' : 'Like this literature'}
+          >
+            <ThumbsUp
+              size={14}
+              fill={userVote === 'LIKE' ? 'currentColor' : 'transparent'}
+              style={{ marginRight: '4px' }}
+            />
+            <span>Like</span>
+            <span style={{ opacity: 0.9, marginLeft: '4px', fontWeight: 600 }}>({likesCount})</span>
+          </button>
+
+          {/* Reader Downvote Action */}
+          <button
+            className={`btn ${userVote === 'DOWNVOTE' ? 'btn-primary' : 'btn-secondary'} btn-sm btn-vote-downvote`}
+            onClick={() => handleVote('DOWNVOTE')}
+            disabled={voteLoading}
+            id="btn-reader-downvote"
+            title={userVote === 'DOWNVOTE' ? 'Remove downvote' : 'Downvote this literature'}
+          >
+            <ThumbsDown
+              size={14}
+              fill={userVote === 'DOWNVOTE' ? 'currentColor' : 'transparent'}
+              style={{ marginRight: '4px' }}
+            />
+            <span>Downvote</span>
+            <span style={{ opacity: 0.9, marginLeft: '4px', fontWeight: 600 }}>({downvotesCount})</span>
+          </button>
+
+          {/* Reader Share Action */}
+          <button
+            className="btn btn-secondary btn-sm btn-reader-share"
+            onClick={handleShare}
+            id="btn-reader-share"
+            title="Share this literature"
+          >
+            {copiedShare ? (
+              <>
+                <Check size={14} style={{ marginRight: '4px', color: 'var(--accent-gold)' }} />
+                <span>Copied!</span>
+              </>
+            ) : (
+              <>
+                <Share2 size={14} style={{ marginRight: '4px' }} />
+                <span>Share</span>
+              </>
+            )}
+          </button>
 
           <button
             className={`btn ${isSaved ? 'btn-primary' : 'btn-secondary'} btn-sm`}
@@ -428,6 +581,61 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                 >
                   <BookOpen size={18} />
                   <span>Begin Reading Manuscript (Page by Page)</span>
+                </button>
+              </div>
+
+              {/* Cover Page Reaction Toolbar: Like, Downvote, Share */}
+              <div className="cover-page-reactions-toolbar" style={{ marginTop: '1.25rem', display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className={`btn-reader-reaction ${userVote === 'LIKE' ? 'active-like' : ''}`}
+                  onClick={() => handleVote('LIKE')}
+                  disabled={voteLoading}
+                  id="btn-cover-like"
+                  title={userVote === 'LIKE' ? 'Unlike this literature' : 'Like this literature'}
+                >
+                  <ThumbsUp
+                    size={16}
+                    fill={userVote === 'LIKE' ? 'currentColor' : 'transparent'}
+                  />
+                  <span>Like</span>
+                  <span className="reaction-count-pill">({likesCount})</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`btn-reader-reaction ${userVote === 'DOWNVOTE' ? 'active-downvote' : ''}`}
+                  onClick={() => handleVote('DOWNVOTE')}
+                  disabled={voteLoading}
+                  id="btn-cover-downvote"
+                  title={userVote === 'DOWNVOTE' ? 'Remove downvote' : 'Downvote this literature'}
+                >
+                  <ThumbsDown
+                    size={16}
+                    fill={userVote === 'DOWNVOTE' ? 'currentColor' : 'transparent'}
+                  />
+                  <span>Downvote</span>
+                  <span className="reaction-count-pill">({downvotesCount})</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="btn-reader-reaction btn-reader-share"
+                  onClick={handleShare}
+                  id="btn-cover-share"
+                  title="Share this literature"
+                >
+                  {copiedShare ? (
+                    <>
+                      <Check size={16} style={{ color: '#27ae60' }} />
+                      <span style={{ color: '#27ae60', fontWeight: 600 }}>Copied Link!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 size={16} />
+                      <span>Share</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -653,6 +861,60 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
         <p className="rating-section-desc">
           Rate this classical work on a 1–5 star scale. Each scholar holds one active rating, dynamically contributing to the archival average.
         </p>
+
+        <div className="reader-reaction-section" style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
+          <button
+            type="button"
+            className={`btn-reader-reaction ${userVote === 'LIKE' ? 'active-like' : ''}`}
+            onClick={() => handleVote('LIKE')}
+            disabled={voteLoading}
+            id="btn-eval-like"
+            title={userVote === 'LIKE' ? 'Unlike this literature' : 'Like this literature'}
+          >
+            <ThumbsUp
+              size={18}
+              fill={userVote === 'LIKE' ? 'currentColor' : 'transparent'}
+            />
+            <span>Like Work</span>
+            <span className="reaction-count-pill">({likesCount})</span>
+          </button>
+
+          <button
+            type="button"
+            className={`btn-reader-reaction ${userVote === 'DOWNVOTE' ? 'active-downvote' : ''}`}
+            onClick={() => handleVote('DOWNVOTE')}
+            disabled={voteLoading}
+            id="btn-eval-downvote"
+            title={userVote === 'DOWNVOTE' ? 'Remove downvote' : 'Downvote this literature'}
+          >
+            <ThumbsDown
+              size={18}
+              fill={userVote === 'DOWNVOTE' ? 'currentColor' : 'transparent'}
+            />
+            <span>Downvote Work</span>
+            <span className="reaction-count-pill">({downvotesCount})</span>
+          </button>
+
+          <button
+            type="button"
+            className="btn-reader-reaction btn-reader-share"
+            onClick={handleShare}
+            id="btn-eval-share"
+            title="Share this literature with colleagues"
+          >
+            {copiedShare ? (
+              <>
+                <Check size={18} style={{ color: '#27ae60' }} />
+                <span style={{ color: '#27ae60', fontWeight: 600 }}>Copied Link!</span>
+              </>
+            ) : (
+              <>
+                <Share2 size={18} />
+                <span>Share Literature</span>
+              </>
+            )}
+          </button>
+        </div>
 
         <div className="interactive-stars-widget" id="interactive-stars-widget">
           {[1, 2, 3, 4, 5].map((star) => {

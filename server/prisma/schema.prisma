@@ -21,6 +21,7 @@ model User {
   ratings      Rating[]
   saves        Save[]
   comments     Comment[]
+  votes        LiteratureVote[]
 }
 
 model Creator {
@@ -66,6 +67,7 @@ model Literature {
   ratings           Rating[]
   saves             Save[]
   comments          Comment[]
+  votes             LiteratureVote[]
 
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
@@ -127,4 +129,18 @@ model Comment {
 
   parent       Comment?   @relation("ThreadedReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies      Comment[]  @relation("ThreadedReplies")
+}
+
+model LiteratureVote {
+  id           String     @id @default(uuid())
+  type         String     // "LIKE" or "DOWNVOTE"
+  userId       String
+  literatureId String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  literature   Literature @relation(fields: [literatureId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, literatureId])
 }

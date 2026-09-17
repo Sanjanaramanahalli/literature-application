@@ -63,6 +63,30 @@ export const prisma: PrismaClient =
     },
   });
 
+// Automatically ensure LiteratureVote table exists in the SQLite database
+async function initDbTables() {
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "LiteratureVote" (
+        "id" TEXT NOT NULL PRIMARY KEY,
+        "type" TEXT NOT NULL,
+        "userId" TEXT NOT NULL,
+        "literatureId" TEXT NOT NULL,
+        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "LiteratureVote_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        CONSTRAINT "LiteratureVote_literatureId_fkey" FOREIGN KEY ("literatureId") REFERENCES "Literature" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+      );
+    `);
+    await prisma.$executeRawUnsafe(`
+      CREATE UNIQUE INDEX IF NOT EXISTS "LiteratureVote_userId_literatureId_key" ON "LiteratureVote"("userId", "literatureId");
+    `);
+  } catch (err) {
+    console.error('[Database] Failed to verify LiteratureVote table:', err);
+  }
+}
+initDbTables();
+
 if (process.env.NODE_ENV !== 'production') {
   global.__db__ = prisma;
 }

@@ -73,6 +73,7 @@ searchRouter.get('/advanced', async (req: Request, res: Response): Promise<void>
         ratings: true,
         saves: true,
         comments: true,
+        votes: true,
       },
       orderBy: { publicationDate: 'desc' },
     });
@@ -83,6 +84,9 @@ searchRouter.get('/advanced', async (req: Request, res: Response): Promise<void>
         totalRatingsCount > 0
           ? Number((item.ratings.reduce((acc, r) => acc + r.value, 0) / totalRatingsCount).toFixed(1))
           : 0;
+
+      const likesCount = item.votes.filter((v) => v.type === 'LIKE').length;
+      const downvotesCount = item.votes.filter((v) => v.type === 'DOWNVOTE').length;
 
       return {
         id: item.id,
@@ -99,6 +103,10 @@ searchRouter.get('/advanced', async (req: Request, res: Response): Promise<void>
         tags: item.tags.map((t) => t.tag.name),
         totalRatingsCount,
         averageRating,
+        totalSavesCount: item.saves.length,
+        totalCommentsCount: item.comments.length,
+        likesCount,
+        downvotesCount,
       };
     });
 

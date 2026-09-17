@@ -223,6 +223,7 @@ adminRouter.get(
           ratings: true,
           saves: true,
           comments: true,
+          votes: true,
         },
         orderBy: { updatedAt: 'desc' },
       });
@@ -233,6 +234,9 @@ adminRouter.get(
           totalRatingsCount > 0
             ? Number((item.ratings.reduce((acc, r) => acc + r.value, 0) / totalRatingsCount).toFixed(1))
             : 0;
+
+        const likesCount = item.votes.filter((v) => v.type === 'LIKE').length;
+        const downvotesCount = item.votes.filter((v) => v.type === 'DOWNVOTE').length;
 
         return {
           id: item.id,
@@ -255,6 +259,8 @@ adminRouter.get(
           averageRating,
           totalSavesCount: item.saves.length,
           totalCommentsCount: item.comments.length,
+          likesCount,
+          downvotesCount,
         };
       });
 

@@ -222,6 +222,56 @@
   font-family: var(--font-ui);
 }
 
+/* Card Quick Actions: Like, Downvote, Share */
+.card-quick-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding-top: 0.65rem;
+  border-top: 1px dashed var(--border-classic);
+}
+
+.card-action-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.76rem;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  color: var(--text-secondary);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.card-action-btn:hover {
+  background-color: var(--bg-surface);
+  border-color: var(--accent-burgundy);
+  color: var(--accent-burgundy);
+  transform: translateY(-1px);
+}
+
+.card-action-btn.btn-card-share:hover {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.action-pill-count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background-color: rgba(114, 47, 55, 0.1);
+  color: var(--accent-burgundy);
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+}
+
 /* Plate / Horizontal Layout */
 .literature-card.layout-plate {
   flex-direction: row;

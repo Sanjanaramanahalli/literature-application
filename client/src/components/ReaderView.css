@@ -838,3 +838,66 @@
   font-family: var(--font-heading);
   letter-spacing: 0.1em;
 }
+
+/* Reader Reaction Buttons (Like, Downvote, Share) */
+.btn-reader-reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 1.1rem;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-classic);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.btn-reader-reaction:hover:not(:disabled) {
+  background: #ffffff;
+  border-color: var(--accent-burgundy);
+  color: var(--accent-burgundy);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(107, 29, 47, 0.12);
+}
+
+.btn-reader-reaction:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-reader-reaction.active-like {
+  background: var(--accent-burgundy);
+  color: #ffffff;
+  border-color: var(--accent-burgundy);
+  box-shadow: 0 3px 10px rgba(107, 29, 47, 0.28);
+}
+
+.btn-reader-reaction.active-like:hover:not(:disabled) {
+  background: #561423;
+  border-color: #561423;
+  color: #ffffff;
+}
+
+.btn-reader-reaction.active-downvote {
+  background: #4a2828;
+  color: #ffffff;
+  border-color: #4a2828;
+  box-shadow: 0 3px 10px rgba(74, 40, 40, 0.28);
+}
+
+.btn-reader-reaction.active-downvote:hover:not(:disabled) {
+  background: #361b1b;
+  border-color: #361b1b;
+  color: #ffffff;
+}
+
+.reaction-count-pill {
+  font-size: 0.85rem;
+  font-weight: 700;
+  opacity: 0.9;
+}
