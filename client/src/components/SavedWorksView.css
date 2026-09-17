@@ -173,3 +173,25 @@
   text-align: center;
   padding: 4rem 1rem;
 }
+
+@media (max-width: 768px) {
+  .saved-main-title {
+    font-size: 2rem;
+  }
+  .saved-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .saved-card {
+    padding: 1.25rem;
+  }
+  .saved-card-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .saved-card-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+

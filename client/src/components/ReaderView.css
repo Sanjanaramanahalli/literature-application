@@ -901,3 +901,181 @@
   font-weight: 700;
   opacity: 0.9;
 }
+
+/* ==========================================================================
+   RESPONSIVE DESIGN SYSTEM FOR READERVIEW (LAPTOPS, TABLETS & MOBILE PHONES)
+   ========================================================================== */
+
+/* Laptop & Large Screens (1024px to 1440px) */
+@media (min-width: 1024px) {
+  .reader-article-wrapper {
+    max-width: 820px;
+    padding: 3.5rem 3.5rem;
+  }
+  .book-page-inner-folio {
+    padding: 3.5rem 4rem;
+  }
+}
+
+/* Tablet & Smaller Laptops (768px - 1023px) */
+@media (max-width: 1023px) {
+  .reader-navigation-bar {
+    margin-bottom: 1.5rem;
+  }
+  .reader-actions-quick {
+    gap: 0.5rem;
+  }
+  .cover-page-inner {
+    grid-template-columns: 280px 1fr;
+  }
+  .cover-page-details {
+    padding: 2rem 1.75rem;
+  }
+  .cover-page-title {
+    font-size: 2.1rem;
+  }
+  .full-literature-folio-card {
+    padding: 2rem 2.2rem;
+  }
+}
+
+/* Tablets & Large Mobile Viewports (max-width: 768px) */
+@media (max-width: 768px) {
+  .reader-navigation-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+  }
+  .reader-back-btn {
+    align-self: flex-start;
+  }
+  .reader-actions-quick {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 0.4rem;
+  }
+  .reader-actions-quick .btn {
+    flex: 1 1 calc(50% - 0.4rem);
+    min-width: 120px;
+    justify-content: center;
+    padding: 0.55rem 0.65rem;
+    font-size: 0.82rem;
+  }
+  .cover-page-inner {
+    grid-template-columns: 1fr;
+  }
+  .cover-page-artwork-container {
+    padding: 2.25rem 1.5rem 1.75rem;
+    border-right: none;
+    border-bottom: 1px solid var(--border-classic);
+  }
+  .cover-page-main-img {
+    max-width: 220px;
+    height: 310px;
+  }
+  .cover-page-details {
+    padding: 2rem 1.5rem;
+    text-align: left;
+  }
+  .cover-page-title {
+    font-size: 1.85rem;
+  }
+  .cover-page-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .btn-open-manuscript {
+    width: 100%;
+    justify-content: center;
+  }
+  .cover-page-reactions-toolbar {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .btn-reader-reaction {
+    flex: 1;
+    justify-content: center;
+    padding: 0.55rem 0.65rem;
+    font-size: 0.84rem;
+  }
+  .book-page-inner-folio {
+    padding: 2rem 1.5rem;
+    min-height: auto;
+  }
+  .reader-content-body {
+    font-size: 1.05rem;
+    line-height: 1.8;
+  }
+  .reader-content-body p {
+    text-align: left;
+    margin-bottom: 1.4rem;
+  }
+  .reader-content-body p:first-of-type::first-letter {
+    font-size: 3.2rem;
+    padding-right: 8px;
+  }
+  .reader-page-controls {
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  .full-literature-folio-card {
+    padding: 1.5rem 1.25rem;
+  }
+  .full-mode-body {
+    font-size: 1.02rem;
+    line-height: 1.8;
+  }
+  .reader-rating-section {
+    padding: 1.75rem 1.25rem;
+  }
+}
+
+/* Small Mobile Phones (max-width: 480px) */
+@media (max-width: 480px) {
+  .reader-navigation-bar {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+  }
+  .reader-actions-quick .btn {
+    flex: 1 1 100%;
+  }
+  .cover-page-main-img {
+    max-width: 170px;
+    height: 245px;
+  }
+  .cover-page-title {
+    font-size: 1.55rem;
+  }
+  .cover-page-subheading {
+    font-size: 1rem;
+  }
+  .cover-page-details {
+    padding: 1.5rem 1rem;
+  }
+  .book-page-inner-folio {
+    padding: 1.4rem 1rem;
+  }
+  .reader-article-wrapper {
+    padding: 1.5rem 1rem;
+  }
+  .reader-title {
+    font-size: 1.85rem;
+  }
+  .interactive-stars-widget {
+    gap: 0.25rem;
+  }
+  .star-rating-btn svg {
+    width: 26px;
+    height: 26px;
+  }
+  .folio-chip-link {
+    font-size: 0.72rem;
+    padding: 0 4px;
+  }
+  .full-folio-header,
+  .full-folio-footer {
+    font-size: 0.75rem;
+  }
+}
+

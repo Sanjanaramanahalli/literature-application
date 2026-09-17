@@ -322,4 +322,21 @@
     border-right: none;
     border-bottom: 1px solid var(--border-classic);
   }
+  .card-quick-actions {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .card-action-btn {
+    min-width: calc(33.33% - 0.35rem);
+    padding: 0.45rem 0.35rem;
+    font-size: 0.74rem;
+  }
 }
+
+@media (max-width: 380px) {
+  .card-action-btn {
+    flex: 1 1 100%;
+    padding: 0.45rem 0.5rem;
+  }
+}
+

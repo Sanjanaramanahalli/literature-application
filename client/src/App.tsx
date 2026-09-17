@@ -58,28 +58,32 @@ export const App: React.FC = () => {
         onOpenAuth={handleOpenAuth}
         onLogout={handleLogout}
       />
-      <main style={{ flex: 1, padding: '2.5rem 1.5rem', maxWidth: '1240px', margin: '0 auto', width: '100%' }}>
+      <main className="app-main-content" style={{ flex: 1, padding: '2.5rem 1.5rem', maxWidth: '1240px', margin: '0 auto', width: '100%' }}>
         {/* Welcome Sanctuary Hero Banner */}
         {currentTab !== 'admin-signin' && (
-          <div style={{ textAlign: 'center', padding: '2rem 1rem 1.5rem', marginBottom: '1.5rem' }}>
-            <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: 'var(--accent-burgundy)' }} id="sanctuary-welcome-heading">
+          <div className="app-welcome-banner" style={{ textAlign: 'center', padding: '2rem 1rem 1.5rem', marginBottom: '1.5rem' }}>
+            <h1 className="app-welcome-heading" style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: 'var(--accent-burgundy)' }} id="sanctuary-welcome-heading">
               Welcome to the Athenæum
             </h1>
-            <p style={{ maxWidth: '680px', margin: '0 auto', color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: '1.6' }}>
+            <p className="app-welcome-subtitle" style={{ maxWidth: '680px', margin: '0 auto', color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: '1.6' }}>
               A dedicated sanctuary for discovering, reading, and contemplating timeless works of world literature.
             </p>
           </div>
         )}
 
+
         {/* Active user greeting pill */}
         {user && currentTab !== 'admin-signin' && (
           <div
+            className="active-user-banner"
             style={{
               marginBottom: '2rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: '0.85rem 1.5rem',
+              flexWrap: 'wrap',
+              gap: '0.75rem',
+              padding: '0.85rem 1.25rem',
               backgroundColor: 'var(--bg-secondary)',
               border: '1px solid var(--border-classic)',
               borderRadius: 'var(--radius-md)',

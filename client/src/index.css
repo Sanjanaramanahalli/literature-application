@@ -289,4 +289,35 @@ p.reading-text {
     align-items: center;
     text-align: center;
   }
+  .btn {
+    padding: 0.55rem 1rem;
+    font-size: 0.88rem;
+  }
+  p.reading-text {
+    font-size: 1.02rem;
+    line-height: 1.75;
+  }
+  .app-main-content {
+    padding: 1.5rem 1rem !important;
+  }
+  .app-welcome-banner {
+    padding: 1.25rem 0.5rem 1rem !important;
+    margin-bottom: 1rem !important;
+  }
+  .app-welcome-heading {
+    font-size: 1.85rem !important;
+  }
+  .app-welcome-subtitle {
+    font-size: 0.92rem !important;
+  }
 }
+
+@media (max-width: 420px) {
+  .app-main-content {
+    padding: 1rem 0.75rem !important;
+  }
+  .app-welcome-heading {
+    font-size: 1.6rem !important;
+  }
+}
+

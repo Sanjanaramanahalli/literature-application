@@ -428,4 +428,38 @@
   padding: 0.35rem 0.65rem;
 }
 
+@media (max-width: 520px) {
+  .modal-overlay {
+    padding: 0.75rem;
+  }
+  .modal-plate {
+    max-height: 94vh;
+    overflow-y: auto;
+    border-radius: var(--radius-md);
+  }
+  .auth-modal-container {
+    padding: 1.5rem 1.15rem;
+  }
+  .modal-title {
+    font-size: 1.35rem;
+  }
+  .auth-form {
+    gap: 0.9rem;
+  }
+  .otp-digits-container {
+    gap: 0.35rem;
+  }
+  .otp-digit-input {
+    width: 38px;
+    height: 46px;
+    font-size: 1.2rem;
+  }
+  .mailbox-actions-row {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+}
+
+
 
