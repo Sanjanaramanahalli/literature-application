@@ -1,6 +1,15 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import { hamletPages, godanPages, malegalalliPages } from './classicalLiteratureTexts.js';
+import {
+  hamletPages,
+  godanPages,
+  malegalalliPages,
+  ramayanaDarshanamPages,
+  nakutantiPages,
+  samskaraPages,
+  beralgeKoralPages,
+  kavyaManjariPages,
+} from './classicalLiteratureTexts.js';
 
 const prisma = new PrismaClient();
 
@@ -132,13 +141,27 @@ async function main() {
     prisma.creator.create({
       data: {
         name: 'Kuvempu (K. V. Puttappa)',
-        bio: 'Celebrated Kannada poet and author, widely regarded as the greatest Kannada literary titan of the 20th century.',
+        bio: 'Celebrated Kannada poet, playwright and novelist, Jnanpith laureate and Rashtrakavi of 20th century Kannada literature.',
         roleType: 'BOTH',
+      },
+    }),
+    prisma.creator.create({
+      data: {
+        name: 'D. R. Bendre (ದ.ರಾ. ಬೇಂದ್ರೆ)',
+        bio: 'Lyrical genius and mystic poet of Karnataka, Jnanpith laureate revered as Varakavi of modern Kannada poetry.',
+        roleType: 'POET',
+      },
+    }),
+    prisma.creator.create({
+      data: {
+        name: 'U. R. Ananthamurthy (ಯು.ಆರ್. ಅನಂತಮೂರ್ತಿ)',
+        bio: 'Pioneering Kannada writer, critic, Jnanpith laureate, and prominent vanguard of the Navya (Modernist) movement.',
+        roleType: 'AUTHOR',
       },
     }),
   ]);
 
-  const [shakes, tolstoy, woolf, chekhov, premchand, kuvempu] = creators;
+  const [shakes, tolstoy, woolf, chekhov, premchand, kuvempu, bendre, ananthamurthy] = creators;
 
   // 5. Create Tags
   const tagNames = ['Tragedy', 'Philosophy', 'Morality', 'Modernism', 'Victorian', 'Existentialism'];
@@ -268,6 +291,91 @@ MASHA: I am in mourning for my life. I am unhappy.`,
     },
   });
 
+  const lit7Ramayana = await prisma.literature.create({
+    data: {
+      title: 'ಶ್ರೀ ರಾಮಾಯಣ ದರ್ಶನಂ (Sri Ramayana Darshanam)',
+      subheading: 'ಕನ್ನಡದ ಪ್ರಥಮ ಜ್ಞಾನಪೀಠ ಪ್ರಶಸ್ತಿ ಪುರಸ್ಕೃತ ಮಹೋನ್ನತ ಮಹಾಕಾವ್ಯ',
+      brief: 'ರಾಷ್ಟ್ರಕವಿ ಕುವೆಂಪು ರಚಿತ ಮಹಾಛಂದಸ್ಸಿನ ಆಧುನಿಕ ಯುಗದ ದಿವ್ಯ ಕಾವ್ಯ. ರಾಮಾಯಣದ ಆದರ್ಶಗಳನ್ನು ವಿಶ್ವಮಾನವ ದೃಷ್ಟಿಕೋನದಲ್ಲಿ ಮರುಪ್ರತಿಷ್ಠಾಪಿಸಿದ ಕೃತಿ.',
+      content: ramayanaDarshanamPages.join('\n\n---page---\n\n'),
+      language: 'Kannada',
+      subject: 'ವಿಶ್ವಮಾನವ ಸಂದೇಶ ಮತ್ತು ಮಹಾಕಾವ್ಯ ದರ್ಶನ',
+      genre: 'Epic Poetry',
+      coverImage: '/covers/kannada-ramayana-darshanam.jpg',
+      publicationStatus: 'PUBLISHED',
+      publicationDate: new Date('2026-09-15T09:00:00Z'),
+      creatorId: kuvempu.id,
+      categoryId: catPoetry.id,
+    },
+  });
+
+  const lit8Nakutanti = await prisma.literature.create({
+    data: {
+      title: 'ನಾಕುತಂತಿ (Nakutanti)',
+      subheading: 'ನಾಲ್ಕು ತಂತಿಗಳ ನಾದಲೀಲೆ — ಜ್ಞಾನಪೀಠ ಪ್ರಶಸ್ತಿ ವಿಜೇತ ಕವನ ಸಂಕಲನ',
+      brief: 'ವರಕವಿ ದ.ರಾ. ಬೇಂದ್ರೆಯವರ ಅತೀಂದ್ರಿಯ, ರಹಸ್ಯವಾದಿ ಮತ್ತು ಲಯಬದ್ಧ ಕಾವ್ಯ ಸೃಷ್ಟಿ. ನಾನು, ನೀನು, ತಾನು, ಮಾನವತೆಯ ಚತುಸ್ತಂತಿಯ ವಿಶ್ವ ನಾದ.',
+      content: nakutantiPages.join('\n\n---page---\n\n'),
+      language: 'Kannada',
+      subject: 'ಅತೀಂದ್ರಿಯ ಭಾವ ಮತ್ತು ಜೀವ ನಾದ',
+      genre: 'Mystical Poetry',
+      coverImage: '/covers/kannada-nakutanti.jpg',
+      publicationStatus: 'PUBLISHED',
+      publicationDate: new Date('2026-09-15T10:30:00Z'),
+      creatorId: bendre.id,
+      categoryId: catPoetry.id,
+    },
+  });
+
+  const lit9Samskara = await prisma.literature.create({
+    data: {
+      title: 'ಸಂಸ್ಕಾರ (Samskara: A Rite for a Dead Man)',
+      subheading: 'ಧರ್ಮಸಂಕಟ, ಅಸ್ತಿತ್ವವಾದ ಮತ್ತು ಸಂಪ್ರದಾಯದ ಘರ್ಷಣೆಯ ನವ್ಯ ಕಾದಂಬರಿ',
+      brief: 'ಯು.ಆರ್. ಅನಂತಮೂರ್ತಿಯವರ ಕ್ರಾಂತಿಕಾರಿ ಕಾದಂಬರಿ. ಅಗ್ರಹಾರದ ಸನಾತನ ನಿಯಮಗಳು ಮತ್ತು ಮನುಷ್ಯನ ಮೂಲಭೂತ ಕಾಮನೆ-ಆತಂಕಗಳ ನಡುವಿನ ತೀವ್ರ ಮುಖಾಮುಖಿ.',
+      content: samskaraPages.join('\n\n---page---\n\n'),
+      language: 'Kannada',
+      subject: 'ಅಸ್ತಿತ್ವವಾದ ಮತ್ತು ಧರ್ಮಮೀಮಾಂಸೆ',
+      genre: 'Modernist Novel',
+      coverImage: '/covers/kannada-samskara.jpg',
+      publicationStatus: 'PUBLISHED',
+      publicationDate: new Date('2026-09-16T11:00:00Z'),
+      creatorId: ananthamurthy.id,
+      categoryId: catClassics.id,
+    },
+  });
+
+  const lit10Natakagalu = await prisma.literature.create({
+    data: {
+      title: 'ಬೆರಳ್ಗೆ ಕೊರಳ್ ಹಾಗೂ ಪ್ರಸಿದ್ಧ ಕನ್ನಡ ನಾಟಕಗಳು (Beralge Koral & Natakagalu)',
+      subheading: 'ಮಹಾಭಾರತದ ಏಕಲವ್ಯನ ತ್ಯಾಗ, ಗುರುದಕ್ಷಿಣೆ ಮತ್ತು ನ್ಯಾಯದ ನಾಟಕೀಯ ಮಹಾಚಿಂತನೆ',
+      brief: 'ಕುವೆಂಪು ಅವರ ಶ್ರೇಷ್ಠ ನಾಟಕ ‘ಬೆರಳ್ಗೆ ಕೊರಳ್’ ಹಾಗೂ ಕನ್ನಡದ ಮಹೋನ್ನತ ರಂಗಭೂಮಿ ಪರಂಪರೆಯ ಪ್ರಾತಿನಿಧಿಕ ನಾಟಕಗಳ ಸಂಗ್ರಹ.',
+      content: beralgeKoralPages.join('\n\n---page---\n\n'),
+      language: 'Kannada',
+      subject: 'ನ್ಯಾಯ, ಆತ್ಮಾರ್ಪಣೆ ಮತ್ತು ರಂಗಕಲೆ',
+      genre: 'Classical Drama',
+      coverImage: '/covers/kannada-natakagalu.jpg',
+      publicationStatus: 'PUBLISHED',
+      publicationDate: new Date('2026-09-16T14:00:00Z'),
+      creatorId: kuvempu.id,
+      categoryId: catDrama.id,
+    },
+  });
+
+  const lit11Kavya = await prisma.literature.create({
+    data: {
+      title: 'ಕನ್ನಡ ಕಾವ್ಯ ಮಂಜರಿ (Kannada Kavya Manjari)',
+      subheading: 'ಪಂಪ, ರನ್ನ, ಬಸವಣ್ಣ, ಕುಮಾರವ್ಯಾಸರಿಂದ ನವೋದಯದವರೆಗೆ ಕಾವ್ಯಧಾರೆ',
+      brief: 'ಹಳಗನ್ನಡ, ನಡುಗನ್ನಡ ಹಾಗೂ ಹೊಸಗನ್ನಡದ ಶ್ರೇಷ್ಠ ಕವಿಗಳ ಮೇರು ಕೃತಿಗಳ ಅಮೃತ ಸಂಪುಟ — ಕನ್ನಡ ಕಾವ್ಯ ಪರಂಪರೆಯ ರಸಯಾತ್ರೆ.',
+      content: kavyaManjariPages.join('\n\n---page---\n\n'),
+      language: 'Kannada',
+      subject: 'ಕನ್ನಡ ಸಾಹಿತ್ಯ ಚರಿತ್ರೆ ಮತ್ತು ರಸಾನುಭವ',
+      genre: 'Anthology & Poetry',
+      coverImage: '/covers/kannada-kavya.jpg',
+      publicationStatus: 'PUBLISHED',
+      publicationDate: new Date('2026-09-17T08:00:00Z'),
+      creatorId: kuvempu.id,
+      categoryId: catPoetry.id,
+    },
+  });
+
   // Attach Tags
   await prisma.literatureTag.createMany({
     data: [
@@ -278,6 +386,14 @@ MASHA: I am in mourning for my life. I am unhappy.`,
       { literatureId: lit3.id, tagId: tags[3].id }, // Modernism
       { literatureId: lit5Hindi.id, tagId: tags[2].id }, // Morality
       { literatureId: lit6Kannada.id, tagId: tags[1].id }, // Philosophy
+      { literatureId: lit7Ramayana.id, tagId: tags[1].id }, // Philosophy
+      { literatureId: lit7Ramayana.id, tagId: tags[2].id }, // Morality
+      { literatureId: lit8Nakutanti.id, tagId: tags[1].id }, // Philosophy
+      { literatureId: lit9Samskara.id, tagId: tags[5].id }, // Existentialism
+      { literatureId: lit9Samskara.id, tagId: tags[2].id }, // Morality
+      { literatureId: lit10Natakagalu.id, tagId: tags[0].id }, // Tragedy
+      { literatureId: lit10Natakagalu.id, tagId: tags[2].id }, // Morality
+      { literatureId: lit11Kavya.id, tagId: tags[1].id }, // Philosophy
     ],
   });
 
@@ -317,6 +433,41 @@ MASHA: I am in mourning for my life. I am unhappy.`,
       literatureId: lit6Kannada.id,
     },
   });
+  await prisma.rating.create({
+    data: {
+      value: 5,
+      userId: reader2.id,
+      literatureId: lit7Ramayana.id,
+    },
+  });
+  await prisma.rating.create({
+    data: {
+      value: 5,
+      userId: reader1.id,
+      literatureId: lit8Nakutanti.id,
+    },
+  });
+  await prisma.rating.create({
+    data: {
+      value: 5,
+      userId: reader2.id,
+      literatureId: lit9Samskara.id,
+    },
+  });
+  await prisma.rating.create({
+    data: {
+      value: 5,
+      userId: reader1.id,
+      literatureId: lit10Natakagalu.id,
+    },
+  });
+  await prisma.rating.create({
+    data: {
+      value: 5,
+      userId: reader2.id,
+      literatureId: lit11Kavya.id,
+    },
+  });
 
   // 8. Seed Saves
   await prisma.save.create({
@@ -329,6 +480,18 @@ MASHA: I am in mourning for my life. I am unhappy.`,
     data: {
       userId: reader2.id,
       literatureId: lit2.id,
+    },
+  });
+  await prisma.save.create({
+    data: {
+      userId: reader1.id,
+      literatureId: lit7Ramayana.id,
+    },
+  });
+  await prisma.save.create({
+    data: {
+      userId: reader2.id,
+      literatureId: lit8Nakutanti.id,
     },
   });
 
@@ -355,6 +518,31 @@ MASHA: I am in mourning for my life. I am unhappy.`,
       content: 'Ivan Ilyich’s sudden realization that his respectable decorum was an illusion is chillingly relevant even in our modern corporate era.',
       userId: reader2.id,
       literatureId: lit2.id,
+    },
+  });
+
+  const comment3 = await prisma.comment.create({
+    data: {
+      content: 'ಶ್ರೀ ರಾಮಾಯಣ ದರ್ಶನಂ ಮಹಾಕಾವ್ಯದ ಮಹಾಛಂದಸ್ಸು ಕನ್ನಡ ಸಾಹಿತ್ಯದ ಅತ್ಯುನ್ನತ ಶಿಖರ. ಕುವೆಂಪು ಅವರ ವಿಶ್ವಮಾನವ ದೃಷ್ಟಿಕೋನ ಇಡೀ ಜಗತ್ತಿಗೆ ಬೆಳಕು.',
+      userId: reader1.id,
+      literatureId: lit7Ramayana.id,
+    },
+  });
+
+  await prisma.comment.create({
+    data: {
+      content: 'ಸತ್ಯ, ಜ್ಞಾನಪೀಠ ಪ್ರಶಸ್ತಿ ಪಡೆದ ಮೊದಲ ಕನ್ನಡ ಕೃತಿ ಎಂಬ ಹೆಗ್ಗಳಿಕೆಯ ಜೊತೆಗೆ, ಇದರಲ್ಲಿನ ಪಾತ್ರಚಿತ್ರಣ ಅದ್ಭುತವಾಗಿದೆ.',
+      userId: reader2.id,
+      literatureId: lit7Ramayana.id,
+      parentId: comment3.id,
+    },
+  });
+
+  const comment4 = await prisma.comment.create({
+    data: {
+      content: 'ಬೇಂದ್ರೆಯವರ ನಾಕುತಂತಿಯ ಲಯ ಮತ್ತು ನಾದಮಾಧುರ್ಯ ಓದುತ್ತಿದ್ದಂತೆ ಹೊಸ ಅಂತರಂಗ ಲೋಕವನ್ನೇ ತೆರೆಯುತ್ತದೆ.',
+      userId: reader2.id,
+      literatureId: lit8Nakutanti.id,
     },
   });
 
