@@ -244,7 +244,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setError(null);
     setGoogleLoading(true);
 
-    const clientId = googleClientId || import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+    const defaultClientId = '892874567274-29c1ch5pis8v4inec1bcol07ulv238g9.apps.googleusercontent.com';
+    const clientId = googleClientId || import.meta.env.VITE_GOOGLE_CLIENT_ID || defaultClientId;
     const isRealClientId = clientId && clientId.includes('.apps.googleusercontent.com');
 
     if (!isRealClientId) {
