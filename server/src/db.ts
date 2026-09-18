@@ -81,8 +81,45 @@ async function initDbTables() {
     await prisma.$executeRawUnsafe(`
       CREATE UNIQUE INDEX IF NOT EXISTS "LiteratureVote_userId_literatureId_key" ON "LiteratureVote"("userId", "literatureId");
     `);
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "ArtCraft" (
+        "id" TEXT NOT NULL PRIMARY KEY,
+        "name" TEXT NOT NULL,
+        "localName" TEXT,
+        "state" TEXT NOT NULL,
+        "region" TEXT,
+        "district" TEXT,
+        "place" TEXT NOT NULL,
+        "type" TEXT NOT NULL,
+        "originPeriod" TEXT NOT NULL,
+        "history" TEXT NOT NULL,
+        "culturalSignificance" TEXT NOT NULL,
+        "culturalBackground" TEXT NOT NULL,
+        "materials" TEXT NOT NULL,
+        "makingProcess" TEXT NOT NULL,
+        "traditionalProducts" TEXT NOT NULL,
+        "modernContext" TEXT NOT NULL,
+        "coverImage" TEXT,
+        "status" TEXT NOT NULL DEFAULT 'PUBLISHED',
+        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS "ArtCraft_state_idx" ON "ArtCraft"("state");
+    `);
+    await prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS "ArtCraft_type_idx" ON "ArtCraft"("type");
+    `);
+
+    // Ensure User table has avatarUrl column
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "User" ADD COLUMN "avatarUrl" TEXT;`);
+    } catch {
+      // Column may already exist, ignore duplicate column addition error
+    }
   } catch (err) {
-    console.error('[Database] Failed to verify LiteratureVote table:', err);
+    console.error('[Database] Failed to verify LiteratureVote/ArtCraft table:', err);
   }
 }
 initDbTables();

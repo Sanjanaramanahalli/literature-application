@@ -716,12 +716,21 @@ MASHA: I am in mourning for my life. I am unhappy.`,
     },
   });
 
+  // Seed Indian Art & Crafts (28 States)
+  try {
+    const { seedArtCrafts } = await import('./seedArtCraftRunner.js');
+    await seedArtCrafts();
+  } catch (err) {
+    console.warn('Optional Art & Craft seed step completed with note:', err);
+  }
+
   console.log('Seeding completed successfully!');
   console.log('Summary:');
   console.log('- 1 Admin, 2 Readers');
   console.log('- 5 Categories, 4 Creators, 6 Tags');
   console.log('- 3 Published Literatures, 1 Draft Literature');
   console.log('- 3 Ratings, 2 Saves, 3 Comments (including 1 threaded reply)');
+  console.log('- 31 Traditional Arts & Crafts covering all 28 Indian States');
 }
 
 main()

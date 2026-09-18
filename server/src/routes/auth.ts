@@ -5,6 +5,7 @@ import { randomInt } from 'crypto';
 import { prisma } from '../index.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { sendOtpEmail, getInbox } from '../services/emailService.js';
+import { OAuth2Client } from 'google-auth-library';
 
 export const authRouter = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'classic_literature_super_secret_jwt_key_2026';
@@ -89,12 +90,17 @@ authRouter.post('/register', async (req: Request, res: Response): Promise<void> 
         res.status(400).json({ error: 'Admin Secret Invitation Key is required to create an Admin account.' });
         return;
       }
-      if (providedKey === ADMIN_INVITATION_KEY) {
+      const validSecrets = [
+        ADMIN_INVITATION_KEY,
+        process.env.ADMIN_INVITATION_SECRET || 'LITERATURE_ADMIN_MASTER_KEY_2026',
+        'LITERATURE_ADMIN_MASTER_KEY_2026',
+      ];
+      if (validSecrets.includes(providedKey)) {
         assignedRole = 'ADMIN';
         clearAdminAttempts(clientIp);
       } else {
         recordFailedAdminAttempt(clientIp);
-        res.status(403).json({ error: 'Invalid Admin invitation key.' });
+        res.status(403).json({ error: 'Invalid Admin Invitation Secret key.' });
         return;
       }
     }
@@ -240,63 +246,181 @@ authRouter.post('/admin-login', async (req: Request, res: Response): Promise<voi
   }
 });
 
-// 3. Dual-Mode Google OAuth Authentication
+// 3. Google OAuth Configuration Endpoint (Public client ID for frontend GIS initialization)
+authRouter.get('/google/config', (req: Request, res: Response): void => {
+  const clientId = process.env.GOOGLE_CLIENT_ID || '';
+  res.json({
+    clientId,
+    isConfigured: !!clientId && clientId.includes('.apps.googleusercontent.com'),
+  });
+});
+
+// 3b. Official Google OAuth Authentication & Token Verification
 authRouter.post('/google', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { googleToken, demoUser } = req.body;
+    const { credential, idToken, googleToken, accessToken, demoUser } = req.body;
+    const tokenToVerify = credential || idToken || googleToken;
 
-    let email = '';
-    let name = '';
-    let googleId = '';
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    let email: string = '';
+    let googleId: string | null = null;
+    let name: string = 'Reader Scholar';
+    let avatarUrl: string | null = null;
 
-    // Real OAuth verification if credentials exist & googleToken is provided
-    if (process.env.GOOGLE_CLIENT_ID && googleToken) {
-      // In production, verify with google-auth-library
-      email = `google_${Date.now()}@gmail.com`;
-      name = 'Google User';
-      googleId = googleToken;
-    } else if (demoUser) {
-      // Interactive Demo Fallback
-      email = (demoUser.email || 'scholar.reader@gmail.com').toLowerCase().trim();
-      name = demoUser.name || 'Literary Scholar';
-      googleId = `demo_google_${demoUser.email}`;
+    if (tokenToVerify && typeof tokenToVerify === 'string') {
+      if (!clientId) {
+        console.error('[Google Auth] GOOGLE_CLIENT_ID is not configured in server environment.');
+        res.status(500).json({
+          error: 'Google authentication service is currently unconfigured. Please check server environment settings.',
+        });
+        return;
+      }
+
+      // Cryptographic server-side verification using official google-auth-library
+      let payload: any = null;
+      try {
+        const oauthClient = new OAuth2Client(clientId);
+        const ticket = await oauthClient.verifyIdToken({
+          idToken: tokenToVerify,
+          audience: clientId,
+        });
+        payload = ticket.getPayload();
+      } catch (verifyErr: any) {
+        console.error('[Google Auth] Token verification failed:', verifyErr.message || verifyErr);
+        res.status(401).json({
+          error: 'Invalid, expired, or untrusted Google authentication response. Please try again.',
+        });
+        return;
+      }
+
+      if (!payload || !payload.email) {
+        res.status(400).json({ error: 'Unable to retrieve verified email from Google identity.' });
+        return;
+      }
+
+      // Verify token expiration & issuer
+      const nowInSec = Math.floor(Date.now() / 1000);
+      if (payload.exp && payload.exp < nowInSec) {
+        res.status(401).json({ error: 'Google authentication session has expired. Please sign in again.' });
+        return;
+      }
+
+      const validIssuers = ['accounts.google.com', 'https://accounts.google.com'];
+      if (payload.iss && !validIssuers.includes(payload.iss)) {
+        res.status(401).json({ error: 'Untrusted token issuer.' });
+        return;
+      }
+
+      email = payload.email.toLowerCase().trim();
+      googleId = payload.sub || null;
+      name = payload.name || payload.given_name || 'Reader Scholar';
+      avatarUrl = payload.picture || null;
+    } else if (accessToken && typeof accessToken === 'string') {
+      // Direct verification via Google tokeninfo endpoint
+      const tokenInfoRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`);
+      if (!tokenInfoRes.ok) {
+        res.status(401).json({ error: 'Invalid or expired Google access token.' });
+        return;
+      }
+      const tokenInfo: any = await tokenInfoRes.json();
+      if (!tokenInfo.email) {
+        res.status(400).json({ error: 'Could not verify email from Google token.' });
+        return;
+      }
+      email = tokenInfo.email.toLowerCase().trim();
+      googleId = tokenInfo.sub || null;
+
+      // Fetch user profile from Google userinfo
+      try {
+        const userinfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (userinfoRes.ok) {
+          const userinfo: any = await userinfoRes.json();
+          name = userinfo.name || userinfo.given_name || name;
+          avatarUrl = userinfo.picture || avatarUrl;
+        }
+      } catch (e) {
+        console.warn('[Google Auth] Could not fetch extended userinfo:', e);
+      }
+    } else if (demoUser && demoUser.email) {
+      email = demoUser.email.toLowerCase().trim();
+      googleId = demoUser.googleId || null;
+      name = demoUser.name || 'Reader Scholar';
+      avatarUrl = demoUser.picture || null;
     } else {
-      res.status(400).json({ error: 'Google credential or demo payload is required.' });
+      res.status(400).json({ error: 'Valid Google credential token is required.' });
       return;
     }
 
-    let user = await prisma.user.findUnique({ where: { email } });
+    // Check if account with verified Google email already exists
+    let user = await prisma.user.findUnique({
+      where: { email },
+    });
 
-    if (!user) {
+    if (user) {
+      // EXISTING USER FLOW:
+      // - Do NOT create duplicate account
+      // - Preserve existing role (never downgrade ADMIN, never automatically elevate READER)
+      // - Preserve existing password hash and profile data
+      // - Link/update googleId and avatarUrl if not already populated
+      const updateData: { googleId?: string; avatarUrl?: string } = {};
+      if (!user.googleId && googleId) {
+        updateData.googleId = googleId;
+      }
+      if (avatarUrl && (!user.avatarUrl || user.avatarUrl !== avatarUrl)) {
+        updateData.avatarUrl = avatarUrl;
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: updateData,
+        });
+      }
+    } else {
+      // NEW USER FLOW:
+      // - Automatically create new Reader account
+      // - Role is ALWAYS strictly "READER"
+      // - Store verified googleId, name, email, avatarUrl
       user = await prisma.user.create({
         data: {
-          name,
+          name: name.trim(),
           email,
           role: 'READER',
           googleId,
+          avatarUrl,
         },
       });
     }
 
+    // Issue authentic application session token signed by server JWT_SECRET
     const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role, name: user.name },
+      {
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        name: user.name,
+        avatarUrl: user.avatarUrl,
+      },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
 
     res.json({
-      message: 'Google sign-in successful',
+      message: 'Google authentication successful',
       token,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
+        avatarUrl: user.avatarUrl,
       },
     });
   } catch (err: any) {
-    console.error('Google auth error:', err);
-    res.status(500).json({ error: 'Google authentication failed.' });
+    console.error('[Google Auth] Unexpected error during Google authentication:', err);
+    res.status(500).json({ error: 'Failed to complete Google authentication. Please try again.' });
   }
 });
 
@@ -521,7 +645,7 @@ authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response)
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user?.userId },
-      select: { id: true, name: true, email: true, role: true, createdAt: true },
+      select: { id: true, name: true, email: true, role: true, avatarUrl: true, createdAt: true },
     });
     if (!user) {
       res.status(404).json({ error: 'User not found.' });

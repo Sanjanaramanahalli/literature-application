@@ -116,3 +116,78 @@ searchRouter.get('/advanced', async (req: Request, res: Response): Promise<void>
     res.status(500).json({ error: 'Advanced search failed.' });
   }
 });
+
+// Art & Craft Multi-Field Search (Name, State, Region, Place, Type, Keywords)
+searchRouter.get('/art-craft', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { name, state, region, place, type, query } = req.query;
+
+    const conditions: any[] = [{ status: 'PUBLISHED' }];
+
+    if (name && String(name).trim()) {
+      conditions.push({
+        OR: [
+          { name: { contains: String(name).trim() } },
+          { localName: { contains: String(name).trim() } },
+        ],
+      });
+    }
+
+    if (state && String(state).trim() && String(state).trim() !== 'ALL') {
+      conditions.push({
+        state: { equals: String(state).trim() },
+      });
+    }
+
+    if (region && String(region).trim()) {
+      conditions.push({
+        region: { contains: String(region).trim() },
+      });
+    }
+
+    if (place && String(place).trim()) {
+      conditions.push({
+        place: { contains: String(place).trim() },
+      });
+    }
+
+    if (type && String(type).trim()) {
+      conditions.push({
+        type: { contains: String(type).trim() },
+      });
+    }
+
+    if (query && String(query).trim()) {
+      const q = String(query).trim();
+      conditions.push({
+        OR: [
+          { name: { contains: q } },
+          { localName: { contains: q } },
+          { state: { contains: q } },
+          { region: { contains: q } },
+          { district: { contains: q } },
+          { place: { contains: q } },
+          { type: { contains: q } },
+          { materials: { contains: q } },
+          { traditionalProducts: { contains: q } },
+        ],
+      });
+    }
+
+    const crafts = await prisma.artCraft.findMany({
+      where: {
+        AND: conditions,
+      },
+      orderBy: [{ state: 'asc' }, { name: 'asc' }],
+    });
+
+    res.json({
+      total: crafts.length,
+      results: crafts,
+    });
+  } catch (err) {
+    console.error('Art & Craft search error:', err);
+    res.status(500).json({ error: 'Art & Craft search failed.' });
+  }
+});
+

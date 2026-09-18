@@ -15,6 +15,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onSuccess,
 }) => {
   const [mode, setMode] = useState<'login' | 'register' | 'forgot'>(initialMode);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleClientId, setGoogleClientId] = useState<string | null>(null);
+  const isGoogleProcessingRef = React.useRef(false);
 
   React.useEffect(() => {
     setMode(initialMode);
@@ -51,12 +57,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [showInbox, setShowInbox] = useState(false);
   const [inboxLoading, setInboxLoading] = useState(false);
 
-  // States
-  const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  if (!isOpen) return null;
 
   const resetForm = () => {
     setName('');
@@ -175,26 +175,54 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  // 3. Dual-Mode Google OAuth (Interactive Simulation Fallback)
-  const handleGoogleSignIn = async () => {
+  // Fetch Google OAuth configuration from server
+  React.useEffect(() => {
+    let isMounted = true;
+    const loadGoogleConfig = async () => {
+      try {
+        const res = await fetch('/api/auth/google/config');
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.clientId) {
+            setGoogleClientId(data.clientId);
+          }
+        }
+      } catch (err) {
+        console.error('[Google Auth] Could not retrieve Google OAuth client configuration:', err);
+      }
+    };
+    if (isOpen) {
+      loadGoogleConfig();
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
+
+  // Handle verified Google credential from Google Identity Services
+  const handleGoogleCredentialResponse = async (response: any) => {
+    if (!response || !response.credential) {
+      setError('Google did not return a valid credential. Please try again.');
+      setGoogleLoading(false);
+      isGoogleProcessingRef.current = false;
+      return;
+    }
+
+    if (isGoogleProcessingRef.current) return;
+    isGoogleProcessingRef.current = true;
     setError(null);
-    setLoading(true);
+    setGoogleLoading(true);
 
     try {
       const res = await fetch('/api/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          demoUser: {
-            name: 'Scholar Reader',
-            email: 'scholar.reader@gmail.com',
-          },
-        }),
+        body: JSON.stringify({ credential: response.credential }),
       });
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Google sign in failed.');
+        throw new Error(data.error || 'Google authentication verification failed.');
       }
 
       localStorage.setItem('literature_token', data.token);
@@ -202,9 +230,113 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       onSuccess(data.user, data.token);
       onClose();
     } catch (err: any) {
-      setError(err.message);
+      console.error('[Google Auth] Verification error:', err);
+      setError(err.message || 'Google authentication failed. Please try again.');
     } finally {
-      setLoading(false);
+      setGoogleLoading(false);
+      isGoogleProcessingRef.current = false;
+    }
+  };
+
+  // 3. Initiate official Google OAuth / Identity flow
+  const handleGoogleSignIn = () => {
+    if (loading || googleLoading || isGoogleProcessingRef.current) return;
+    setError(null);
+    setGoogleLoading(true);
+
+    const clientId = googleClientId || import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+    const isRealClientId = clientId && clientId.includes('.apps.googleusercontent.com');
+
+    if (!isRealClientId) {
+      setGoogleLoading(false);
+      setError(
+        'Google OAuth Client ID is not configured. Please configure a valid GOOGLE_CLIENT_ID in your server environment.'
+      );
+      return;
+    }
+
+    // Check if Google Identity Services SDK is loaded
+    const google = (window as any).google;
+    if (!google || !google.accounts) {
+      setGoogleLoading(false);
+      setError('Google Identity Services SDK is currently unavailable. Please check your network connection.');
+      return;
+    }
+
+    try {
+      // 1. Direct OAuth2 Token Client popup (Guaranteed to show official Google Account Chooser modal)
+      if (google.accounts.oauth2) {
+        const tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: clientId,
+          scope: 'openid email profile',
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse && tokenResponse.error) {
+              setGoogleLoading(false);
+              if (tokenResponse.error !== 'popup_closed_by_user') {
+                setError(`Google Sign-In error: ${tokenResponse.error_description || tokenResponse.error}`);
+              }
+              return;
+            }
+
+            if (tokenResponse && tokenResponse.access_token) {
+              try {
+                // Fetch verified profile directly from Google
+                const userinfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+                });
+                const userinfo = await userinfoRes.json();
+                if (!userinfo.email) {
+                  throw new Error('Could not retrieve email from Google userinfo.');
+                }
+
+                const res = await fetch('/api/auth/google', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    accessToken: tokenResponse.access_token,
+                    demoUser: {
+                      name: userinfo.name || userinfo.email.split('@')[0],
+                      email: userinfo.email,
+                      picture: userinfo.picture,
+                      googleId: userinfo.sub,
+                    },
+                  }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Authentication failed.');
+
+                localStorage.setItem('literature_token', data.token);
+                localStorage.setItem('literature_user', JSON.stringify(data.user));
+                onSuccess(data.user, data.token);
+                onClose();
+              } catch (e: any) {
+                setError(e.message || 'Google authentication failed.');
+              } finally {
+                setGoogleLoading(false);
+              }
+            } else {
+              setGoogleLoading(false);
+            }
+          },
+        });
+
+        tokenClient.requestAccessToken({ prompt: 'select_account' });
+        return;
+      }
+
+      // 2. Fallback to Google ID One-Tap if oauth2 is not ready
+      if (google.accounts.id) {
+        google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleCredentialResponse,
+          auto_select: false,
+        });
+        google.accounts.id.prompt();
+      }
+    } catch (err: any) {
+      console.error('[Google Auth] Exception during initialization:', err);
+      setGoogleLoading(false);
+      setError('Failed to initiate Google authentication. Please check browser popups.');
     }
   };
 
@@ -338,6 +470,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setLoading(false);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" id="auth-modal-overlay" onClick={onClose}>
@@ -829,33 +963,37 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <span>or continue with scholarship</span>
         </div>
 
-        {/* Google Dual-Mode OAuth Button */}
+        {/* Google Official OAuth Button */}
         <button
           type="button"
           className="btn btn-google btn-block"
           onClick={handleGoogleSignIn}
-          disabled={loading}
+          disabled={loading || googleLoading}
           id="btn-google-auth"
         >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path
-              d="M17.64 9.20455C17.64 8.56636 17.5827 7.95273 17.4764 7.36364H9V10.845H13.8436C13.635 11.97 13.0009 12.9232 12.0477 13.5614V15.8195H14.9564C16.6582 14.2527 17.64 11.9455 17.64 9.20455Z"
-              fill="#4285F4"
-            />
-            <path
-              d="M9 18C11.43 18 13.4673 17.1941 14.9564 15.8195L12.0477 13.5614C11.2418 14.1014 10.2109 14.4205 9 14.4205C6.65591 14.4205 4.67182 12.8373 3.96409 10.71H0.957275V13.0418C2.43818 15.9832 5.48182 18 9 18Z"
-              fill="#34A853"
-            />
-            <path
-              d="M3.96409 10.71C3.78409 10.17 3.68182 9.59318 3.68182 9C3.68182 8.40682 3.78409 7.83 3.96409 7.29V4.95818H0.957275C0.347727 6.17318 0 7.54773 0 9C0 10.4523 0.347727 11.8268 0.957275 13.0418L3.96409 10.71Z"
-              fill="#FBBC05"
-            />
-            <path
-              d="M9 3.57955C10.3214 3.57955 11.5077 4.03364 12.4405 4.92545L15.0218 2.34409C13.4632 0.891818 11.4259 0 9 0C5.48182 0 2.43818 2.01682 0.957275 4.95818L3.96409 7.29C4.67182 5.16273 6.65591 3.57955 9 3.57955Z"
-              fill="#EA4335"
-            />
-          </svg>
-          Continue with Google
+          {googleLoading ? (
+            <RotateCw size={16} className="spin" style={{ marginRight: '6px' }} />
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path
+                d="M17.64 9.20455C17.64 8.56636 17.5827 7.95273 17.4764 7.36364H9V10.845H13.8436C13.635 11.97 13.0009 12.9232 12.0477 13.5614V15.8195H14.9564C16.6582 14.2527 17.64 11.9455 17.64 9.20455Z"
+                fill="#4285F4"
+              />
+              <path
+                d="M9 18C11.43 18 13.4673 17.1941 14.9564 15.8195L12.0477 13.5614C11.2418 14.1014 10.2109 14.4205 9 14.4205C6.65591 14.4205 4.67182 12.8373 3.96409 10.71H0.957275V13.0418C2.43818 15.9832 5.48182 18 9 18Z"
+                fill="#34A853"
+              />
+              <path
+                d="M3.96409 10.71C3.78409 10.17 3.68182 9.59318 3.68182 9C3.68182 8.40682 3.78409 7.83 3.96409 7.29V4.95818H0.957275C0.347727 6.17318 0 7.54773 0 9C0 10.4523 0.347727 11.8268 0.957275 13.0418L3.96409 10.71Z"
+                fill="#FBBC05"
+              />
+              <path
+                d="M9 3.57955C10.3214 3.57955 11.5077 4.03364 12.4405 4.92545L15.0218 2.34409C13.4632 0.891818 11.4259 0 9 0C5.48182 0 2.43818 2.01682 0.957275 4.95818L3.96409 7.29C4.67182 5.16273 6.65591 3.57955 9 3.57955Z"
+                fill="#EA4335"
+              />
+            </svg>
+          )}
+          <span>{googleLoading ? 'Connecting to Google...' : 'Continue with Google'}</span>
         </button>
 
         {/* Footer Switching */}

@@ -29,11 +29,15 @@ import { literatureRouter } from './routes/literature.js';
 import { searchRouter } from './routes/search.js';
 import { readerRouter } from './routes/reader.js';
 import { adminRouter } from './routes/admin.js';
+import { artCraftRouter } from './routes/artCraft.js';
+import { aiRouter } from './routes/ai.js';
 app.use('/api/auth', authRouter);
 app.use('/api/literature', literatureRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/reader', readerRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/art-craft', artCraftRouter);
+app.use('/api/ai', aiRouter);
 
 // Health check endpoint
 app.get('/api/health', async (req: Request, res: Response) => {
@@ -66,8 +70,16 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 export default app;
 
 if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`[API Server] Running gracefully on http://localhost:${PORT}`);
+  });
+
+  server.on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`[API Server] Port ${PORT} is already in use. Please terminate the process using port ${PORT} or restart.`);
+    } else {
+      console.error('[API Server] Listen error:', err);
+    }
   });
 }
 

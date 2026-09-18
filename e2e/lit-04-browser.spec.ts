@@ -68,6 +68,7 @@ test.describe('Milestone 2 - LIT-04: Literature Catalog, Popularity & New Releas
   });
 
   test('Positive: Category filter bar updates catalog compendium list dynamically', async ({ page }) => {
+    await page.click('#nav-explore');
     const filterBar = page.locator('#category-filter-bar');
     await expect(filterBar).toBeVisible();
 
@@ -108,6 +109,7 @@ test.describe('Milestone 2 - LIT-04: Literature Catalog, Popularity & New Releas
     await page.waitForTimeout(500);
 
     await expect(page.locator('#featured-literature-section')).toBeVisible({ timeout: 10000 });
+    await page.click('#nav-explore');
     await expect(page.locator('#compendium-grid')).toBeVisible({ timeout: 10000 });
 
     // Verify card fits cleanly without horizontal overflow

@@ -87,18 +87,31 @@ test.describe('Milestone 1 - LIT-02: Authentication & Role-Based Access Control'
     expect(body.error).toContain('Invalid email or password');
   });
 
-  test('Positive: Google OAuth Demo fallback authenticates seamlessly', async ({ request }) => {
-    const res = await request.post('http://localhost:5000/api/auth/google', {
-      data: {
-        demoUser: {
-          name: 'Lady Catherine de Bourgh',
-          email: 'lady.catherine@gmail.com',
-        },
-      },
-    });
+  test('Positive: GET /api/auth/google/config returns configuration metadata', async ({ request }) => {
+    const res = await request.get('http://localhost:5000/api/auth/google/config');
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(body.user.email).toBe('lady.catherine@gmail.com');
-    expect(body.token).toBeDefined();
+    expect(body).toHaveProperty('clientId');
+    expect(body).toHaveProperty('isConfigured');
+  });
+
+  test('Negative: Google OAuth rejects request with missing or empty token with 400 Bad Request', async ({ request }) => {
+    const res = await request.post('http://localhost:5000/api/auth/google', {
+      data: {},
+    });
+    expect(res.status()).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain('Valid Google credential token is required');
+  });
+
+  test('Negative: Google OAuth rejects forged/invalid token with 401 Unauthorized', async ({ request }) => {
+    const res = await request.post('http://localhost:5000/api/auth/google', {
+      data: {
+        credential: 'forged.fake.google.id.token',
+      },
+    });
+    expect(res.status()).toBe(401);
+    const body = await res.json();
+    expect(body.error).toContain('Invalid, expired, or untrusted Google authentication response');
   });
 });

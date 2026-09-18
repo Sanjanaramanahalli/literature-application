@@ -137,6 +137,14 @@
   color: var(--text-primary);
 }
 
+.user-avatar-img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--accent-gold);
+}
+
 .user-role-tag {
   font-size: 0.68rem;
   text-transform: uppercase;

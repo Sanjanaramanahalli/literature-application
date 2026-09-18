@@ -7,12 +7,16 @@ import { ReaderView } from './components/ReaderView';
 import { SavedWorksView } from './components/SavedWorksView';
 import { AdminEditorialView } from './components/AdminEditorialView';
 import { AdminSignInPage } from './components/AdminSignInPage';
+import { ArtCraftCatalogView } from './components/ArtCraftCatalogView';
+import { ArtCraftDetailView } from './components/ArtCraftDetailView';
+import type { ArtCraftItem } from './components/ArtCraftCard';
 import './components/Header.css';
 import './components/AuthModal.css';
 
 export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<string>('home');
   const [selectedLiteratureId, setSelectedLiteratureId] = useState<string | null>(null);
+  const [selectedArtCraft, setSelectedArtCraft] = useState<ArtCraftItem | null>(null);
   const [user, setUser] = useState<any>(null);
   
   // Auth Modal State
@@ -52,6 +56,7 @@ export const App: React.FC = () => {
         currentTab={currentTab}
         setCurrentTab={(tab) => {
           setSelectedLiteratureId(null);
+          setSelectedArtCraft(null);
           setCurrentTab(tab);
         }}
         user={user}
@@ -59,8 +64,8 @@ export const App: React.FC = () => {
         onLogout={handleLogout}
       />
       <main className="app-main-content" style={{ flex: 1, padding: '2.5rem 1.5rem', maxWidth: '1240px', margin: '0 auto', width: '100%' }}>
-        {/* Welcome Sanctuary Hero Banner */}
-        {currentTab !== 'admin-signin' && (
+        {/* Welcome Sanctuary Hero Banner (Show for home, categories) */}
+        {(currentTab === 'home' || currentTab === 'categories') && !selectedLiteratureId && (
           <div className="app-welcome-banner" style={{ textAlign: 'center', padding: '2rem 1rem 1.5rem', marginBottom: '1.5rem' }}>
             <h1 className="app-welcome-heading" style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: 'var(--accent-burgundy)' }} id="sanctuary-welcome-heading">
               Welcome to the Athenæum
@@ -71,9 +76,8 @@ export const App: React.FC = () => {
           </div>
         )}
 
-
         {/* Active user greeting pill */}
-        {user && currentTab !== 'admin-signin' && (
+        {user && currentTab !== 'admin-signin' && !selectedLiteratureId && !selectedArtCraft && (
           <div
             className="active-user-banner"
             style={{
@@ -90,23 +94,38 @@ export const App: React.FC = () => {
             }}
             id="active-user-banner"
           >
-            <div>
-              <p style={{ fontWeight: 600, color: 'var(--accent-burgundy)' }}>
-                Scholar Session: {user.name} ({user.role})
-              </p>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{user.email}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              {user.avatarUrl && (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.name}
+                  style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent-gold)' }}
+                  referrerPolicy="no-referrer"
+                />
+              )}
+              <div>
+                <p style={{ fontWeight: 600, color: 'var(--accent-burgundy)' }}>
+                  Scholar Session: {user.name} ({user.role})
+                </p>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{user.email}</p>
+              </div>
             </div>
             <span className="tag-badge burgundy">Authenticated</span>
           </div>
         )}
 
-        {/* Dynamic View rendering based on selected literature or currentTab */}
+        {/* Dynamic View rendering based on selected literature, selected art craft, or currentTab */}
         {selectedLiteratureId ? (
           <ReaderView
             literatureId={selectedLiteratureId}
             user={user}
             onBack={() => setSelectedLiteratureId(null)}
             onOpenAuth={handleOpenAuth}
+          />
+        ) : selectedArtCraft ? (
+          <ArtCraftDetailView
+            craft={selectedArtCraft}
+            onBack={() => setSelectedArtCraft(null)}
           />
         ) : (
           <>
@@ -118,6 +137,17 @@ export const App: React.FC = () => {
                 onSelectLiterature={(item) => {
                   setSelectedLiteratureId(item.id);
                 }}
+                onSelectArtCraft={(craft) => {
+                  setSelectedArtCraft(craft);
+                }}
+              />
+            )}
+
+            {currentTab === 'artcraft' && (
+              <ArtCraftCatalogView
+                onSelectArtCraft={(craft) => {
+                  setSelectedArtCraft(craft);
+                }}
               />
             )}
 
@@ -127,6 +157,9 @@ export const App: React.FC = () => {
                 onOpenAuth={handleOpenAuth}
                 onSelectLiterature={(item) => {
                   setSelectedLiteratureId(item.id);
+                }}
+                onSelectArtCraft={(craft) => {
+                  setSelectedArtCraft(craft);
                 }}
               />
             )}

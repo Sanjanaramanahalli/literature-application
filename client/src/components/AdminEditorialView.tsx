@@ -29,9 +29,15 @@ import {
   ShieldCheck,
   Flame,
   Tag,
+  Palette,
+  Sparkles,
+  Edit,
 } from 'lucide-react';
+import type { ArtCraftItem } from './ArtCraftCard';
+import { getApiUrl } from '../config/api';
 
 import './AdminEditorialView.css';
+import './ArtCraftView.css';
 
 
 interface Creator {
@@ -52,6 +58,7 @@ interface KpiData {
   totalSaves: number;
   newUsersThisMonth?: number;
   newReleasesThisMonth?: number;
+  totalArtCraft?: number;
 }
 
 interface SecondaryComment {
@@ -133,8 +140,31 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
   onNavigateAdminSignIn,
   onViewLiterature,
 }) => {
-  // Navigation tabs: 'create' | 'manage' | 'analytics'
-  const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'analytics'>('analytics');
+  // Navigation tabs: 'create' | 'manage' | 'analytics' | 'artcraft'
+  const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'analytics' | 'artcraft'>('analytics');
+
+  // Art & Craft Management State
+  const [adminCrafts, setAdminCrafts] = useState<ArtCraftItem[]>([]);
+  const [editingCraftId, setEditingCraftId] = useState<string | null>(null);
+  const [craftForm, setCraftForm] = useState({
+    name: '',
+    localName: '',
+    state: 'Karnataka',
+    region: '',
+    district: '',
+    place: '',
+    type: 'Woodcraft & Lacquerware',
+    originPeriod: '',
+    history: '',
+    culturalSignificance: '',
+    culturalBackground: '',
+    materials: '',
+    makingProcess: '',
+    traditionalProducts: '',
+    modernContext: '',
+    coverImage: '',
+    status: 'PUBLISHED',
+  });
 
   // Executive KPI Dashboard State (LIT-16)
   const [kpiData, setKpiData] = useState<KpiData | null>(null);
@@ -183,6 +213,137 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
   const [loading, setLoading] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [alertMsg, setAlertMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Admin AI Assistant States
+  const [aiLoading, setAiLoading] = useState<boolean>(false);
+  const [aiDraftModalOpen, setAiDraftModalOpen] = useState<boolean>(false);
+  const [aiMetadataProposal, setAiMetadataProposal] = useState<{
+    brief?: string;
+    subject?: string;
+    genre?: string;
+    tags?: string[];
+  } | null>(null);
+
+  const [aiCraftLoading, setAiCraftLoading] = useState<boolean>(false);
+  const [aiCraftProposal, setAiCraftProposal] = useState<any | null>(null);
+  const [aiCraftModalOpen, setAiCraftModalOpen] = useState<boolean>(false);
+
+  // Trigger AI Metadata / Brief generation for manuscript
+  const handleAiGenerateMetadata = async (mode: 'brief' | 'tags' | 'all') => {
+    if (!title.trim() && !content.trim()) {
+      setAlertMsg({
+        type: 'error',
+        text: 'Please provide either a Manuscript Title or Content before consulting the AI Assistant.',
+      });
+      return;
+    }
+
+    const token = localStorage.getItem('literature_token');
+    try {
+      setAiLoading(true);
+      const endpoint = mode === 'brief' ? '/api/ai/generate-brief' : '/api/ai/generate-tags';
+      const res = await fetch(getApiUrl(endpoint), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title, content: (content || '').slice(0, 10000) }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'AI service is temporarily unavailable. Please try again later.');
+      }
+
+      setAiMetadataProposal(data.data);
+      setAiDraftModalOpen(true);
+    } catch (err: any) {
+      setAlertMsg({ type: 'error', text: err.message || 'AI service is temporarily unavailable.' });
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  // Apply approved AI suggestions into Manuscript form
+  const handleApplyAiMetadata = () => {
+    if (!aiMetadataProposal) return;
+    if (aiMetadataProposal.brief) setBrief(aiMetadataProposal.brief);
+    if (aiMetadataProposal.subject) setSubject(aiMetadataProposal.subject);
+    if (aiMetadataProposal.genre) setGenre(aiMetadataProposal.genre);
+    if (aiMetadataProposal.tags && aiMetadataProposal.tags.length > 0) {
+      setTagsInput(aiMetadataProposal.tags.join(', '));
+    }
+    setAiDraftModalOpen(false);
+    setAlertMsg({
+      type: 'success',
+      text: 'AI Curatorial metadata successfully reviewed and applied to manuscript composition form!',
+    });
+  };
+
+  // Trigger AI Art & Craft Draft dossier generation
+  const handleAiGenerateCraftDraft = async () => {
+    if (!craftForm.name.trim()) {
+      setAlertMsg({
+        type: 'error',
+        text: 'Please enter a Craft Name (e.g. Channapatna Toys) before consulting the AI Assistant.',
+      });
+      return;
+    }
+
+    const token = localStorage.getItem('literature_token');
+    try {
+      setAiCraftLoading(true);
+      const res = await fetch(getApiUrl('/api/ai/art-craft'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: craftForm.name,
+          state: craftForm.state,
+          region: craftForm.region,
+          place: craftForm.place,
+          type: craftForm.type,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'AI service is temporarily unavailable. Please try again later.');
+      }
+
+      setAiCraftProposal(data.data);
+      setAiCraftModalOpen(true);
+    } catch (err: any) {
+      setAlertMsg({ type: 'error', text: err.message || 'AI service is temporarily unavailable.' });
+    } finally {
+      setAiCraftLoading(false);
+    }
+  };
+
+  // Apply approved AI Art & Craft draft into craftForm
+  const handleApplyAiCraftDraft = () => {
+    if (!aiCraftProposal) return;
+    setCraftForm((prev) => ({
+      ...prev,
+      localName: aiCraftProposal.localName || prev.localName,
+      originPeriod: aiCraftProposal.originPeriod || prev.originPeriod,
+      history: aiCraftProposal.history || prev.history,
+      culturalSignificance: aiCraftProposal.culturalSignificance || prev.culturalSignificance,
+      culturalBackground: aiCraftProposal.culturalBackground || prev.culturalBackground,
+      materials: aiCraftProposal.materials || prev.materials,
+      makingProcess: aiCraftProposal.makingProcess || prev.makingProcess,
+      traditionalProducts: aiCraftProposal.traditionalProducts || prev.traditionalProducts,
+      modernContext: aiCraftProposal.modernContext || prev.modernContext,
+    }));
+    setAiCraftModalOpen(false);
+    setAlertMsg({
+      type: 'success',
+      text: 'AI-generated Art & Craft dossier applied as draft. Review and verify details before publishing.',
+    });
+  };
 
   // Check role guard
   const isAdmin = user && user.role === 'ADMIN';
@@ -264,11 +425,103 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
     }
   };
 
+  const fetchAdminCrafts = async () => {
+    if (!isAdmin) return;
+    try {
+      const res = await fetch('/api/art-craft?status=ALL');
+      if (res.ok) {
+        const data = await res.json();
+        setAdminCrafts(data.artCrafts || []);
+      }
+    } catch (err) {
+      console.error('Failed to load admin crafts:', err);
+    }
+  };
+
+  const handleSaveCraft = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const token = localStorage.getItem('literature_token');
+    try {
+      setLoading(true);
+      const url = editingCraftId ? `/api/art-craft/${editingCraftId}` : '/api/art-craft';
+      const method = editingCraftId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(craftForm),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to save craft entry.');
+      }
+
+      setAlertMsg({
+        type: 'success',
+        text: editingCraftId ? 'Art & Craft updated successfully.' : 'New Art & Craft entry created successfully.',
+      });
+
+      // Reset form
+      setEditingCraftId(null);
+      setCraftForm({
+        name: '',
+        localName: '',
+        state: 'Karnataka',
+        region: '',
+        district: '',
+        place: '',
+        type: 'Woodcraft & Lacquerware',
+        originPeriod: '',
+        history: '',
+        culturalSignificance: '',
+        culturalBackground: '',
+        materials: '',
+        makingProcess: '',
+        traditionalProducts: '',
+        modernContext: '',
+        coverImage: '',
+        status: 'PUBLISHED',
+      });
+
+      fetchAdminCrafts();
+      fetchDashboardKpis();
+    } catch (err: any) {
+      setAlertMsg({ type: 'error', text: err.message || 'Operation failed.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteCraft = async (id: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) return;
+    const token = localStorage.getItem('literature_token');
+    try {
+      const res = await fetch(`/api/art-craft/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setAlertMsg({ type: 'success', text: `Craft "${name}" deleted.` });
+        fetchAdminCrafts();
+        fetchDashboardKpis();
+      } else {
+        throw new Error('Failed to delete craft.');
+      }
+    } catch (err: any) {
+      setAlertMsg({ type: 'error', text: err.message });
+    }
+  };
+
   useEffect(() => {
     if (isAdmin) {
       fetchMetadata();
       fetchArchivalWorks();
       fetchDashboardKpis();
+      fetchAdminCrafts();
     }
   }, [isAdmin]);
 
@@ -636,6 +889,20 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
               {allWorks.length}
             </span>
           </button>
+          <button
+            className={`editorial-tab-btn ${activeTab === 'artcraft' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('artcraft');
+              fetchAdminCrafts();
+            }}
+            id="tab-btn-artcraft-studio"
+          >
+            <Palette size={16} />
+            Art & Craft Studio
+            <span className="badge-count" id="artcraft-count-badge" style={{ backgroundColor: 'var(--accent-gold)', color: 'var(--bg-dark)' }}>
+              {adminCrafts.length}
+            </span>
+          </button>
         </div>
       </div>
 
@@ -915,6 +1182,22 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
               </div>
               <div className="kpi-card-subtext">
                 <span>Preserved manuscripts this month</span>
+              </div>
+            </div>
+
+            {/* 12. Total Art & Craft (Cultural Heritage Telemetry) */}
+            <div className="kpi-card" id="kpi-total-artcraft" data-testid="kpi-card-total-artcraft">
+              <div className="kpi-card-top">
+                <span className="kpi-card-label">Total Art & Craft</span>
+                <div className="kpi-card-icon-wrap gold">
+                  <Sparkles size={18} />
+                </div>
+              </div>
+              <div className="kpi-card-value" id="kpi-val-total-artcraft">
+                {kpiData && kpiData.totalArtCraft !== undefined ? kpiData.totalArtCraft : '0'}
+              </div>
+              <div className="kpi-card-subtext">
+                <span>Across all 28 Indian States</span>
               </div>
             </div>
           </div>
@@ -1294,9 +1577,23 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
               )}
 
               <div className="form-group">
-                <label className="form-label" htmlFor="lit-brief">
-                  Brief Philosophical Abstract <span style={{ color: 'var(--accent-burgundy)' }}>*</span>
-                </label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                  <label className="form-label" htmlFor="lit-brief" style={{ margin: 0 }}>
+                    Brief Philosophical Abstract <span style={{ color: 'var(--accent-burgundy)' }}>*</span>
+                  </label>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    disabled={aiLoading}
+                    onClick={() => handleAiGenerateMetadata('brief')}
+                    id="btn-admin-ai-generate-brief"
+                    style={{ borderColor: 'var(--accent-gold)', fontSize: '0.8rem', padding: '0.25rem 0.65rem' }}
+                    title="Generate brief using Google Gemini"
+                  >
+                    <Sparkles size={13} style={{ marginRight: '4px', color: 'var(--accent-gold)' }} />
+                    <span>{aiLoading ? 'Generating...' : '✨ Generate Brief'}</span>
+                  </button>
+                </div>
                 <textarea
                   id="lit-brief"
                   className="form-textarea"
@@ -1388,9 +1685,23 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label" htmlFor="lit-tags">
-                    Archival Tags <span className="form-label-optional">(Comma separated)</span>
-                  </label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                    <label className="form-label" htmlFor="lit-tags" style={{ margin: 0 }}>
+                      Archival Tags <span className="form-label-optional">(Comma separated)</span>
+                    </label>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      disabled={aiLoading}
+                      onClick={() => handleAiGenerateMetadata('tags')}
+                      id="btn-admin-ai-generate-tags"
+                      style={{ borderColor: 'var(--accent-gold)', fontSize: '0.78rem', padding: '0.2rem 0.6rem' }}
+                      title="Generate Tags, Subject & Genre using Google Gemini"
+                    >
+                      <Sparkles size={12} style={{ marginRight: '4px', color: 'var(--accent-gold)' }} />
+                      <span>{aiLoading ? 'Generating...' : '✨ Generate Tags'}</span>
+                    </button>
+                  </div>
                   <input
                     id="lit-tags"
                     className="form-input"
@@ -1678,6 +1989,713 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                 </tbody>
               </table>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* VIEW 3: INDIAN ART & CRAFT CURATION STUDIO */}
+      {activeTab === 'artcraft' && (
+        <div id="admin-artcraft-studio-view" style={{ animation: 'fadeIn 0.25s ease' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <h2 className="serif-title" style={{ fontSize: '1.45rem', color: 'var(--accent-burgundy)' }}>
+                {editingCraftId ? 'Edit Traditional Art & Craft' : 'Art & Craft Cultural Registry'}
+              </h2>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                Document, edit, draft, publish, and manage Indian regional heritage across all 28 states.
+              </p>
+            </div>
+            {editingCraftId && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => {
+                  setEditingCraftId(null);
+                  setCraftForm({
+                    name: '',
+                    localName: '',
+                    state: 'Karnataka',
+                    region: '',
+                    district: '',
+                    place: '',
+                    type: 'Woodcraft & Lacquerware',
+                    originPeriod: '',
+                    history: '',
+                    culturalSignificance: '',
+                    culturalBackground: '',
+                    materials: '',
+                    makingProcess: '',
+                    traditionalProducts: '',
+                    modernContext: '',
+                    coverImage: '',
+                    status: 'PUBLISHED',
+                  });
+                }}
+              >
+                + Cancel Edit & Create New
+              </button>
+            )}
+          </div>
+
+          {/* Form Card */}
+          <div className="editorial-form-card" style={{ marginBottom: '2.5rem' }}>
+            <form onSubmit={handleSaveCraft}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <h3 className="serif-title" style={{ fontSize: '1.2rem', margin: 0, color: 'var(--accent-burgundy)' }}>
+                  {editingCraftId ? 'Update Art & Craft Details' : 'Add New Indian Traditional Art & Craft'}
+                </h3>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  disabled={aiCraftLoading}
+                  onClick={handleAiGenerateCraftDraft}
+                  id="btn-admin-ai-craft-draft"
+                  style={{ borderColor: 'var(--accent-gold)', color: 'var(--accent-burgundy)' }}
+                  title="Generate structured historical and cultural draft dossier using Google Gemini"
+                >
+                  <Sparkles size={14} style={{ marginRight: '5px', color: 'var(--accent-gold)' }} />
+                  <span>{aiCraftLoading ? 'Consulting Archival Intellect...' : '✨ AI Assistant: Draft Historical & Cultural Dossier'}</span>
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                <div>
+                  <label className="form-label" htmlFor="craft-form-name">Craft / Art Name *</label>
+                  <input
+                    type="text"
+                    id="craft-form-name"
+                    required
+                    placeholder="e.g. Channapatna Toys"
+                    value={craftForm.name}
+                    onChange={(e) => setCraftForm({ ...craftForm, name: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" htmlFor="craft-form-localname">Traditional / Local Name (Devanagari, Kannada, etc.)</label>
+                  <input
+                    type="text"
+                    id="craft-form-localname"
+                    placeholder="e.g. ಚನ್ನಪಟ್ಟಣದ ಗೊಂಬೆಗಳು / चन्नपटना खिलौने"
+                    value={craftForm.localName}
+                    onChange={(e) => setCraftForm({ ...craftForm, localName: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" htmlFor="craft-form-state">State (28 Indian States) *</label>
+                  <select
+                    id="craft-form-state"
+                    required
+                    value={craftForm.state}
+                    onChange={(e) => setCraftForm({ ...craftForm, state: e.target.value })}
+                    className="form-select"
+                  >
+                    <option value="Andhra Pradesh">Andhra Pradesh</option>
+                    <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                    <option value="Assam">Assam</option>
+                    <option value="Bihar">Bihar</option>
+                    <option value="Chhattisgarh">Chhattisgarh</option>
+                    <option value="Goa">Goa</option>
+                    <option value="Gujarat">Gujarat</option>
+                    <option value="Haryana">Haryana</option>
+                    <option value="Himachal Pradesh">Himachal Pradesh</option>
+                    <option value="Jharkhand">Jharkhand</option>
+                    <option value="Karnataka">Karnataka</option>
+                    <option value="Kerala">Kerala</option>
+                    <option value="Madhya Pradesh">Madhya Pradesh</option>
+                    <option value="Maharashtra">Maharashtra</option>
+                    <option value="Manipur">Manipur</option>
+                    <option value="Meghalaya">Meghalaya</option>
+                    <option value="Mizoram">Mizoram</option>
+                    <option value="Nagaland">Nagaland</option>
+                    <option value="Odisha">Odisha</option>
+                    <option value="Punjab">Punjab</option>
+                    <option value="Rajasthan">Rajasthan</option>
+                    <option value="Sikkim">Sikkim</option>
+                    <option value="Tamil Nadu">Tamil Nadu</option>
+                    <option value="Telangana">Telangana</option>
+                    <option value="Tripura">Tripura</option>
+                    <option value="Uttar Pradesh">Uttar Pradesh</option>
+                    <option value="Uttarakhand">Uttarakhand</option>
+                    <option value="West Bengal">West Bengal</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="form-label" htmlFor="craft-form-place">Place / Town / Village of Origin *</label>
+                  <input
+                    type="text"
+                    id="craft-form-place"
+                    required
+                    placeholder="e.g. Channapatna"
+                    value={craftForm.place}
+                    onChange={(e) => setCraftForm({ ...craftForm, place: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" htmlFor="craft-form-district">District</label>
+                  <input
+                    type="text"
+                    id="craft-form-district"
+                    placeholder="e.g. Ramanagara"
+                    value={craftForm.district}
+                    onChange={(e) => setCraftForm({ ...craftForm, district: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" htmlFor="craft-form-region">Region</label>
+                  <input
+                    type="text"
+                    id="craft-form-region"
+                    placeholder="e.g. South Karnataka, Mewar"
+                    value={craftForm.region}
+                    onChange={(e) => setCraftForm({ ...craftForm, region: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" htmlFor="craft-form-type">Craft / Art Type *</label>
+                  <input
+                    type="text"
+                    id="craft-form-type"
+                    required
+                    placeholder="e.g. Woodcraft & Lacquerware"
+                    value={craftForm.type}
+                    onChange={(e) => setCraftForm({ ...craftForm, type: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" htmlFor="craft-form-status">Publication Status</label>
+                  <select
+                    id="craft-form-status"
+                    value={craftForm.status}
+                    onChange={(e) => setCraftForm({ ...craftForm, status: e.target.value })}
+                    className="form-select"
+                  >
+                    <option value="PUBLISHED">Published</option>
+                    <option value="DRAFT">Draft</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label className="form-label" htmlFor="craft-form-origin">Origin Period (Verified / Approximate) *</label>
+                <input
+                  type="text"
+                  id="craft-form-origin"
+                  required
+                  placeholder="e.g. Origin period: Believed to date back to the late 18th century under Tipu Sultan's reign"
+                  value={craftForm.originPeriod}
+                  onChange={(e) => setCraftForm({ ...craftForm, originPeriod: e.target.value })}
+                  className="form-input"
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label className="form-label" htmlFor="craft-form-history">Verified History & Development *</label>
+                <textarea
+                  id="craft-form-history"
+                  required
+                  rows={4}
+                  placeholder="Provide verified historical background..."
+                  value={craftForm.history}
+                  onChange={(e) => setCraftForm({ ...craftForm, history: e.target.value })}
+                  className="form-textarea"
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                <div>
+                  <label className="form-label" htmlFor="craft-form-culture">Cultural Significance</label>
+                  <textarea
+                    id="craft-form-culture"
+                    rows={3}
+                    placeholder="Ritual, festive, and traditional cultural significance..."
+                    value={craftForm.culturalSignificance}
+                    onChange={(e) => setCraftForm({ ...craftForm, culturalSignificance: e.target.value })}
+                    className="form-textarea"
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" htmlFor="craft-form-background">Community Background & Lore</label>
+                  <textarea
+                    id="craft-form-background"
+                    rows={3}
+                    placeholder="Artisan communities, hereditary lineages, traditional stories..."
+                    value={craftForm.culturalBackground}
+                    onChange={(e) => setCraftForm({ ...craftForm, culturalBackground: e.target.value })}
+                    className="form-textarea"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                <div>
+                  <label className="form-label" htmlFor="craft-form-materials">Traditional Materials Used</label>
+                  <textarea
+                    id="craft-form-materials"
+                    rows={3}
+                    placeholder="Ivory wood, natural lac, vegetable dyes, etc..."
+                    value={craftForm.materials}
+                    onChange={(e) => setCraftForm({ ...craftForm, materials: e.target.value })}
+                    className="form-textarea"
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" htmlFor="craft-form-process">Traditional Making Process</label>
+                  <textarea
+                    id="craft-form-process"
+                    rows={3}
+                    placeholder="1. Raw material prep. 2. Lathe turning. 3. Lacquering. 4. Polishing..."
+                    value={craftForm.makingProcess}
+                    onChange={(e) => setCraftForm({ ...craftForm, makingProcess: e.target.value })}
+                    className="form-textarea"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                <div>
+                  <label className="form-label" htmlFor="craft-form-products">Famous Traditional Products</label>
+                  <input
+                    type="text"
+                    id="craft-form-products"
+                    placeholder="e.g. Raja-Rani dolls, rocking horses, wooden beads"
+                    value={craftForm.traditionalProducts}
+                    onChange={(e) => setCraftForm({ ...craftForm, traditionalProducts: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" htmlFor="craft-form-modern">Modern Context & GI Status</label>
+                  <input
+                    type="text"
+                    id="craft-form-modern"
+                    placeholder="e.g. GI registered in 2006, contemporary initiatives..."
+                    value={craftForm.modernContext}
+                    onChange={(e) => setCraftForm({ ...craftForm, modernContext: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label className="form-label" htmlFor="craft-form-cover">Cover Image URL</label>
+                <input
+                  type="text"
+                  id="craft-form-cover"
+                  placeholder="https://... or /uploads/..."
+                  value={craftForm.coverImage}
+                  onChange={(e) => setCraftForm({ ...craftForm, coverImage: e.target.value })}
+                  className="form-input"
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setEditingCraftId(null);
+                    setCraftForm({
+                      name: '',
+                      localName: '',
+                      state: 'Karnataka',
+                      region: '',
+                      district: '',
+                      place: '',
+                      type: 'Woodcraft & Lacquerware',
+                      originPeriod: '',
+                      history: '',
+                      culturalSignificance: '',
+                      culturalBackground: '',
+                      materials: '',
+                      makingProcess: '',
+                      traditionalProducts: '',
+                      modernContext: '',
+                      coverImage: '',
+                      status: 'PUBLISHED',
+                    });
+                  }}
+                >
+                  Reset Form
+                </button>
+                <button
+                  type="submit"
+                  className="btn-publish"
+                  disabled={loading}
+                  id="btn-submit-craft-form"
+                >
+                  <Check size={16} />
+                  {editingCraftId ? 'Update Art & Craft' : 'Publish to Cultural Repository'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Existing Art & Craft Table */}
+          <h3 className="serif-title" style={{ fontSize: '1.25rem', marginBottom: '1rem', color: 'var(--accent-burgundy)' }}>
+            All Registered Indian Arts & Crafts ({adminCrafts.length})
+          </h3>
+          <div className="admin-artcraft-table-wrap">
+            <table className="admin-artcraft-table" id="admin-crafts-table">
+              <thead>
+                <tr>
+                  <th>Craft Name</th>
+                  <th>State</th>
+                  <th>Place / District</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {adminCrafts.map((craft) => (
+                  <tr key={craft.id}>
+                    <td>
+                      <strong>{craft.name}</strong>
+                      {craft.localName && (
+                        <div style={{ fontSize: '0.8rem', color: 'var(--accent-burgundy)' }}>
+                          {craft.localName}
+                        </div>
+                      )}
+                    </td>
+                    <td>{craft.state}</td>
+                    <td>{craft.place}{craft.district ? `, ${craft.district}` : ''}</td>
+                    <td><span className="tag-badge" style={{ fontSize: '0.75rem' }}>{craft.type}</span></td>
+                    <td>
+                      <span className={`artcraft-status-tag ${craft.status.toLowerCase()}`}>
+                        {craft.status}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="admin-action-btn-group">
+                        <button
+                          className="admin-action-btn"
+                          title="Edit Craft"
+                          onClick={() => {
+                            setEditingCraftId(craft.id);
+                            setCraftForm({
+                              name: craft.name,
+                              localName: craft.localName || '',
+                              state: craft.state,
+                              region: craft.region || '',
+                              district: craft.district || '',
+                              place: craft.place,
+                              type: craft.type,
+                              originPeriod: craft.originPeriod,
+                              history: craft.history,
+                              culturalSignificance: craft.culturalSignificance || '',
+                              culturalBackground: craft.culturalBackground || '',
+                              materials: craft.materials || '',
+                              makingProcess: craft.makingProcess || '',
+                              traditionalProducts: craft.traditionalProducts || '',
+                              modernContext: craft.modernContext || '',
+                              coverImage: craft.coverImage || '',
+                              status: craft.status,
+                            });
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                        >
+                          <Edit size={13} /> Edit
+                        </button>
+                        <button
+                          className="admin-action-btn delete"
+                          title="Delete Craft"
+                          onClick={() => handleDeleteCraft(craft.id, craft.name)}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      {/* Admin AI Manuscript Metadata Review Modal */}
+      {aiDraftModalOpen && aiMetadataProposal && (
+        <div className="ai-modal-overlay" onClick={() => setAiDraftModalOpen(false)}>
+          <div className="ai-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
+            <div className="ai-modal-header">
+              <div className="ai-modal-header-left">
+                <div className="ai-modal-icon-badge">
+                  <Sparkles size={18} />
+                </div>
+                <div>
+                  <h3 className="ai-modal-title">Curatorial AI Metadata Review</h3>
+                  <p className="ai-modal-subtitle">Review, edit, and approve before applying to manuscript form</p>
+                </div>
+              </div>
+              <button className="ai-modal-close-btn" onClick={() => setAiDraftModalOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="ai-modal-body">
+              <div className="ai-disclaimer-badge">
+                <ShieldCheck size={14} />
+                <span>Curator approval required. Content will not be published until you explicitly save.</span>
+              </div>
+
+              {aiMetadataProposal.brief && (
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, color: 'var(--accent-burgundy)' }}>
+                    Curatorial Brief (Draft)
+                  </label>
+                  <textarea
+                    className="form-textarea"
+                    rows={3}
+                    value={aiMetadataProposal.brief}
+                    onChange={(e) =>
+                      setAiMetadataProposal({ ...aiMetadataProposal, brief: e.target.value })
+                    }
+                  />
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, color: 'var(--accent-burgundy)' }}>
+                    Proposed Genre
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={aiMetadataProposal.genre || ''}
+                    onChange={(e) =>
+                      setAiMetadataProposal({ ...aiMetadataProposal, genre: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, color: 'var(--accent-burgundy)' }}>
+                    Proposed Subject
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={aiMetadataProposal.subject || ''}
+                    onChange={(e) =>
+                      setAiMetadataProposal({ ...aiMetadataProposal, subject: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
+              {aiMetadataProposal.tags && (
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, color: 'var(--accent-burgundy)' }}>
+                    Proposed Tags (Comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={aiMetadataProposal.tags.join(', ')}
+                    onChange={(e) =>
+                      setAiMetadataProposal({
+                        ...aiMetadataProposal,
+                        tags: e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
+                      })
+                    }
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="ai-modal-footer">
+              <button
+                type="button"
+                className="btn-ai-secondary"
+                onClick={() => setAiDraftModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-ai-action"
+                onClick={handleApplyAiMetadata}
+                id="btn-apply-ai-metadata"
+              >
+                <Check size={14} />
+                <span>Approve & Apply to Form</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Admin AI Art & Craft Dossier Review Modal */}
+      {aiCraftModalOpen && aiCraftProposal && (
+        <div className="ai-modal-overlay" onClick={() => setAiCraftModalOpen(false)}>
+          <div className="ai-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '780px' }}>
+            <div className="ai-modal-header">
+              <div className="ai-modal-header-left">
+                <div className="ai-modal-icon-badge">
+                  <Sparkles size={18} />
+                </div>
+                <div>
+                  <h3 className="ai-modal-title">Review AI Art & Craft Cultural Dossier</h3>
+                  <p className="ai-modal-subtitle">Verify historical accuracy and provenance before populating draft form</p>
+                </div>
+              </div>
+              <button className="ai-modal-close-btn" onClick={() => setAiCraftModalOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="ai-modal-body" style={{ maxHeight: '68vh', overflowY: 'auto' }}>
+              <div className="ai-disclaimer-badge">
+                <ShieldCheck size={14} />
+                <span>Draft Information: Cultural & historical facts must be verified by Curators before publishing.</span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, color: 'var(--accent-burgundy)' }}>
+                    Traditional / Local Name
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={aiCraftProposal.localName || ''}
+                    onChange={(e) => setAiCraftProposal({ ...aiCraftProposal, localName: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, color: 'var(--accent-burgundy)' }}>
+                    Origin Period / Epoch
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={aiCraftProposal.originPeriod || ''}
+                    onChange={(e) => setAiCraftProposal({ ...aiCraftProposal, originPeriod: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: 600, color: 'var(--accent-burgundy)' }}>
+                  Historical Chronicle
+                </label>
+                <textarea
+                  className="form-textarea"
+                  rows={4}
+                  value={aiCraftProposal.history || ''}
+                  onChange={(e) => setAiCraftProposal({ ...aiCraftProposal, history: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, color: 'var(--accent-burgundy)' }}>
+                    Cultural Significance
+                  </label>
+                  <textarea
+                    className="form-textarea"
+                    rows={3}
+                    value={aiCraftProposal.culturalSignificance || ''}
+                    onChange={(e) => setAiCraftProposal({ ...aiCraftProposal, culturalSignificance: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, color: 'var(--accent-burgundy)' }}>
+                    Cultural Background
+                  </label>
+                  <textarea
+                    className="form-textarea"
+                    rows={3}
+                    value={aiCraftProposal.culturalBackground || ''}
+                    onChange={(e) => setAiCraftProposal({ ...aiCraftProposal, culturalBackground: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, color: 'var(--accent-burgundy)' }}>
+                    Materials Used
+                  </label>
+                  <textarea
+                    className="form-textarea"
+                    rows={2}
+                    value={aiCraftProposal.materials || ''}
+                    onChange={(e) => setAiCraftProposal({ ...aiCraftProposal, materials: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, color: 'var(--accent-burgundy)' }}>
+                    Traditional Products
+                  </label>
+                  <textarea
+                    className="form-textarea"
+                    rows={2}
+                    value={aiCraftProposal.traditionalProducts || ''}
+                    onChange={(e) => setAiCraftProposal({ ...aiCraftProposal, traditionalProducts: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: 600, color: 'var(--accent-burgundy)' }}>
+                  Traditional Making Process
+                </label>
+                <textarea
+                  className="form-textarea"
+                  rows={3}
+                  value={aiCraftProposal.makingProcess || ''}
+                  onChange={(e) => setAiCraftProposal({ ...aiCraftProposal, makingProcess: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: 600, color: 'var(--accent-burgundy)' }}>
+                  Modern Context & GI Status
+                </label>
+                <textarea
+                  className="form-textarea"
+                  rows={2}
+                  value={aiCraftProposal.modernContext || ''}
+                  onChange={(e) => setAiCraftProposal({ ...aiCraftProposal, modernContext: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="ai-modal-footer">
+              <button
+                type="button"
+                className="btn-ai-secondary"
+                onClick={() => setAiCraftModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-ai-action"
+                onClick={handleApplyAiCraftDraft}
+                id="btn-apply-ai-craft"
+              >
+                <Check size={14} />
+                <span>Verify & Apply to Craft Form</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

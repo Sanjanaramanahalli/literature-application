@@ -15,6 +15,7 @@ model User {
   passwordHash String?
   role         String    @default("READER") // "READER" or "ADMIN"
   googleId     String?
+  avatarUrl    String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -144,3 +145,27 @@ model LiteratureVote {
 
   @@unique([userId, literatureId])
 }
+
+model ArtCraft {
+  id                    String    @id @default(uuid())
+  name                  String
+  localName             String?   // Hindi, Kannada, or regional script
+  state                 String    // One of the 28 Indian states
+  region                String?   // Geographical / cultural region
+  district              String?   // District
+  place                 String    // Specific town, village, or city of origin
+  type                  String    // e.g. "Woodcraft & Lacquerware", "Traditional Painting", "Textile & Weaving"
+  originPeriod          String    // Verified historical/approximate period
+  history               String
+  culturalSignificance  String
+  culturalBackground    String
+  materials             String
+  makingProcess         String
+  traditionalProducts   String
+  modernContext         String
+  coverImage            String?
+  status                String    @default("PUBLISHED") // "DRAFT" or "PUBLISHED"
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+

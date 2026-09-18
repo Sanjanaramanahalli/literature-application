@@ -1,0 +1,641 @@
+/* ==========================================================================
+   ATHENÆUM - ART & CRAFT MODULE STYLESHEET
+   Classic Literature & Cultural Heritage Aesthetic
+   Palette: Warm Alabaster, Aged Parchment, Antique Dark Brown, Burgundy, Gold
+   ========================================================================== */
+
+.artcraft-section {
+  width: 100%;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Header & Banner */
+.artcraft-hero-banner {
+  background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-secondary) 100%);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-lg);
+  padding: 2.25rem 2rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-subtle);
+}
+
+.artcraft-hero-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent-burgundy), var(--accent-gold), var(--accent-burgundy));
+}
+
+.artcraft-hero-title {
+  font-family: var(--font-display);
+  font-size: 2.35rem;
+  color: var(--accent-burgundy);
+  margin-bottom: 0.65rem;
+  letter-spacing: -0.02em;
+}
+
+.artcraft-hero-subtitle {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  max-width: 760px;
+  margin: 0 auto 1.25rem;
+  line-height: 1.65;
+}
+
+.artcraft-hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.artcraft-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-classic);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.artcraft-stat-pill strong {
+  color: var(--accent-burgundy);
+}
+
+/* Controls & Filter Bar */
+.artcraft-filter-bar {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.artcraft-search-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.artcraft-search-input-wrap {
+  flex: 1;
+  min-width: 260px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.artcraft-search-icon {
+  position: absolute;
+  left: 0.85rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.artcraft-search-input {
+  width: 100%;
+  padding: 0.65rem 0.85rem 0.65rem 2.4rem;
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.artcraft-search-input:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.2);
+}
+
+.artcraft-select {
+  padding: 0.65rem 1rem;
+  font-family: var(--font-ui);
+  font-size: 0.92rem;
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.artcraft-select:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
+
+/* State Navigation Scrollbar / Chips */
+.artcraft-states-scroll {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-classic) transparent;
+}
+
+.artcraft-states-scroll::-webkit-scrollbar {
+  height: 5px;
+}
+.artcraft-states-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--border-classic);
+  border-radius: 4px;
+}
+
+.artcraft-state-chip {
+  white-space: nowrap;
+  padding: 0.4rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.84rem;
+  border: 1px solid var(--border-classic);
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-ui);
+}
+
+.artcraft-state-chip:hover {
+  border-color: var(--accent-gold);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.artcraft-state-chip.active {
+  background-color: var(--accent-burgundy);
+  color: var(--text-light);
+  border-color: var(--accent-burgundy);
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(114, 47, 55, 0.3);
+}
+
+/* Craft Grid */
+.artcraft-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.75rem;
+  margin-bottom: 2.5rem;
+}
+
+/* Craft Card */
+.artcraft-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-subtle);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.artcraft-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card);
+  border-color: var(--accent-gold);
+}
+
+.artcraft-card-cover {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-classic);
+  overflow: hidden;
+}
+
+.artcraft-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.artcraft-card:hover .artcraft-card-img {
+  transform: scale(1.04);
+}
+
+.artcraft-card-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: rgba(30, 20, 12, 0.85);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+  backdrop-filter: blur(4px);
+}
+
+.artcraft-card-type-badge {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: var(--accent-burgundy);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.25rem 0.55rem;
+  border-radius: 4px;
+}
+
+.artcraft-card-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.artcraft-card-header {
+  margin-bottom: 0.5rem;
+}
+
+.artcraft-card-name {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+  line-height: 1.35;
+}
+
+.artcraft-card-local-name {
+  font-size: 0.88rem;
+  color: var(--accent-burgundy);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.artcraft-card-location {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.artcraft-card-origin-period {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background-color: var(--bg-secondary);
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.85rem;
+  border-left: 3px solid var(--accent-gold);
+  line-height: 1.4;
+}
+
+.artcraft-card-excerpt {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.artcraft-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border-classic);
+  font-size: 0.82rem;
+}
+
+.artcraft-view-link {
+  color: var(--accent-burgundy);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* ==========================================================================
+   ART & CRAFT DETAIL VIEW STYLES
+   ========================================================================== */
+.artcraft-detail-view {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease;
+}
+
+.artcraft-detail-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-classic);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s;
+}
+
+.artcraft-detail-back-btn:hover {
+  border-color: var(--accent-burgundy);
+  color: var(--accent-burgundy);
+  background-color: var(--accent-burgundy-subtle);
+}
+
+.artcraft-detail-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 2.5rem;
+}
+
+.artcraft-detail-hero {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  background-color: var(--bg-secondary);
+  overflow: hidden;
+}
+
+.artcraft-detail-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.artcraft-detail-hero-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 2.5rem 2rem 1.5rem;
+  background: linear-gradient(to top, rgba(30, 20, 12, 0.92) 0%, rgba(30, 20, 12, 0.4) 60%, transparent 100%);
+  color: #fff;
+}
+
+.artcraft-detail-state-badge {
+  display: inline-block;
+  background-color: var(--accent-gold);
+  color: var(--bg-dark);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.artcraft-detail-title {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  color: #fff;
+  margin-bottom: 0.35rem;
+  line-height: 1.2;
+}
+
+.artcraft-detail-local-name {
+  font-size: 1.15rem;
+  color: #f6e0b5;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.artcraft-detail-location-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: #e3dac9;
+}
+
+.artcraft-detail-location-bar span {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.artcraft-detail-content {
+  padding: 2.5rem 2.25rem;
+}
+
+.artcraft-origin-callout {
+  background-color: var(--accent-burgundy-subtle);
+  border-left: 4px solid var(--accent-burgundy);
+  padding: 1.15rem 1.4rem;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-bottom: 2rem;
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  color: var(--accent-burgundy);
+  line-height: 1.6;
+}
+
+.artcraft-origin-callout strong {
+  display: block;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-burgundy-hover);
+  margin-bottom: 0.25rem;
+}
+
+/* Sections */
+.artcraft-section-block {
+  margin-bottom: 2.25rem;
+}
+
+.artcraft-section-title {
+  font-family: var(--font-heading);
+  font-size: 1.45rem;
+  color: var(--accent-burgundy);
+  border-bottom: 1px solid var(--border-classic);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.artcraft-prose {
+  font-family: var(--font-reading);
+  font-size: 1.08rem;
+  line-height: 1.85;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.artcraft-materials-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.artcraft-material-pill {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-classic);
+  padding: 0.35rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.artcraft-process-steps {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.artcraft-process-step {
+  position: relative;
+  padding-left: 2rem;
+  margin-bottom: 1rem;
+  font-family: var(--font-reading);
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: var(--text-primary);
+}
+
+.artcraft-process-step::before {
+  content: '✦';
+  position: absolute;
+  left: 0.35rem;
+  color: var(--accent-gold);
+  font-size: 1.1rem;
+}
+
+.artcraft-highlight-box {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  margin-top: 1.25rem;
+}
+
+.artcraft-highlight-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--accent-burgundy);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+/* ==========================================================================
+   ADMIN ART & CRAFT STUDIO STYLES
+   ========================================================================== */
+.admin-artcraft-table-wrap {
+  overflow-x: auto;
+  margin-top: 1.5rem;
+}
+
+.admin-artcraft-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.admin-artcraft-table th {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid var(--border-classic);
+}
+
+.admin-artcraft-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-classic);
+  vertical-align: middle;
+}
+
+.admin-artcraft-table tr:hover {
+  background-color: var(--bg-secondary);
+}
+
+.artcraft-status-tag {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.artcraft-status-tag.published {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+
+.artcraft-status-tag.draft {
+  background-color: #fff3e0;
+  color: #ef6c00;
+  border: 1px solid #ffe0b2;
+}
+
+.admin-action-btn-group {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.admin-action-btn {
+  background: none;
+  border: 1px solid var(--border-classic);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.82rem;
+}
+
+.admin-action-btn:hover {
+  border-color: var(--accent-burgundy);
+  color: var(--accent-burgundy);
+}
+
+.admin-action-btn.delete:hover {
+  border-color: #c62828;
+  color: #c62828;
+  background-color: #ffebee;
+}

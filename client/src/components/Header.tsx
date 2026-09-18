@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, Search, Bookmark, ShieldCheck, LogOut, Menu, X } from 'lucide-react';
+import { BookOpen, Search, Bookmark, ShieldCheck, LogOut, Menu, X, Palette } from 'lucide-react';
 
 interface HeaderProps {
   currentTab: string;
@@ -61,6 +61,14 @@ export const Header: React.FC<HeaderProps> = ({
             Categories
           </button>
           <button
+            className={`nav-link ${currentTab === 'artcraft' ? 'active' : ''}`}
+            onClick={() => handleNav('artcraft')}
+            id="nav-artcraft"
+          >
+            <Palette size={15} style={{ marginRight: '4px' }} />
+            Art & Craft
+          </button>
+          <button
             className={`nav-link ${currentTab === 'search' ? 'active' : ''}`}
             onClick={() => handleNav('search')}
             id="nav-search"
@@ -106,6 +114,14 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="header-actions">
           {user ? (
             <div className="user-profile-badge">
+              {user.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.name}
+                  className="user-avatar-img"
+                  referrerPolicy="no-referrer"
+                />
+              ) : null}
               <span className="user-role-tag">{user.role}</span>
               <span className="user-name">{user.name}</span>
               <button
@@ -153,11 +169,14 @@ export const Header: React.FC<HeaderProps> = ({
           <button className="mobile-nav-link" onClick={() => handleNav('home')}>
             Home
           </button>
-          <button className="mobile-nav-link" onClick={() => handleNav('explore')}>
+          <button className="mobile-nav-link" onClick={() => handleNav('explore')} id="mobile-nav-explore">
             Explore Literature
           </button>
           <button className="mobile-nav-link" onClick={() => handleNav('categories')}>
             Categories
+          </button>
+          <button className="mobile-nav-link" onClick={() => handleNav('artcraft')} id="mobile-nav-artcraft">
+            Art & Craft
           </button>
           <button className="mobile-nav-link" onClick={() => handleNav('search')}>
             Advanced Search

@@ -472,6 +472,14 @@ const handleDashboardStats = async (req: AuthRequest, res: Response): Promise<vo
       },
     });
 
+    // 12. Total Indian Art & Craft (Real Database Telemetry)
+    let totalArtCraft = 0;
+    try {
+      totalArtCraft = await prisma.artCraft.count();
+    } catch {
+      totalArtCraft = 0;
+    }
+
     // Dashboard Section: Recent Literature
     const recentLiterature = await prisma.literature.findMany({
       take: 6,
@@ -603,6 +611,7 @@ const handleDashboardStats = async (req: AuthRequest, res: Response): Promise<vo
       totalSaves,
       newUsersThisMonth,
       newReleasesThisMonth,
+      totalArtCraft,
     };
 
     res.json({

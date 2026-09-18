@@ -17,6 +17,7 @@ import {
   Check,
 } from 'lucide-react';
 import { ThreadedComments } from './ThreadedComments';
+import { WhatsAppAiAssistant } from './WhatsAppAiAssistant';
 import type { LiteratureItem } from './LiteratureCard';
 import './ReaderView.css';
 
@@ -78,6 +79,8 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isFlipping, setIsFlipping] = useState<boolean>(false);
   const [flipDirection, setFlipDirection] = useState<'next' | 'prev'>('next');
+
+
 
   const handlePageChange = (newPage: number, direction: 'next' | 'prev', scroll: boolean = false) => {
     if (newPage === currentPage || isFlipping) return;
@@ -500,6 +503,8 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
             <span>{isSaved ? 'Saved in Sanctuary' : 'Save to Sanctuary'}</span>
             <span style={{ opacity: 0.8, marginLeft: '4px' }}>({savesCount})</span>
           </button>
+
+
         </div>
       </div>
 
@@ -1070,6 +1075,16 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
         comments={literature.comments || []}
         user={user}
         onCommentsUpdated={fetchLiteratureDetail}
+        onOpenAuth={onOpenAuth}
+      />
+
+
+
+      {/* WhatsApp-Style Floating Literature AI Chat Assistant */}
+      <WhatsAppAiAssistant
+        literatureTitle={literature.title}
+        literatureContent={literature.content}
+        user={user}
         onOpenAuth={onOpenAuth}
       />
     </div>

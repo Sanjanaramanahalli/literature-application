@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { LiteratureCard } from './LiteratureCard';
 import type { LiteratureItem } from './LiteratureCard';
+import { ArtCraftCard } from './ArtCraftCard';
+import type { ArtCraftItem } from './ArtCraftCard';
 import './CatalogView.css';
 
 interface Category {
@@ -14,6 +16,7 @@ interface Category {
 interface CatalogViewProps {
   currentTab: string;
   onSelectLiterature?: (item: LiteratureItem) => void;
+  onSelectArtCraft?: (item: ArtCraftItem) => void;
   user?: any;
   onOpenAuth?: (mode: 'login' | 'register') => void;
 }
@@ -21,6 +24,7 @@ interface CatalogViewProps {
 export const CatalogView: React.FC<CatalogViewProps> = ({
   currentTab,
   onSelectLiterature,
+  onSelectArtCraft,
   user,
   onOpenAuth,
 }) => {
@@ -29,6 +33,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [newReleases, setNewReleases] = useState<LiteratureItem[]>([]);
   const [allLiteratures, setAllLiteratures] = useState<LiteratureItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [artCrafts, setArtCrafts] = useState<ArtCraftItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [loading, setLoading] = useState<boolean>(true);
@@ -43,25 +48,27 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       setLoading(true);
       setError(null);
 
-      // Fetch featured, popular, new releases, all literature, and categories in parallel
-      const [featRes, popRes, newRes, allRes, catRes] = await Promise.all([
+      // Fetch featured, popular, new releases, all literature, categories, and art-craft in parallel
+      const [featRes, popRes, newRes, allRes, catRes, craftRes] = await Promise.all([
         fetch('/api/literature/featured'),
         fetch('/api/literature/popular'),
         fetch('/api/literature/new-releases?limit=6'),
         fetch('/api/literature'),
         fetch('/api/literature/categories'),
+        fetch('/api/art-craft?limit=6'),
       ]);
 
       if (!featRes.ok || !popRes.ok || !newRes.ok || !allRes.ok || !catRes.ok) {
         throw new Error('Failed to load literary catalog resources.');
       }
 
-      const [featData, popData, newData, allData, catData] = await Promise.all([
+      const [featData, popData, newData, allData, catData, craftData] = await Promise.all([
         featRes.json(),
         popRes.json(),
         newRes.json(),
         allRes.json(),
         catRes.json(),
+        craftRes.ok ? craftRes.json() : Promise.resolve({ items: [] }),
       ]);
 
       setFeatured(featData.featured || null);
@@ -69,6 +76,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       setNewReleases(newData.newReleases || []);
       setAllLiteratures(allData.literatures || []);
       setCategories(catData.categories || []);
+      setArtCrafts(craftData.items || craftData.artCrafts || (Array.isArray(craftData) ? craftData : []));
     } catch (err: any) {
       console.error('Catalog fetch error:', err);
       setError(err.message || 'Unable to connect to the literary repository.');
@@ -249,7 +257,31 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         </section>
       )}
 
-      {/* 4. Complete Catalog Showcase & Category Filter Engine */}
+      {/* 4. Indian Art & Craft Heritage Showcase (Displayed on Home) */}
+      {currentTab === 'home' && artCrafts.length > 0 && (
+        <section className="catalog-section" id="home-artcraft-section" style={{ marginTop: '2.5rem' }}>
+          <div className="section-header-classic">
+            <span className="ornament-line">❖ ❖ ❖</span>
+            <h2 className="section-title">Indian Art & Craft Heritage</h2>
+            <p className="section-subtitle">
+              Authentic cultural traditions, master craft heritage, and geographical craft expressions across India.
+            </p>
+          </div>
+
+          <div className="artcraft-grid" id="home-artcraft-grid">
+            {artCrafts.map((craft) => (
+              <ArtCraftCard
+                key={`craft-${craft.id}`}
+                item={craft}
+                onClick={() => onSelectArtCraft && onSelectArtCraft(craft)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 5. Complete Catalog Showcase & Category Filter Engine (Shown in Categories, excluded from Home) */}
+      {currentTab !== 'home' && (
       <section className="catalog-section" id="full-catalog-section">
         <div className="section-header-classic">
           <span className="ornament-line">❦ ❦ ❦</span>
@@ -344,6 +376,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           </div>
         )}
       </section>
+      )}
         </>
       )}
     </div>
