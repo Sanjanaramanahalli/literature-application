@@ -31,16 +31,31 @@ import { readerRouter } from './routes/reader.js';
 import { adminRouter } from './routes/admin.js';
 import { artCraftRouter } from './routes/artCraft.js';
 import { aiRouter } from './routes/ai.js';
+
+// Support both /api/* and root paths when handled by Vercel serverless functions
 app.use('/api/auth', authRouter);
+app.use('/auth', authRouter);
+
 app.use('/api/literature', literatureRouter);
+app.use('/literature', literatureRouter);
+
 app.use('/api/search', searchRouter);
+app.use('/search', searchRouter);
+
 app.use('/api/reader', readerRouter);
+app.use('/reader', readerRouter);
+
 app.use('/api/admin', adminRouter);
+app.use('/admin', adminRouter);
+
 app.use('/api/art-craft', artCraftRouter);
+app.use('/art-craft', artCraftRouter);
+
 app.use('/api/ai', aiRouter);
+app.use('/ai', aiRouter);
 
 // Health check endpoint
-app.get('/api/health', async (req: Request, res: Response) => {
+const handleHealth = async (req: Request, res: Response) => {
   try {
     // Ping DB
     await prisma.$queryRaw`SELECT 1`;
@@ -53,7 +68,9 @@ app.get('/api/health', async (req: Request, res: Response) => {
   } catch (err) {
     res.status(500).json({ status: 'error', message: 'Database connection failed' });
   }
-});
+};
+app.get('/api/health', handleHealth);
+app.get('/health', handleHealth);
 
 // Generic 404 handler
 app.use((req: Request, res: Response) => {
