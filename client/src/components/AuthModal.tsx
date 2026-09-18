@@ -199,44 +199,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     };
   }, [isOpen]);
 
-  // Handle verified Google credential from Google Identity Services
-  const handleGoogleCredentialResponse = async (response: any) => {
-    if (!response || !response.credential) {
-      setError('Google did not return a valid credential. Please try again.');
-      setGoogleLoading(false);
-      isGoogleProcessingRef.current = false;
-      return;
-    }
-
-    if (isGoogleProcessingRef.current) return;
-    isGoogleProcessingRef.current = true;
-    setError(null);
-    setGoogleLoading(true);
-
-    try {
-      const res = await fetch('/api/auth/google', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential: response.credential }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Google authentication verification failed.');
-      }
-
-      localStorage.setItem('literature_token', data.token);
-      localStorage.setItem('literature_user', JSON.stringify(data.user));
-      onSuccess(data.user, data.token);
-      onClose();
-    } catch (err: any) {
-      console.error('[Google Auth] Verification error:', err);
-      setError(err.message || 'Google authentication failed. Please try again.');
-    } finally {
-      setGoogleLoading(false);
-      isGoogleProcessingRef.current = false;
-    }
-  };
+  // 3. Initiate official Google OAuth / Identity flow
 
   // 3. Initiate official Google OAuth / Identity flow
   const handleGoogleSignIn = () => {
@@ -265,79 +228,110 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     try {
-      // 1. Direct OAuth2 Token Client popup (Guaranteed to show official Google Account Chooser modal)
-      if (google.accounts.oauth2) {
-        const tokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: clientId,
-          scope: 'openid email profile',
-          callback: async (tokenResponse: any) => {
-            if (tokenResponse && tokenResponse.error) {
-              setGoogleLoading(false);
-              if (tokenResponse.error !== 'popup_closed_by_user') {
-                setError(`Google Sign-In error: ${tokenResponse.error_description || tokenResponse.error}`);
+      // Direct official Google OAuth2 Authorization Screen (Guaranteed popup in all browsers)
+      const redirectUri = window.location.origin;
+      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
+        clientId
+      )}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(
+        'openid email profile'
+      )}&prompt=select_account`;
+
+      const popup = window.open(
+        oauthUrl,
+        'GoogleSignInWindow',
+        'width=500,height=650,top=100,left=100,toolbar=no,menubar=no,status=no'
+      );
+
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+        // Fallback: If popup blocker blocked the small window, open via Google Identity Services
+        if (google && google.accounts && google.accounts.oauth2) {
+          const tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope: 'openid email profile',
+            callback: async (tokenResponse: any) => {
+              if (tokenResponse && tokenResponse.access_token) {
+                await exchangeAccessToken(tokenResponse.access_token);
+              } else {
+                setGoogleLoading(false);
               }
+            },
+          });
+          tokenClient.requestAccessToken({ prompt: 'select_account' });
+        } else {
+          setGoogleLoading(false);
+          setError('Please allow popups for this site to sign in with Google.');
+        }
+      } else {
+        // Listen for token in redirected popup
+        const checkInterval = setInterval(async () => {
+          try {
+            if (popup.closed) {
+              clearInterval(checkInterval);
+              setGoogleLoading(false);
               return;
             }
 
-            if (tokenResponse && tokenResponse.access_token) {
-              try {
-                // Fetch verified profile directly from Google
-                const userinfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-                });
-                const userinfo = await userinfoRes.json();
-                if (!userinfo.email) {
-                  throw new Error('Could not retrieve email from Google userinfo.');
-                }
+            const currentUrl = popup.location.href;
+            if (currentUrl && currentUrl.includes('access_token=')) {
+              clearInterval(checkInterval);
+              const hash = popup.location.hash || popup.location.search;
+              popup.close();
 
-                const res = await fetch('/api/auth/google', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    accessToken: tokenResponse.access_token,
-                    demoUser: {
-                      name: userinfo.name || userinfo.email.split('@')[0],
-                      email: userinfo.email,
-                      picture: userinfo.picture,
-                      googleId: userinfo.sub,
-                    },
-                  }),
-                });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Authentication failed.');
+              const params = new URLSearchParams(hash.replace(/^#/, '?'));
+              const accessToken = params.get('access_token');
 
-                localStorage.setItem('literature_token', data.token);
-                localStorage.setItem('literature_user', JSON.stringify(data.user));
-                onSuccess(data.user, data.token);
-                onClose();
-              } catch (e: any) {
-                setError(e.message || 'Google authentication failed.');
-              } finally {
+              if (accessToken) {
+                await exchangeAccessToken(accessToken);
+              } else {
                 setGoogleLoading(false);
               }
-            } else {
-              setGoogleLoading(false);
             }
-          },
-        });
-
-        tokenClient.requestAccessToken({ prompt: 'select_account' });
-        return;
-      }
-
-      // 2. Fallback to Google ID One-Tap if oauth2 is not ready
-      if (google.accounts.id) {
-        google.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleGoogleCredentialResponse,
-          auto_select: false,
-        });
-        google.accounts.id.prompt();
+          } catch (e) {
+            // Cross-origin access error while on accounts.google.com is expected until redirect
+          }
+        }, 500);
       }
     } catch (err: any) {
       console.error('[Google Auth] Exception during initialization:', err);
       setGoogleLoading(false);
       setError('Failed to initiate Google authentication. Please check browser popups.');
+    }
+  };
+
+  const exchangeAccessToken = async (accessToken: string) => {
+    try {
+      const userinfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const userinfo = await userinfoRes.json();
+      if (!userinfo.email) {
+        throw new Error('Could not retrieve email from Google userinfo.');
+      }
+
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accessToken,
+          demoUser: {
+            name: userinfo.name || userinfo.email.split('@')[0],
+            email: userinfo.email,
+            picture: userinfo.picture,
+            googleId: userinfo.sub,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Authentication failed.');
+
+      localStorage.setItem('literature_token', data.token);
+      localStorage.setItem('literature_user', JSON.stringify(data.user));
+      onSuccess(data.user, data.token);
+      onClose();
+    } catch (e: any) {
+      setError(e.message || 'Google authentication failed.');
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
