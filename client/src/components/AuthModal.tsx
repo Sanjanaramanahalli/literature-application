@@ -219,14 +219,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    // Check if Google Identity Services SDK is loaded
-    const google = (window as any).google;
-    if (!google || !google.accounts) {
-      setGoogleLoading(false);
-      setError('Google Identity Services SDK is currently unavailable. Please check your network connection.');
-      return;
-    }
-
     try {
       // Direct official Google OAuth2 Authorization Screen (Guaranteed popup in all browsers)
       const redirectUri = window.location.origin;
@@ -244,6 +236,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       if (!popup || popup.closed || typeof popup.closed === 'undefined') {
         // Fallback: If popup blocker blocked the small window, open via Google Identity Services
+        const google = (window as any).google;
         if (google && google.accounts && google.accounts.oauth2) {
           const tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: clientId,
