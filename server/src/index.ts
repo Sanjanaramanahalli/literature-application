@@ -31,6 +31,7 @@ import { readerRouter } from './routes/reader.js';
 import { adminRouter } from './routes/admin.js';
 import { artCraftRouter } from './routes/artCraft.js';
 import { aiRouter } from './routes/ai.js';
+import { externalLiteratureRouter } from './routes/externalLiterature.js';
 
 // Support both /api/* and root paths when handled by Vercel serverless functions
 app.use('/api/auth', authRouter);
@@ -53,6 +54,9 @@ app.use('/art-craft', artCraftRouter);
 
 app.use('/api/ai', aiRouter);
 app.use('/ai', aiRouter);
+
+app.use('/api/external', externalLiteratureRouter);
+app.use('/external', externalLiteratureRouter);
 
 // Health check endpoint
 const handleHealth = async (req: Request, res: Response) => {

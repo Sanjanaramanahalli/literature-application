@@ -10,6 +10,8 @@ import { AdminSignInPage } from './components/AdminSignInPage';
 import { ArtCraftCatalogView } from './components/ArtCraftCatalogView';
 import { ArtCraftDetailView } from './components/ArtCraftDetailView';
 import type { ArtCraftItem } from './components/ArtCraftCard';
+import { ExternalLiteratureReader } from './components/ExternalLiteratureReader';
+import type { ExternalWorkDetail } from './components/ExternalLiteratureReader';
 import './components/Header.css';
 import './components/AuthModal.css';
 
@@ -17,6 +19,7 @@ export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<string>('home');
   const [selectedLiteratureId, setSelectedLiteratureId] = useState<string | null>(null);
   const [selectedArtCraft, setSelectedArtCraft] = useState<ArtCraftItem | null>(null);
+  const [selectedExternalWork, setSelectedExternalWork] = useState<ExternalWorkDetail | null>(null);
   const [user, setUser] = useState<any>(null);
   
   // Auth Modal State
@@ -57,6 +60,7 @@ export const App: React.FC = () => {
         setCurrentTab={(tab) => {
           setSelectedLiteratureId(null);
           setSelectedArtCraft(null);
+          setSelectedExternalWork(null);
           setCurrentTab(tab);
         }}
         user={user}
@@ -65,7 +69,7 @@ export const App: React.FC = () => {
       />
       <main className="app-main-content" style={{ flex: 1, padding: '2.5rem 1.5rem', maxWidth: '1240px', margin: '0 auto', width: '100%' }}>
         {/* Welcome Sanctuary Hero Banner (Show for home, categories) */}
-        {(currentTab === 'home' || currentTab === 'categories') && !selectedLiteratureId && (
+        {(currentTab === 'home' || currentTab === 'categories') && !selectedLiteratureId && !selectedExternalWork && (
           <div className="app-welcome-banner" style={{ textAlign: 'center', padding: '2rem 1rem 1.5rem', marginBottom: '1.5rem' }}>
             <h1 className="app-welcome-heading" style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: 'var(--accent-burgundy)' }} id="sanctuary-welcome-heading">
               Welcome to the Athenæum
@@ -77,7 +81,7 @@ export const App: React.FC = () => {
         )}
 
         {/* Active user greeting pill */}
-        {user && currentTab !== 'admin-signin' && !selectedLiteratureId && !selectedArtCraft && (
+        {user && currentTab !== 'admin-signin' && !selectedLiteratureId && !selectedArtCraft && !selectedExternalWork && (
           <div
             className="active-user-banner"
             style={{
@@ -114,13 +118,18 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {/* Dynamic View rendering based on selected literature, selected art craft, or currentTab */}
+        {/* Dynamic View rendering based on selected literature, selected external work, selected art craft, or currentTab */}
         {selectedLiteratureId ? (
           <ReaderView
             literatureId={selectedLiteratureId}
             user={user}
             onBack={() => setSelectedLiteratureId(null)}
             onOpenAuth={handleOpenAuth}
+          />
+        ) : selectedExternalWork ? (
+          <ExternalLiteratureReader
+            work={selectedExternalWork}
+            onBack={() => setSelectedExternalWork(null)}
           />
         ) : selectedArtCraft ? (
           <ArtCraftDetailView
@@ -160,6 +169,9 @@ export const App: React.FC = () => {
                 }}
                 onSelectArtCraft={(craft) => {
                   setSelectedArtCraft(craft);
+                }}
+                onSelectExternalWork={(work) => {
+                  setSelectedExternalWork(work);
                 }}
               />
             )}
