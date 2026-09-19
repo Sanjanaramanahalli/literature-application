@@ -208,6 +208,7 @@ export const App: React.FC = () => {
 
         {currentTab === 'saved' && (
           <SavedWorksView
+            key={currentTab}
             user={user}
             onSelectLiterature={(id) => setSelectedLiteratureId(id)}
             onNavigateExplore={() => setCurrentTab('home')}

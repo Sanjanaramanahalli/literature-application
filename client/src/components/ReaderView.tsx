@@ -127,24 +127,11 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       setLikesCount(item.likesCount || 0);
       setDownvotesCount(item.downvotesCount || 0);
       if (item.userVote) setUserVote(item.userVote);
-      if (item.isSaved !== undefined) setIsSaved(item.isSaved);
+      // isSaved and userRating come directly from the detail endpoint (server-side, DB-sourced).
+      // DO NOT re-fetch /api/reader/saved to overwrite this — that second fetch was redundant
+      // and could race with the first, silently reverting isSaved to false on token edge-cases.
+      setIsSaved(item.isSaved === true);
       if (item.userRating) setUserRating(item.userRating);
-
-      // Check if item is saved in user's library if authenticated
-      if (token && user) {
-        try {
-          const savedRes = await fetch('/api/reader/saved', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (savedRes.ok) {
-            const savedData = await savedRes.json();
-            const exists = (savedData.savedWorks || []).some((w: any) => w.id === literatureId);
-            setIsSaved(exists);
-          }
-        } catch (e) {
-          console.error('Error verifying save state:', e);
-        }
-      }
     } catch (err: any) {
       console.error('Reader detail fetch failure:', err);
       setError(err.message || 'Unable to open reading sanctuary.');
