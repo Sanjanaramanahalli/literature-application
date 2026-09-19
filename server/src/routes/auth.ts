@@ -420,7 +420,7 @@ authRouter.post('/google', async (req: Request, res: Response): Promise<void> =>
     });
   } catch (err: any) {
     console.error('[Google Auth] Unexpected error during Google authentication:', err);
-    res.status(500).json({ error: 'Failed to complete Google authentication. Please try again.' });
+    res.status(500).json({ error: 'Failed to complete Google authentication.', details: err.message || String(err) });
   }
 });
 

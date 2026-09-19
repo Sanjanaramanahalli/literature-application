@@ -80,7 +80,7 @@ app.use((req: Request, res: Response) => {
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('Server error:', err);
-  res.status(500).json({ error: 'Internal Server Error' });
+  res.status(500).json({ error: 'Internal Server Error', message: err.message || String(err) });
 });
 
 // Export for Vercel serverless functions
