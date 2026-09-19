@@ -365,7 +365,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         {/* Language Filter Pills (LIT-15) */}
         <div className="language-filter-bar" id="language-filter-bar" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', margin: '0.75rem 0 1.5rem' }}>
           <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-burgundy)', alignSelf: 'center', marginRight: '0.25rem' }}>
-            Language:
+            Primary Language:
           </span>
           <button
             className={`category-filter-btn ${selectedLanguage === 'all' ? 'active' : ''}`}
@@ -375,11 +375,11 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             All Languages
           </button>
           <button
-            className={`category-filter-btn ${selectedLanguage === 'English' ? 'active' : ''}`}
-            id="lang-filter-english"
-            onClick={() => setSelectedLanguage('English')}
+            className={`category-filter-btn ${selectedLanguage === 'Kannada' ? 'active' : ''}`}
+            id="lang-filter-kannada"
+            onClick={() => setSelectedLanguage('Kannada')}
           >
-            English
+            ಕನ್ನಡ (Kannada)
           </button>
           <button
             className={`category-filter-btn ${selectedLanguage === 'Hindi' ? 'active' : ''}`}
@@ -389,11 +389,46 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             हिंदी (Hindi)
           </button>
           <button
-            className={`category-filter-btn ${selectedLanguage === 'Kannada' ? 'active' : ''}`}
-            id="lang-filter-kannada"
-            onClick={() => setSelectedLanguage('Kannada')}
+            className={`category-filter-btn ${selectedLanguage === 'Tamil' ? 'active' : ''}`}
+            id="lang-filter-tamil"
+            onClick={() => setSelectedLanguage('Tamil')}
           >
-            ಕನ್ನಡ (Kannada)
+            தமிழ் (Tamil)
+          </button>
+          <button
+            className={`category-filter-btn ${selectedLanguage === 'Telugu' ? 'active' : ''}`}
+            id="lang-filter-telugu"
+            onClick={() => setSelectedLanguage('Telugu')}
+          >
+            తెలుగు (Telugu)
+          </button>
+          <button
+            className={`category-filter-btn ${selectedLanguage === 'Malayalam' ? 'active' : ''}`}
+            id="lang-filter-malayalam"
+            onClick={() => setSelectedLanguage('Malayalam')}
+          >
+            മലയാളം (Malayalam)
+          </button>
+          <button
+            className={`category-filter-btn ${selectedLanguage === 'Bengali' ? 'active' : ''}`}
+            id="lang-filter-bengali"
+            onClick={() => setSelectedLanguage('Bengali')}
+          >
+            বাংলা (Bengali)
+          </button>
+          <button
+            className={`category-filter-btn ${selectedLanguage === 'Sanskrit' ? 'active' : ''}`}
+            id="lang-filter-sanskrit"
+            onClick={() => setSelectedLanguage('Sanskrit')}
+          >
+            संस्कृतम् (Sanskrit)
+          </button>
+          <button
+            className={`category-filter-btn ${selectedLanguage === 'English' ? 'active' : ''}`}
+            id="lang-filter-english"
+            onClick={() => setSelectedLanguage('English')}
+          >
+            English
           </button>
         </div>
 

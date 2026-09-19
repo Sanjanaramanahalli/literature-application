@@ -564,7 +564,16 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                 <div className="cover-page-folio-tag">
                   {literature.language === 'Kannada' ? 'ಕನ್ನಡ ಸಾಹಿತ್ಯ ಸಂಪುಟ • Athenæum Edition' :
                    literature.language === 'Hindi' ? 'हिंदी साहित्य निधि • Athenæum Edition' :
-                   'Athenæum Classical Folio Edition'}
+                   literature.language === 'Tamil' ? 'தமிழ் இலக்கியத் திரட்டு • Athenæum Edition' :
+                   literature.language === 'Telugu' ? 'తెలుగు సాహిత్య సంపుటి • Athenæum Edition' :
+                   literature.language === 'Malayalam' ? 'മലയാള സാഹിത്യ ശേഖരം • Athenæum Edition' :
+                   literature.language === 'Bengali' ? 'বাংলা সাহিত্য ভাণ্ডার • Athenæum Edition' :
+                   literature.language === 'Sanskrit' ? 'संस्कृत साहित्य रत्नावली • Athenæum Edition' :
+                   literature.language === 'Marathi' ? 'मराठी साहित्य संग्रह • Athenæum Edition' :
+                   literature.language === 'Gujarati' ? 'ગુજરાતી સાહિત્ય વારસો • Athenæum Edition' :
+                   literature.language === 'Punjabi' ? 'ਪੰਜਾਬੀ ਸਾਹਿਤ ਸੰਗ੍ਰਹਿ • Athenæum Edition' :
+                   literature.language === 'Urdu' ? 'اردو ادب کا خزانہ • Athenæum Edition' :
+                   `Athenæum Classical ${literature.language || 'Literature'} Edition`}
                 </div>
               </div>
             ) : (

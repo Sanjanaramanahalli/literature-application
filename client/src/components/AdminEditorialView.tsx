@@ -1453,11 +1453,28 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                   id="lit-title"
                   className="form-input"
                   type="text"
-                  placeholder="e.g., The Divine Comedy"
+                  placeholder={
+                    language === 'Kannada'
+                      ? 'ಉದಾಹರಣೆಗೆ: ಮಲೆಗಳಲ್ಲಿ ಮದುಮಗಳು'
+                      : language === 'Hindi'
+                      ? 'उदा: गोदान'
+                      : language === 'Tamil'
+                      ? 'எ.கா: சிலப்பதிகாரம்'
+                      : language === 'Telugu'
+                      ? 'ఉదా: ఆంధ్ర మహాభారతము'
+                      : language === 'Sanskrit'
+                      ? 'उदा: मेघदूतम्'
+                      : 'e.g., Pride and Prejudice, The Divine Comedy'
+                  }
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
                 />
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                  {language !== 'English'
+                    ? `Enter title in ${language} script. It will be stored and displayed authentically in ${language} without transliteration or translation.`
+                    : 'Enter title as published. It will be preserved and displayed in its original text.'}
+                </p>
               </div>
 
               <div className="form-group">
@@ -1543,7 +1560,19 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                       id="input-quick-creator-name"
                       className="form-input"
                       type="text"
-                      placeholder="Creator Full Name"
+                      placeholder={
+                        language === 'Kannada'
+                          ? 'ಲೇಖಕರ ಹೆಸರು (ಉದಾ: ಕುವೆಂಪು, ದ.ರಾ. ಬೇಂದ್ರೆ)'
+                          : language === 'Hindi'
+                          ? 'लेखक का नाम (उदा: मुंशी प्रेमचंद, कबीर)'
+                          : language === 'Tamil'
+                          ? 'ஆசிரியர் பெயர் (எ.கா: இளங்கோ அடிகள், பாரதியார்)'
+                          : language === 'Telugu'
+                          ? 'రచయిత పేరు (ఉదా: శ్రీశ్రీ, నన్నయ)'
+                          : language === 'Sanskrit'
+                          ? 'रचयितुः नाम (उदा: कालिदासः)'
+                          : 'Creator Full Name (e.g. Jane Austen, Dante Alighieri)'
+                      }
                       value={newCreatorName}
                       onChange={(e) => setNewCreatorName(e.target.value)}
                     />
@@ -1558,6 +1587,9 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                       <option value="BOTH">Both</option>
                     </select>
                   </div>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                    Author name entered in native script ({language}) will be preserved and displayed exactly as entered across the entire application without transliteration.
+                  </p>
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                     <button
                       type="button"
@@ -1650,11 +1682,17 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                     onChange={(e) => setLanguage(e.target.value)}
                   >
                     <option value="English">English</option>
-                    <option value="Hindi">Hindi (हिंदी साहित्य)</option>
-                    <option value="Kannada">Kannada (ಕನ್ನಡ ಸಾಹಿತ್ಯ)</option>
-                    <option value="Sanskrit">Sanskrit (संस्कृतम्)</option>
+                    <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
+                    <option value="Hindi">Hindi (हिंदी)</option>
                     <option value="Tamil">Tamil (தமிழ்)</option>
+                    <option value="Telugu">Telugu (తెలుగు)</option>
+                    <option value="Malayalam">Malayalam (മലയാളം)</option>
                     <option value="Bengali">Bengali (বাংলা)</option>
+                    <option value="Marathi">Marathi (मराठी)</option>
+                    <option value="Gujarati">Gujarati (ગુજરાતી)</option>
+                    <option value="Punjabi">Punjabi (ਪੰਜਾਬੀ)</option>
+                    <option value="Urdu">Urdu (اردو)</option>
+                    <option value="Sanskrit">Sanskrit (संस्कृतम्)</option>
                     <option value="Ancient Greek">Ancient Greek</option>
                     <option value="Latin">Latin</option>
                   </select>

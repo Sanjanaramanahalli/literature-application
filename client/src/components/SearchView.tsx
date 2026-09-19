@@ -656,7 +656,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
               </div>
 
               <div className="filter-field">
-                <label htmlFor="search-select-language" className="filter-label">Language</label>
+                <label htmlFor="search-select-language" className="filter-label">Primary Language</label>
                 <select
                   id="search-select-language"
                   className="input-field select-field"
@@ -664,6 +664,17 @@ export const SearchView: React.FC<SearchViewProps> = ({
                   onChange={(e) => setLanguage(e.target.value)}
                 >
                   <option value="">All Languages</option>
+                  <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
+                  <option value="Hindi">Hindi (हिंदी)</option>
+                  <option value="Tamil">Tamil (தமிழ்)</option>
+                  <option value="Telugu">Telugu (తెలుగు)</option>
+                  <option value="Malayalam">Malayalam (മലയാളം)</option>
+                  <option value="Bengali">Bengali (বাংলা)</option>
+                  <option value="Marathi">Marathi (मराठी)</option>
+                  <option value="Gujarati">Gujarati (ગુજરાતી)</option>
+                  <option value="Punjabi">Punjabi (ਪੰਜਾਬੀ)</option>
+                  <option value="Urdu">Urdu (اردو)</option>
+                  <option value="Sanskrit">Sanskrit (संस्कृतम्)</option>
                   <option value="English">English</option>
                   <option value="Ancient Greek">Ancient Greek</option>
                   <option value="Latin">Latin</option>
@@ -671,7 +682,6 @@ export const SearchView: React.FC<SearchViewProps> = ({
                   <option value="French">French</option>
                   <option value="German">German</option>
                   <option value="Russian">Russian</option>
-                  <option value="Sanskrit">Sanskrit</option>
                 </select>
               </div>
 
