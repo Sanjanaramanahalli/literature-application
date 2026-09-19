@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, Search, Bookmark, ShieldCheck, LogOut, Menu, X, Palette } from 'lucide-react';
+import { BookOpen, Search, Bookmark, ShieldCheck, LogOut, Menu, X, Palette, Globe } from 'lucide-react';
 
 interface HeaderProps {
   currentTab: string;
@@ -52,6 +52,15 @@ export const Header: React.FC<HeaderProps> = ({
             id="nav-explore"
           >
             Explore
+          </button>
+          <button
+            className={`nav-link ${currentTab === 'world-literature' ? 'active' : ''}`}
+            onClick={() => handleNav('world-literature')}
+            id="nav-world-literature"
+            title="Search and read world literature across all languages via Wikipedia & Wikisource"
+          >
+            <Globe size={15} style={{ marginRight: '4px' }} />
+            World Literature (Wikipedia)
           </button>
           <button
             className={`nav-link ${currentTab === 'categories' ? 'active' : ''}`}
@@ -171,6 +180,10 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
           <button className="mobile-nav-link" onClick={() => handleNav('explore')} id="mobile-nav-explore">
             Explore Literature
+          </button>
+          <button className="mobile-nav-link" onClick={() => handleNav('world-literature')} id="mobile-nav-world-literature">
+            <Globe size={15} style={{ marginRight: '6px', display: 'inline' }} />
+            World Literature (Wikipedia)
           </button>
           <button className="mobile-nav-link" onClick={() => handleNav('categories')}>
             Categories

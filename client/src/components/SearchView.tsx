@@ -26,6 +26,7 @@ export interface ExternalSearchResult {
 }
 
 interface SearchViewProps {
+  initialMode?: 'literature' | 'artcraft' | 'external';
   onSelectLiterature?: (item: LiteratureItem) => void;
   onSelectArtCraft?: (craft: ArtCraftItem) => void;
   onSelectExternalWork?: (work: ExternalWorkDetail) => void;
@@ -39,6 +40,7 @@ interface SearchViewProps {
 }
 
 export const SearchView: React.FC<SearchViewProps> = ({
+  initialMode = 'literature',
   onSelectLiterature,
   onSelectArtCraft,
   onSelectExternalWork,
@@ -46,7 +48,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
   onOpenAuth,
   initialFilters,
 }) => {
-  const [searchMode, setSearchMode] = useState<'literature' | 'artcraft' | 'external'>('literature');
+  const [searchMode, setSearchMode] = useState<'literature' | 'artcraft' | 'external'>(initialMode);
 
   // Literature search states
   const [title, setTitle] = useState('');
@@ -102,6 +104,11 @@ export const SearchView: React.FC<SearchViewProps> = ({
       executeSearch();
     } else if (searchMode === 'artcraft') {
       executeCraftSearch();
+    } else if (searchMode === 'external') {
+      if (!externalQuery && externalResults.length === 0) {
+        setExternalQuery('Hamlet');
+        executeExternalSearch('Hamlet');
+      }
     }
   }, [searchMode, author, category, genre, subject, language, tag, craftState, craftType]);
 

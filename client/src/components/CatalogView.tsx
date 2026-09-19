@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Globe, ArrowRight } from 'lucide-react';
 import { LiteratureCard } from './LiteratureCard';
 import type { LiteratureItem } from './LiteratureCard';
 import { ArtCraftCard } from './ArtCraftCard';
@@ -17,6 +18,7 @@ interface CatalogViewProps {
   currentTab: string;
   onSelectLiterature?: (item: LiteratureItem) => void;
   onSelectArtCraft?: (item: ArtCraftItem) => void;
+  onNavigateWorldLiterature?: () => void;
   user?: any;
   onOpenAuth?: (mode: 'login' | 'register') => void;
 }
@@ -25,6 +27,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   currentTab,
   onSelectLiterature,
   onSelectArtCraft,
+  onNavigateWorldLiterature,
   user,
   onOpenAuth,
 }) => {
@@ -254,6 +257,53 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               />
             ))}
           </div>
+        </section>
+      )}
+
+      {/* Wikipedia & World Literature Showcase Banner (Home & Explore) */}
+      {(currentTab === 'home' || currentTab === 'explore') && (
+        <section
+          className="world-literature-banner-card"
+          id="world-literature-wikipedia-banner"
+          style={{
+            margin: '2.5rem 0',
+            padding: '2rem 2.5rem',
+            background: 'linear-gradient(135deg, rgba(74, 25, 39, 0.05) 0%, rgba(212, 175, 55, 0.12) 100%)',
+            border: '1px solid var(--border-classic)',
+            borderRadius: 'var(--radius-lg)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1.5rem',
+            boxShadow: 'var(--shadow-card)',
+          }}
+        >
+          <div style={{ maxWidth: '680px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '0.25rem 0.75rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '20px', border: '1px solid var(--border-classic)', marginBottom: '0.75rem' }}>
+              <Globe size={14} style={{ color: 'var(--accent-burgundy)' }} />
+              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-burgundy)' }}>
+                Wikipedia & Wikisource Connected
+              </span>
+            </div>
+            <h3 className="serif-title" style={{ fontSize: '1.65rem', color: 'var(--accent-burgundy)', margin: '0 0 0.5rem 0' }}>
+              Universal Multilingual Literature Repository
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.96rem', lineHeight: '1.6', margin: 0 }}>
+              Search for any literary work, poet, novelist, or epic across <strong>Kannada (ಕನ್ನಡ)</strong>, <strong>Hindi (हिन्दी)</strong>, <strong>Sanskrit (संस्कृतम्)</strong>, <strong>Tamil (தமிழ்)</strong>, English, and world languages. Public domain works feature unabridged full text verified legally from <strong>Wikisource</strong>.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={onNavigateWorldLiterature}
+            id="btn-explore-world-literature-home"
+            style={{ padding: '0.75rem 1.4rem', fontSize: '0.95rem', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+          >
+            <span>Explore World Literature</span>
+            <ArrowRight size={16} />
+          </button>
         </section>
       )}
 

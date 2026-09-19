@@ -149,6 +149,9 @@ export const App: React.FC = () => {
                 onSelectArtCraft={(craft) => {
                   setSelectedArtCraft(craft);
                 }}
+                onNavigateWorldLiterature={() => {
+                  setCurrentTab('world-literature');
+                }}
               />
             )}
 
@@ -160,8 +163,27 @@ export const App: React.FC = () => {
               />
             )}
 
+            {currentTab === 'world-literature' && (
+              <SearchView
+                key="world-literature-view"
+                initialMode="external"
+                user={user}
+                onOpenAuth={handleOpenAuth}
+                onSelectLiterature={(item) => {
+                  setSelectedLiteratureId(item.id);
+                }}
+                onSelectArtCraft={(craft) => {
+                  setSelectedArtCraft(craft);
+                }}
+                onSelectExternalWork={(work) => {
+                  setSelectedExternalWork(work);
+                }}
+              />
+            )}
+
             {currentTab === 'search' && (
               <SearchView
+                key="classic-search-view"
                 user={user}
                 onOpenAuth={handleOpenAuth}
                 onSelectLiterature={(item) => {

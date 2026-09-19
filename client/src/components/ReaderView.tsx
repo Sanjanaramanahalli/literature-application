@@ -15,6 +15,7 @@ import {
   ThumbsDown,
   Share2,
   Check,
+  ExternalLink,
 } from 'lucide-react';
 import { ThreadedComments } from './ThreadedComments';
 import { WhatsAppAiAssistant } from './WhatsAppAiAssistant';
@@ -613,9 +614,22 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
               )}
 
               {literature.creator && (
-                <p className="cover-page-author" id="cover-page-author">
-                  Authored by <strong>{literature.creator.name}</strong>
-                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
+                  <p className="cover-page-author" id="cover-page-author" style={{ margin: 0 }}>
+                    Authored by <strong>{literature.creator.name}</strong>
+                  </p>
+                  <a
+                    href={`https://en.wikipedia.org/wiki/${encodeURIComponent(literature.creator.name)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="tag-badge"
+                    style={{ fontSize: '0.75rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    title={`Read ${literature.creator.name}'s biography on Wikipedia`}
+                  >
+                    <span>Author on Wikipedia</span>
+                    <ExternalLink size={11} />
+                  </a>
+                </div>
               )}
 
               {formattedDate && (
