@@ -626,18 +626,10 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
       return;
     }
 
-    // Publication Requirements Check:
-    // 1. Cover Page required before publishing
-    // 2. Minimum > 13 pages content required before publishing
+    // Publication Requirements Check for PUBLISHED works:
+    // Note: cover image is NO LONGER required — a default classical cover will be
+    // auto-assigned server-side if none is provided.
     if (targetStatus === 'PUBLISHED') {
-      if (!coverFile && !coverPreview) {
-        setAlertMsg({
-          type: 'error',
-          text: 'A dedicated Cover Page is required before literature can be published. Please upload a cover image.',
-        });
-        return;
-      }
-
       if (!content || !content.trim()) {
         setAlertMsg({
           type: 'error',
@@ -647,6 +639,10 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
       }
     }
 
+    // Default classical cover fallback (used when Admin publishes without uploading a cover)
+    const DEFAULT_COVER_URL =
+      'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=85';
+
     setLoading(true);
     setAlertMsg(null);
     const token = localStorage.getItem('literature_token');
@@ -655,6 +651,14 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
       let finalCoverUrl: string | null = null;
       if (coverFile) {
         finalCoverUrl = await uploadCoverToServer();
+      } else if (coverPreview) {
+        // coverPreview may be an existing URL (when editing), pass it through
+        finalCoverUrl = coverPreview;
+      }
+
+      // If no cover is set and we're publishing, use the default classical cover
+      if (!finalCoverUrl && targetStatus === 'PUBLISHED') {
+        finalCoverUrl = DEFAULT_COVER_URL;
       }
 
       // Parse tags

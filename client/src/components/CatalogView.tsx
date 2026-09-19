@@ -330,8 +330,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         </section>
       )}
 
-      {/* 5. Complete Catalog Showcase & Category Filter Engine (Shown in Categories, excluded from Home) */}
-      {currentTab !== 'home' && (
+      {/* 5. Complete Catalog Showcase & Category Filter Engine (Always shown on home and categories) */}
+      {(
       <section className="catalog-section" id="full-catalog-section">
         <div className="section-header-classic">
           <span className="ornament-line">❦ ❦ ❦</span>

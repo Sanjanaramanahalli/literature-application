@@ -141,20 +141,25 @@ adminRouter.post(
       const status = publicationStatus === 'PUBLISHED' ? 'PUBLISHED' : 'DRAFT';
       const pageCount = calculatePageCount(content);
 
-      // Requirements for PUBLISHED works:
-      // 1. Mandatory Cover Page
-      // 2. More than 13 pages content (> 13 pages, i.e., at least 14 pages)
-      if (status === 'PUBLISHED') {
-        if (!coverImage || !String(coverImage).trim()) {
-          res.status(400).json({ error: 'A dedicated cover page is required before literature can be published.' });
-          return;
-        }
+      const DEFAULT_COVER_URL =
+        'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=85';
 
+      // Requirements for PUBLISHED works: content must not be empty.
+      // Cover image is optional — a default is assigned if missing.
+      if (status === 'PUBLISHED') {
         if (!content || !content.trim()) {
           res.status(400).json({ error: 'Literature content cannot be empty.' });
           return;
         }
       }
+
+      // Auto-assign default cover when publishing without a cover image
+      const finalCoverImage =
+        coverImage && String(coverImage).trim()
+          ? coverImage
+          : status === 'PUBLISHED'
+            ? DEFAULT_COVER_URL
+            : null;
 
       const publicationDate = status === 'PUBLISHED' ? new Date() : null;
 
@@ -167,7 +172,7 @@ adminRouter.post(
           language: language?.trim() || 'English',
           subject: subject?.trim(),
           genre: genre?.trim(),
-          coverImage: coverImage || null,
+          coverImage: finalCoverImage,
           publicationStatus: status,
           publicationDate,
           creatorId,
@@ -350,20 +355,20 @@ adminRouter.put(
 
         // If transitioning to or updating as PUBLISHED, enforce requirements
         if (publicationStatus === 'PUBLISHED') {
+          const DEFAULT_COVER_URL =
+            'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=85';
           const checkCover = updateData.coverImage !== undefined ? updateData.coverImage : existing.coverImage;
           const checkContent = updateData.content !== undefined ? updateData.content : existing.content;
 
+          // Auto-assign default cover if none is provided — do NOT block publication
           if (!checkCover || !String(checkCover).trim()) {
-            res.status(400).json({ error: 'A dedicated cover page is required before literature can be published.' });
-            return;
+            updateData.coverImage = DEFAULT_COVER_URL;
           }
 
           if (!checkContent || !checkContent.trim()) {
             res.status(400).json({ error: 'Literature content cannot be empty.' });
             return;
           }
-
-
 
           if (!existing.publicationDate) {
             updateData.publicationDate = new Date();

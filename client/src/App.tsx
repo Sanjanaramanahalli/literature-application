@@ -51,6 +51,12 @@ export const App: React.FC = () => {
     localStorage.removeItem('literature_token');
     localStorage.removeItem('literature_user');
     setUser(null);
+    // Always return to home tab on logout — prevents user being stranded on
+    // the Admin restricted guard screen if they were on the 'admin' tab.
+    setCurrentTab('home');
+    setSelectedLiteratureId(null);
+    setSelectedArtCraft(null);
+    setSelectedExternalWork(null);
   };
 
   return (

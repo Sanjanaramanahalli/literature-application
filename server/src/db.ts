@@ -10,8 +10,10 @@ declare global {
 }
 
 function getDatabaseUrl(): string {
-  // If explicitly configured, use it
-  if (process.env.DATABASE_URL && !process.env.VERCEL) {
+  // If a DATABASE_URL is explicitly configured, always use it (including on Vercel production).
+  // CRITICAL: do NOT gate this on !process.env.VERCEL — that caused production to ignore
+  // the configured persistent database and fall back to ephemeral /tmp/dev.db.
+  if (process.env.DATABASE_URL) {
     return process.env.DATABASE_URL;
   }
 
