@@ -207,7 +207,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       )}
 
       {/* 2. Popular Literature Section (Strictly sorted by Ratings + Saves + Comments) */}
-      {(currentTab === 'home' || currentTab === 'explore') && popular.length > 0 && (
+      {currentTab === 'home' && popular.length > 0 && (
         <section className="catalog-section" id="popular-literature-section">
           <div className="section-header-classic">
             <span className="ornament-line">✦ ✦ ✦</span>
@@ -234,7 +234,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       )}
 
       {/* 3. New Releases Section (Latest published works by publicationDate DESC) */}
-      {(currentTab === 'home' || currentTab === 'explore') && newReleases.length > 0 && (
+      {currentTab === 'home' && newReleases.length > 0 && (
         <section className="catalog-section" id="new-releases-section">
           <div className="section-header-classic">
             <span className="ornament-line">❖ ❖ ❖</span>
@@ -260,8 +260,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         </section>
       )}
 
-      {/* Wikipedia & World Literature Showcase Banner (Home & Explore) */}
-      {(currentTab === 'home' || currentTab === 'explore') && (
+      {/* Wikipedia & World Literature Showcase Banner (Home) */}
+      {currentTab === 'home' && (
         <section
           className="world-literature-banner-card"
           id="world-literature-wikipedia-banner"

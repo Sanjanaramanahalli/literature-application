@@ -138,7 +138,7 @@ export const App: React.FC = () => {
           />
         ) : (
           <>
-            {(currentTab === 'home' || currentTab === 'explore' || currentTab === 'categories') && (
+            {(currentTab === 'home' || currentTab === 'categories') && (
               <CatalogView
                 currentTab={currentTab}
                 user={user}
@@ -204,7 +204,7 @@ export const App: React.FC = () => {
           <SavedWorksView
             user={user}
             onSelectLiterature={(id) => setSelectedLiteratureId(id)}
-            onNavigateExplore={() => setCurrentTab('explore')}
+            onNavigateExplore={() => setCurrentTab('home')}
             onOpenAuth={handleOpenAuth}
           />
         )}

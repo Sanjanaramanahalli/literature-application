@@ -47,13 +47,6 @@ export const Header: React.FC<HeaderProps> = ({
             Home
           </button>
           <button
-            className={`nav-link ${currentTab === 'explore' ? 'active' : ''}`}
-            onClick={() => handleNav('explore')}
-            id="nav-explore"
-          >
-            Explore
-          </button>
-          <button
             className={`nav-link ${currentTab === 'world-literature' ? 'active' : ''}`}
             onClick={() => handleNav('world-literature')}
             id="nav-world-literature"
@@ -177,9 +170,6 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="mobile-drawer" id="mobile-menu">
           <button className="mobile-nav-link" onClick={() => handleNav('home')}>
             Home
-          </button>
-          <button className="mobile-nav-link" onClick={() => handleNav('explore')} id="mobile-nav-explore">
-            Explore Literature
           </button>
           <button className="mobile-nav-link" onClick={() => handleNav('world-literature')} id="mobile-nav-world-literature">
             <Globe size={15} style={{ marginRight: '6px', display: 'inline' }} />
