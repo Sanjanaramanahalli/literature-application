@@ -50,10 +50,10 @@ export const Header: React.FC<HeaderProps> = ({
             className={`nav-link ${currentTab === 'world-literature' ? 'active' : ''}`}
             onClick={() => handleNav('world-literature')}
             id="nav-world-literature"
-            title="Search and read world literature across all languages via Wikipedia & Wikisource"
+            title="Search and read world literature across all languages"
           >
             <Globe size={15} style={{ marginRight: '4px' }} />
-            World Literature (Wikipedia)
+            World Literature
           </button>
           <button
             className={`nav-link ${currentTab === 'categories' ? 'active' : ''}`}
@@ -173,7 +173,7 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
           <button className="mobile-nav-link" onClick={() => handleNav('world-literature')} id="mobile-nav-world-literature">
             <Globe size={15} style={{ marginRight: '6px', display: 'inline' }} />
-            World Literature (Wikipedia)
+            World Literature
           </button>
           <button className="mobile-nav-link" onClick={() => handleNav('categories')}>
             Categories

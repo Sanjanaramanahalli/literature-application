@@ -283,7 +283,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '0.25rem 0.75rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '20px', border: '1px solid var(--border-classic)', marginBottom: '0.75rem' }}>
               <Globe size={14} style={{ color: 'var(--accent-burgundy)' }} />
               <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-burgundy)' }}>
-                Wikipedia & Wikisource Connected
+                Global Multilingual Archive
               </span>
             </div>
             <h3 className="serif-title" style={{ fontSize: '1.65rem', color: 'var(--accent-burgundy)', margin: '0 0 0.5rem 0' }}>
