@@ -99,7 +99,7 @@ test.describe('Sprint 17 / Issue #17: Dedicated Admin Sign-In, Mandatory Cover P
     const pageBadge = page.locator('#badge-content-page-count');
     await expect(pageBadge).toBeVisible();
     await expect(pageBadge).toContainText('15 Pages');
-    await expect(page.locator('#content-page-requirement-hint')).toContainText('Minimum page requirement met');
+    await expect(page.locator('#content-page-requirement-hint')).toContainText('Manuscript content verified');
 
     // 3. Publish Immediately
     await page.click('#btn-publish-now');
@@ -182,12 +182,13 @@ test.describe('Sprint 17 / Issue #17: Dedicated Admin Sign-In, Mandatory Cover P
     await expect(page.locator('#editorial-alert-error')).toContainText('dedicated Cover Page is required before literature can be published');
   });
 
-  test('Negative #2: Literature with fewer than 13 pages: System prevents publishing and displays page/content requirement message', async ({ page }) => {
+  test('Positive #3: Literature with any page length (e.g. 2 pages): Admin publishes and work is saved persistently', async ({ page }) => {
     // Sign in as Admin
     await page.click('#nav-admin-signin');
     await page.fill('#admin-email', adminEmail);
     await page.fill('#admin-password', adminPassword);
     await page.click('#btn-submit-admin-signin');
+    await expect(page.locator('#admin-editorial-view')).toBeVisible({ timeout: 10000 });
 
     await page.click('#tab-btn-create-manuscript');
     const title = `Short Work Test (${Date.now()})`;
@@ -198,20 +199,20 @@ test.describe('Sprint 17 / Issue #17: Dedicated Admin Sign-In, Mandatory Cover P
     const fileInput = page.locator('#file-input-cover');
     await fileInput.setInputFiles(testCoverPath);
 
-    // Provide short content (only 2 pages, fewer than 13 pages)
+    // Provide short content (2 pages)
     await page.fill('#lit-content', generateLongContent(2));
 
-    // Page badge shows requirement NOT met
+    // Page badge shows count without 13-page gate
     const pageBadge = page.locator('#badge-content-page-count');
     await expect(pageBadge).toContainText('2 Pages');
-    await expect(page.locator('#content-page-requirement-hint')).toContainText('Literature must contain more than 13 pages');
+    await expect(page.locator('#content-page-requirement-hint')).toContainText('Manuscript content verified');
 
     // Click Publish Immediately
     await page.click('#btn-publish-now');
 
-    // Expected Outcome: System prevents publishing and displays requirement error
-    await expect(page.locator('#editorial-alert-error')).toBeVisible({ timeout: 5000 });
-    await expect(page.locator('#editorial-alert-error')).toContainText('must contain more than 13 pages to be published');
+    // Expected Outcome: Work is successfully published and saved
+    await expect(page.locator('#editorial-alert-success')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('#editorial-alert-success')).toContainText('published');
   });
 
   test('Negative #3: Invalid Admin credentials: System rejects login and displays an appropriate error', async ({ page }) => {

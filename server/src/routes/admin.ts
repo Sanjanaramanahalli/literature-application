@@ -150,11 +150,8 @@ adminRouter.post(
           return;
         }
 
-        if (pageCount <= 13) {
-          res.status(400).json({
-            error: `Literature content must contain more than 13 pages to be published (currently contains ${pageCount} pages). Please provide complete literature content.`,
-            pageCount,
-          });
+        if (!content || !content.trim()) {
+          res.status(400).json({ error: 'Literature content cannot be empty.' });
           return;
         }
       }
@@ -366,14 +363,7 @@ adminRouter.put(
             return;
           }
 
-          const pageCount = calculatePageCount(checkContent);
-          if (pageCount <= 13) {
-            res.status(400).json({
-              error: `Literature content must contain more than 13 pages to be published (currently contains ${pageCount} pages). Please provide complete literature content.`,
-              pageCount,
-            });
-            return;
-          }
+
 
           if (!existing.publicationDate) {
             updateData.publicationDate = new Date();

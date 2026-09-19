@@ -638,10 +638,10 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
         return;
       }
 
-      if (currentContentPages <= 13) {
+      if (!content || !content.trim()) {
         setAlertMsg({
           type: 'error',
-          text: `Literature content must contain more than 13 pages to be published (currently contains ${currentContentPages} pages). Please expand the manuscript content.`,
+          text: 'Literature content cannot be empty.',
         });
         return;
       }
@@ -1611,11 +1611,11 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                     Manuscript Canonical Text <span style={{ color: 'var(--accent-burgundy)' }}>*</span>
                   </label>
                   <span
-                    className={`tag-badge ${currentContentPages > 13 ? 'green' : 'burgundy'}`}
+                    className="tag-badge green"
                     id="badge-content-page-count"
-                    title={currentContentPages > 13 ? 'Content meets >13 pages publication requirement' : 'More than 13 pages required to publish'}
+                    title={`${currentContentPages} pages`}
                   >
-                    📄 {currentContentPages} {currentContentPages === 1 ? 'Page' : 'Pages'} (Requirement: &gt;13 Pages)
+                    📄 {currentContentPages} {currentContentPages === 1 ? 'Page' : 'Pages'}
                   </span>
                 </div>
                 <textarea
@@ -1627,10 +1627,10 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                   onChange={(e) => setContent(e.target.value)}
                   required
                 />
-                <p style={{ fontSize: '0.8rem', color: currentContentPages > 13 ? '#166534' : 'var(--accent-burgundy)', marginTop: '0.35rem', fontWeight: 500 }} id="content-page-requirement-hint">
-                  {currentContentPages > 13
-                    ? `✓ Minimum page requirement met (${currentContentPages} pages). Ready for publication review.`
-                    : `⚠️ Publication requirement: Literature must contain more than 13 pages (currently ${currentContentPages} ${currentContentPages === 1 ? 'page' : 'pages'}). Save as Draft is permitted at any length.`}
+                <p style={{ fontSize: '0.8rem', color: content.trim() ? '#166534' : 'var(--text-muted)', marginTop: '0.35rem', fontWeight: 500 }} id="content-page-requirement-hint">
+                  {content.trim()
+                    ? `✓ Manuscript content verified (${currentContentPages} ${currentContentPages === 1 ? 'page' : 'pages'}). Ready to be saved or published.`
+                    : 'Provide manuscript content. Literature can be saved as draft or published at any length.'}
                 </p>
               </div>
 
