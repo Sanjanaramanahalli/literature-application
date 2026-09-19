@@ -248,6 +248,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 setGoogleLoading(false);
               }
             },
+            error_callback: (nonOAuthError: any) => {
+              console.error('[Google Auth] GIS client error:', nonOAuthError);
+              setGoogleLoading(false);
+              if (nonOAuthError?.message) {
+                setError(`Google Sign-In: ${nonOAuthError.message}`);
+              }
+            },
           });
           tokenClient.requestAccessToken({ prompt: 'select_account' });
         } else {
