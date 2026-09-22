@@ -11,6 +11,7 @@ export interface ExternalSearchResult {
   id: string;
   title: string;
   snippet: string;
+  extract?: string;
   language: string;
   languageCode: string;
   thumbnailUrl?: string;
@@ -105,12 +106,14 @@ export const SearchView: React.FC<SearchViewProps> = ({
     } else if (searchMode === 'artcraft') {
       executeCraftSearch();
     } else if (searchMode === 'external') {
-      if (!externalQuery && externalResults.length === 0) {
+      if (externalQuery.trim()) {
+        executeExternalSearch();
+      } else if (externalResults.length === 0) {
         setExternalQuery('Hamlet');
         executeExternalSearch('Hamlet');
       }
     }
-  }, [searchMode, author, category, genre, subject, language, tag, craftState, craftType]);
+  }, [searchMode, author, category, genre, subject, language, tag, craftState, craftType, externalLang]);
 
   const executeCraftSearch = async () => {
     try {
@@ -852,7 +855,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                           overflow: 'hidden',
                         }}
                       >
-                        {item.snippet}
+                        {item.extract || item.snippet}
                       </p>
                     </div>
                   </div>
