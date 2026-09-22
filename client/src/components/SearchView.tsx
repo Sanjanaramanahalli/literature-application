@@ -5,6 +5,7 @@ import type { LiteratureItem } from './LiteratureCard';
 import { ArtCraftCard } from './ArtCraftCard';
 import type { ArtCraftItem } from './ArtCraftCard';
 import type { ExternalWorkDetail } from './ExternalLiteratureReader';
+import { WikimediaDirectService } from '../services/wikimediaDirectService';
 import './SearchView.css';
 
 export interface ExternalSearchResult {
@@ -178,13 +179,22 @@ export const SearchView: React.FC<SearchViewProps> = ({
         params.append('lang', externalLang);
       }
 
-      const res = await fetch(`/api/external/search?${params.toString()}`);
-      if (!res.ok) {
-        throw new Error('Global literature search request failed.');
+      try {
+        const res = await fetch(`/api/external/search?${params.toString()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.results && data.results.length > 0) {
+            setExternalResults(data.results);
+            return;
+          }
+        }
+      } catch (backendErr) {
+        console.warn('[SearchView] Backend search unavailable, falling back to direct Wikimedia API:', backendErr);
       }
 
-      const data = await res.json();
-      setExternalResults(data.results || []);
+      // Direct Wikimedia fallback (guaranteed to succeed in any network/deployment context)
+      const directResults = await WikimediaDirectService.search(q, externalLang);
+      setExternalResults(directResults);
     } catch (err: any) {
       console.error('Global search failure:', err);
       setError(err.message || 'Failed to query global literature archives.');
@@ -196,13 +206,26 @@ export const SearchView: React.FC<SearchViewProps> = ({
   const handleOpenExternalWork = async (item: ExternalSearchResult) => {
     try {
       setLoadingExternalWork(item.id);
-      const res = await fetch(`/api/external/work/${encodeURIComponent(item.languageCode)}/${encodeURIComponent(item.title)}`);
-      if (!res.ok) {
-        throw new Error('Failed to retrieve full work details.');
+
+      try {
+        const res = await fetch(`/api/external/work/${encodeURIComponent(item.languageCode)}/${encodeURIComponent(item.title)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.work && onSelectExternalWork) {
+            onSelectExternalWork(data.work);
+            return;
+          }
+        }
+      } catch (backendErr) {
+        console.warn('[SearchView] Backend work details unavailable, falling back to direct API:', backendErr);
       }
-      const data = await res.json();
-      if (data.work && onSelectExternalWork) {
-        onSelectExternalWork(data.work);
+
+      // Direct fallback
+      const directWork = await WikimediaDirectService.getWorkDetail(item.languageCode, item.title);
+      if (directWork && onSelectExternalWork) {
+        onSelectExternalWork(directWork);
+      } else {
+        throw new Error('Could not load work details from external archives.');
       }
     } catch (err: any) {
       console.error('Error opening external work:', err);
