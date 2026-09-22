@@ -614,17 +614,41 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                   <p className="cover-page-author" id="cover-page-author" style={{ margin: 0 }}>
                     Authored by <strong>{literature.creator.name}</strong>
                   </p>
-                  <a
-                    href={`https://en.wikipedia.org/wiki/${encodeURIComponent(literature.creator.name)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="tag-badge"
-                    style={{ fontSize: '0.75rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                    title={`Read ${literature.creator.name}'s biography on Wikipedia`}
-                  >
-                    <span>Author on Wikipedia</span>
-                    <ExternalLink size={11} />
-                  </a>
+                  {(() => {
+                    const langCodeMap: Record<string, string> = {
+                      Kannada: 'kn',
+                      Hindi: 'hi',
+                      Tamil: 'ta',
+                      Telugu: 'te',
+                      Malayalam: 'ml',
+                      Bengali: 'bn',
+                      Marathi: 'marathi',
+                      Gujarati: 'gu',
+                      Punjabi: 'pa',
+                      Urdu: 'ur',
+                      Sanskrit: 'sa',
+                      French: 'fr',
+                      German: 'de',
+                      Spanish: 'es',
+                      Italian: 'it',
+                      Russian: 'ru',
+                      English: 'en',
+                    };
+                    const wikiLang = langCodeMap[literature.language] || 'en';
+                    return (
+                      <a
+                        href={`https://${wikiLang}.wikipedia.org/wiki/${encodeURIComponent(literature.creator.name)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="tag-badge"
+                        style={{ fontSize: '0.75rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        title={`Read ${literature.creator.name}'s biography on Wikipedia`}
+                      >
+                        <span>Author on Wikipedia</span>
+                        <ExternalLink size={11} />
+                      </a>
+                    );
+                  })()}
                 </div>
               )}
 
