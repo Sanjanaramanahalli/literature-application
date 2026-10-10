@@ -394,6 +394,11 @@ authRouter.post('/google', async (req: Request, res: Response): Promise<void> =>
       });
     }
 
+    if (!user) {
+      res.status(500).json({ error: 'Failed to create or retrieve user profile.' });
+      return;
+    }
+
     // Issue authentic application session token signed by server JWT_SECRET
     const token = jwt.sign(
       {

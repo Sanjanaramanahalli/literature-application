@@ -2,11 +2,10 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
 
 dotenv.config();
 
-import { prisma } from './db.js';
+import { prisma, initDatabase } from './db.js';
 export { prisma };
 export const app = express();
 const PORT = process.env.PORT || 5000;
@@ -62,15 +61,17 @@ app.use('/external', externalLiteratureRouter);
 const handleHealth = async (req: Request, res: Response) => {
   try {
     // Ping DB
-    await prisma.$queryRaw`SELECT 1`;
+    await initDatabase();
+    const count = await prisma.literature.count();
     res.json({
       status: 'online',
-      service: 'Classic Literature Application API',
+      service: 'Classic Literature Application API (MongoDB Atlas)',
       timestamp: new Date().toISOString(),
       database: 'connected',
+      literatureCount: count,
     });
-  } catch (err) {
-    res.status(500).json({ status: 'error', message: 'Database connection failed' });
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: 'Database connection failed', error: err.message || err });
   }
 };
 app.get('/api/health', handleHealth);
@@ -91,16 +92,22 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 export default app;
 
 if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
-  const server = app.listen(PORT, () => {
-    console.log(`[API Server] Running gracefully on http://localhost:${PORT}`);
-  });
+  initDatabase()
+    .then(() => {
+      const server = app.listen(PORT, () => {
+        console.log(`[API Server] Running gracefully on http://localhost:${PORT} with MongoDB`);
+      });
 
-  server.on('error', (err: any) => {
-    if (err.code === 'EADDRINUSE') {
-      console.error(`[API Server] Port ${PORT} is already in use. Please terminate the process using port ${PORT} or restart.`);
-    } else {
-      console.error('[API Server] Listen error:', err);
-    }
-  });
+      server.on('error', (err: any) => {
+        if (err.code === 'EADDRINUSE') {
+          console.error(`[API Server] Port ${PORT} is already in use. Please terminate the process using port ${PORT} or restart.`);
+        } else {
+          console.error('[API Server] Listen error:', err);
+        }
+      });
+    })
+    .catch((err) => {
+      console.error('[API Server] Failed to initialize MongoDB:', err);
+    });
 }
 

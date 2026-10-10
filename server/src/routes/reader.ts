@@ -267,7 +267,99 @@ readerRouter.post('/literature/:id/vote', authenticateToken, async (req: AuthReq
   }
 });
 
-// 4. Get Reader's Saved Literature
+// 3c. Toggle Save for External Wikimedia Literature
+readerRouter.post('/external/save', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+
+    const {
+      externalId,
+      title,
+      originalTitle,
+      author,
+      language,
+      languageCode,
+      excerpt,
+      thumbnailUrl,
+      sourceUrl,
+      canonicalUrl,
+      isFullTextAvailable,
+      fullTextSource,
+      fullTextUrl,
+    } = req.body;
+
+    if (!externalId || !title || !sourceUrl) {
+      res.status(400).json({ error: 'External ID, title, and sourceUrl are required.' });
+      return;
+    }
+
+    // Check if already saved
+    const existing = await prisma.externalSavedWork.findFirst({
+      where: { userId, externalId },
+    });
+
+    if (existing) {
+      await prisma.externalSavedWork.delete({
+        where: { id: existing.id },
+      });
+      res.json({ saved: false, message: 'Removed from your saved literature.' });
+    } else {
+      const id = `ext-save-${Date.now()}-${Math.round(Math.random() * 1e5)}`;
+      await prisma.externalSavedWork.create({
+        data: {
+          id,
+          externalId,
+          userId,
+          title,
+          originalTitle: originalTitle || title,
+          author: author || null,
+          language: language || 'Indian Literature',
+          languageCode: languageCode || 'kn',
+          excerpt: excerpt || null,
+          thumbnailUrl: thumbnailUrl || null,
+          sourceUrl,
+          canonicalUrl: canonicalUrl || sourceUrl,
+          isFullTextAvailable: isFullTextAvailable ? true : false,
+          fullTextSource: fullTextSource || null,
+          fullTextUrl: fullTextUrl || null,
+        },
+      });
+      res.json({ saved: true, message: 'Saved to your personal collection.' });
+    }
+  } catch (err) {
+    console.error('External save toggle error:', err);
+    res.status(500).json({ error: 'Failed to toggle external literature save.' });
+  }
+});
+
+// Check if an external work is saved by user
+readerRouter.get('/external/is-saved', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    const { externalId } = req.query;
+    if (!userId || !externalId) {
+      res.json({ isSaved: false });
+      return;
+    }
+
+    const existing = await prisma.externalSavedWork.findFirst({
+      where: {
+        userId,
+        externalId: String(externalId),
+      },
+    });
+
+    res.json({ isSaved: !!existing });
+  } catch (err) {
+    res.json({ isSaved: false });
+  }
+});
+
+// 4. Get Reader's Saved Literature (Combines Application literature + Wikimedia saved literature)
 readerRouter.get('/saved', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
@@ -286,7 +378,7 @@ readerRouter.get('/saved', authenticateToken, async (req: AuthRequest, res: Resp
       orderBy: { createdAt: 'desc' },
     });
 
-    const savedWorks = saves.map((s) => {
+    const appSavedWorks = saves.map((s) => {
       const lit = s.literature;
       const totalRatingsCount = lit.ratings.length;
       const averageRating =
@@ -302,16 +394,59 @@ readerRouter.get('/saved', authenticateToken, async (req: AuthRequest, res: Resp
         language: lit.language,
         genre: lit.genre,
         coverImage: lit.coverImage,
+        thumbnailUrl: lit.coverImage,
         publicationDate: lit.publicationDate,
         creator: lit.creator,
         category: lit.category,
         averageRating,
         totalRatingsCount,
+        source: 'APPLICATION' as const,
+        sourceLabel: 'Published Literature',
         savedAt: s.createdAt,
       };
     });
 
-    res.json({ savedWorks });
+    // Also fetch external Wikimedia saved works
+    let externalSavedWorks: any[] = [];
+    try {
+      const rawExt = await prisma.externalSavedWork.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+      });
+      externalSavedWorks = (rawExt || []).map((ext: any) => ({
+        id: ext.externalId,
+        externalId: ext.externalId,
+        title: ext.title,
+        originalTitle: ext.originalTitle,
+        subheading: ext.author ? `By ${ext.author}` : undefined,
+        brief: ext.excerpt,
+        language: ext.language,
+        languageCode: ext.languageCode,
+        genre: 'Indian Literature',
+        coverImage: ext.thumbnailUrl,
+        thumbnailUrl: ext.thumbnailUrl,
+        sourceUrl: ext.sourceUrl,
+        canonicalUrl: ext.canonicalUrl,
+        isFullTextAvailable: ext.isFullTextAvailable === 1,
+        fullTextSource: ext.fullTextSource,
+        fullTextUrl: ext.fullTextUrl,
+        creator: ext.author ? { name: ext.author } : undefined,
+        category: { name: 'Indian Heritage Literature' },
+        averageRating: 0,
+        totalRatingsCount: 0,
+        source: 'WIKIMEDIA' as const,
+        sourceLabel: `Wikimedia / ${ext.language.split(' ')[0]} Wikipedia`,
+        savedAt: ext.createdAt,
+      }));
+    } catch (extErr) {
+      console.warn('[ReaderRouter] Failed to query ExternalSavedWork table:', extErr);
+    }
+
+    const allSavedWorks = [...appSavedWorks, ...externalSavedWorks].sort(
+      (a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime()
+    );
+
+    res.json({ savedWorks: allSavedWorks });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch saved works.' });
   }
