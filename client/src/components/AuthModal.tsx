@@ -206,19 +206,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     };
   }, [isOpen]);
 
-  // Format Google OAuth errors to explicitly address origin_mismatch and configuration problems
   const parseGoogleAuthError = (errObj: any): string => {
-    const rawError = (errObj?.error_description || errObj?.error || errObj?.message || String(errObj || '')).toLowerCase();
+    const errorCode = (errObj?.error || '').toLowerCase();
+    const errorDesc = (errObj?.error_description || '').toLowerCase();
+    const errorMessage = (errObj?.message || '').toLowerCase();
+    const rawError = `${errorCode} ${errorDesc} ${errorMessage} ${String(errObj || '')}`.toLowerCase();
     const currentOrigin = window.location.origin;
 
     if (rawError.includes('origin_mismatch') || rawError.includes('origin mismatch') || rawError.includes('400')) {
       return `Google OAuth Error 400 (origin_mismatch): The current origin "${currentOrigin}" is not listed in Authorized JavaScript Origins in Google Cloud Console. Please add "${currentOrigin}" to your Google OAuth client credentials.`;
     }
+    if (errorCode === 'access_denied' || rawError.includes('access_denied')) {
+      return 'Google sign-in was cancelled or access was denied.';
+    }
     if (rawError.includes('popup_closed') || rawError.includes('closed_by_user')) {
       return 'Google sign-in window was closed before completing authentication.';
-    }
-    if (rawError.includes('access_denied')) {
-      return 'Google sign-in was cancelled or access was denied.';
     }
     if (rawError.includes('idpiframe_initialization_failed')) {
       return `Google sign-in initialization failed. Please ensure cookies and popups are permitted for origin "${currentOrigin}".`;
