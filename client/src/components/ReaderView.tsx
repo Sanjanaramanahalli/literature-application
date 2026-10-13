@@ -88,7 +88,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   // 'cover' = initial view showing Cover Page first
   // 'content' = user has opened the manuscript to read pages
   const [viewingMode, setViewingMode] = useState<'cover' | 'content'>('cover');
-  const [displayMode, setDisplayMode] = useState<'paginated' | 'full'>('full');
+  const [displayMode, setDisplayMode] = useState<'paginated' | 'full'>('paginated');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isFlipping, setIsFlipping] = useState<boolean>(false);
   const [flipDirection, setFlipDirection] = useState<'next' | 'prev'>('next');
@@ -207,9 +207,11 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   };
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     fetchLiteratureDetail();
     // Reset to cover page when switching literature
     setViewingMode('cover');
+    setDisplayMode('paginated');
     setCurrentPage(1);
     setIsFlipping(false);
   }, [literatureId, user]);
@@ -521,20 +523,20 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
           {viewingMode === 'content' && (
             <>
               <button
-                className="btn btn-secondary btn-sm"
+                className="btn btn-secondary btn-sm btn-reader-view-toggle"
                 onClick={() => setDisplayMode(displayMode === 'full' ? 'paginated' : 'full')}
                 id="btn-toggle-display-mode"
                 title={displayMode === 'full' ? 'Switch to 3D Page-by-Page View' : 'Switch to Full Literature View'}
               >
                 {displayMode === 'full' ? (
                   <>
-                    <BookOpen size={14} style={{ marginRight: '4px' }} />
-                    <span>Page-by-Page</span>
+                    <BookOpen size={14} />
+                    <span className="btn-label-responsive">Page-by-Page</span>
                   </>
                 ) : (
                   <>
-                    <AlignLeft size={14} style={{ marginRight: '4px' }} />
-                    <span>Full View</span>
+                    <AlignLeft size={14} />
+                    <span className="btn-label-responsive">Full View</span>
                   </>
                 )}
               </button>
@@ -545,8 +547,8 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                 id="btn-return-cover-page"
                 title="Return to Manuscript Cover Page"
               >
-                <Layers size={14} style={{ marginRight: '4px' }} />
-                <span>Cover</span>
+                <Layers size={14} />
+                <span className="btn-label-responsive">Cover</span>
               </button>
             </>
           )}
@@ -562,9 +564,9 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
             <ThumbsUp
               size={14}
               fill={userVote === 'LIKE' ? 'currentColor' : 'transparent'}
-              style={{ marginRight: '4px' }}
             />
-            <span>Like ({likesCount})</span>
+            <span className="btn-label-responsive">Like</span>
+            <span className="pill-count">({likesCount})</span>
           </button>
 
           {/* Reader Downvote Action */}
@@ -578,9 +580,8 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
             <ThumbsDown
               size={14}
               fill={userVote === 'DOWNVOTE' ? 'currentColor' : 'transparent'}
-              style={{ marginRight: '4px' }}
             />
-            <span>({downvotesCount})</span>
+            <span className="pill-count">({downvotesCount})</span>
           </button>
 
           {/* Reader Share Action */}
@@ -592,13 +593,13 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
           >
             {copiedShare ? (
               <>
-                <Check size={14} style={{ marginRight: '4px', color: 'var(--accent-gold)' }} />
+                <Check size={14} style={{ color: 'var(--accent-gold)' }} />
                 <span>Copied!</span>
               </>
             ) : (
               <>
-                <Share2 size={14} style={{ marginRight: '4px' }} />
-                <span>Share</span>
+                <Share2 size={14} />
+                <span className="btn-label-responsive">Share</span>
               </>
             )}
           </button>
@@ -614,10 +615,9 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
             <Bookmark
               size={14}
               fill={isSaved ? 'currentColor' : 'transparent'}
-              style={{ marginRight: '4px' }}
             />
-            <span>{isSaved ? 'Saved' : 'Save'}</span>
-            <span style={{ opacity: 0.8, marginLeft: '4px' }}>({savesCount})</span>
+            <span className="btn-label-responsive">{isSaved ? 'Saved' : 'Save'}</span>
+            <span className="pill-count">({savesCount})</span>
           </button>
 
           {/* Settings / Display Toggle (Theme, Audio, Font) */}
@@ -948,14 +948,15 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                   className="btn btn-primary btn-open-manuscript"
                   onClick={() => {
                     setViewingMode('content');
-                    setDisplayMode('full');
+                    setDisplayMode('paginated');
                     setCurrentPage(1);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  id="btn-open-full-literature"
-                  title="Open and read the entire literary work in continuous folio view"
+                  id="btn-open-manuscript"
+                  title="Open manuscript at Page 1 in classical page-by-page view"
                 >
-                  <AlignLeft size={18} />
-                  <span>Read Full Literature</span>
+                  <BookOpen size={18} />
+                  <span>Begin Reading Manuscript (Page by Page)</span>
                 </button>
 
                 <button
@@ -963,14 +964,15 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                   className="btn btn-secondary btn-open-manuscript"
                   onClick={() => {
                     setViewingMode('content');
-                    setDisplayMode('paginated');
+                    setDisplayMode('full');
                     setCurrentPage(1);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  id="btn-open-manuscript"
-                  title="Open manuscript in traditional 3D page-by-page physical book view"
+                  id="btn-open-full-literature"
+                  title="Open and read the entire literary work in continuous folio view"
                 >
-                  <BookOpen size={18} />
-                  <span>Begin Reading Manuscript (Page by Page)</span>
+                  <AlignLeft size={18} />
+                  <span>Read Full Literature</span>
                 </button>
               </div>
 

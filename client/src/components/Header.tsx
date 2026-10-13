@@ -366,9 +366,39 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
           {user?.role === 'ADMIN' ? (
-            <button className="mobile-nav-link admin-nav-link" onClick={() => handleNav('admin')}>
-              Admin Dashboard
-            </button>
+            <>
+              <button
+                className="mobile-nav-link"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setShowNotifications(true);
+                }}
+                id="mobile-nav-notifications"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+              >
+                <span>
+                  <Bell size={15} style={{ marginRight: '6px', display: 'inline' }} />
+                  Notifications & Alerts
+                </span>
+                {unreadCount > 0 && (
+                  <span
+                    style={{
+                      background: 'var(--accent-burgundy)',
+                      color: '#ffffff',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      borderRadius: '10px',
+                      padding: '1px 6px',
+                    }}
+                  >
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+              <button className="mobile-nav-link admin-nav-link" onClick={() => handleNav('admin')}>
+                Admin Dashboard
+              </button>
+            </>
           ) : (
             <button className="mobile-nav-link admin-nav-link" onClick={() => handleNav('admin-signin')}>
               Admin Sign-In

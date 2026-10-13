@@ -12,15 +12,16 @@
   position: sticky;
   top: 72px; /* Sticks directly below the main sticky header */
   z-index: 95;
-  background: var(--bg-primary);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 0.75rem 1rem;
+  background: rgba(253, 251, 247, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 0.65rem 1rem;
   margin-bottom: 2rem;
   border: 1px solid var(--border-classic);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 16px rgba(44, 24, 16, 0.06);
+  box-shadow: 0 4px 18px rgba(44, 24, 16, 0.08);
   gap: 0.75rem;
+  transition: all 0.2s ease;
 }
 
 .reader-back-btn {
@@ -29,15 +30,16 @@
   gap: 0.45rem;
   font-family: var(--font-body);
   font-size: 0.88rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--accent-burgundy);
-  background: transparent;
+  background: var(--bg-surface);
   border: 1px solid var(--border-classic);
   padding: 0.45rem 0.95rem;
   border-radius: var(--radius-sm);
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(44, 24, 16, 0.04);
 }
 
 .reader-back-btn:hover {
@@ -48,10 +50,27 @@
 
 .reader-actions-quick {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.45rem;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
+}
+
+.reader-actions-quick .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.42rem 0.75rem;
+  font-size: 0.84rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.pill-count {
+  font-size: 0.8rem;
+  font-weight: 700;
+  opacity: 0.9;
 }
 
 /* Distraction-free Reading Sanctuary Article Container */
@@ -972,25 +991,28 @@
 @media (max-width: 768px) {
   .reader-navigation-bar {
     top: 60px; /* Aligns below mobile header */
-    padding: 0.6rem 0.75rem;
+    padding: 0.5rem 0.65rem;
     flex-wrap: wrap;
     justify-content: space-between;
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
   .reader-back-btn {
-    padding: 0.35rem 0.7rem;
+    padding: 0.35rem 0.65rem;
     font-size: 0.8rem;
   }
   .reader-actions-quick {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem;
+    gap: 0.3rem;
     align-items: center;
   }
   .reader-actions-quick .btn {
-    padding: 0.35rem 0.65rem;
+    padding: 0.35rem 0.55rem;
     font-size: 0.78rem;
     min-width: auto;
+  }
+  .btn-label-responsive {
+    display: none;
   }
   .cover-page-inner {
     grid-template-columns: 1fr;

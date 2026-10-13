@@ -68,4 +68,34 @@ test.describe('Reader Clean Sticky Toolbar, Page 1 Opening & Admin Notifications
     await expect(dropdown).toBeVisible();
     await expect(dropdown).toContainText('Curator Activity & Alerts');
   });
+
+  test('Positive: Responsive layout adapts cleanly on mobile viewport', async ({ page }) => {
+    // Set mobile viewport (iPhone 13 size: 390x844)
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('http://localhost:5173');
+    await page.waitForLoadState('networkidle');
+
+    // Open first literature
+    const card = page.locator('.literature-card, [data-testid="literature-card"]').first();
+    await expect(card).toBeVisible({ timeout: 10000 });
+    await card.click();
+
+    // Verify Cover Page is visible and responsive
+    const coverPage = page.locator('#reader-cover-page');
+    await expect(coverPage).toBeVisible();
+
+    // Open Page 1
+    const openBtn = page.locator('#btn-open-manuscript');
+    await expect(openBtn).toBeVisible();
+    await openBtn.click();
+
+    // Verify Page 1 is displayed cleanly
+    const pageIndicator = page.locator('#reader-page-indicator');
+    await expect(pageIndicator).toBeVisible();
+    await expect(pageIndicator).toContainText('Page 1 of');
+
+    // Verify sticky navigation bar stays visible and responsive
+    const navBar = page.locator('.reader-navigation-bar');
+    await expect(navBar).toBeVisible();
+  });
 });
