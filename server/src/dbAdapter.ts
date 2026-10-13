@@ -31,6 +31,9 @@ function convertWhereClause(where: any = {}): any {
       }
     } else if (key === 'NOT') {
       mongoFilter.$not = convertWhereClause(value);
+    } else if (key.includes('_') && value && typeof value === 'object' && !Array.isArray(value)) {
+      // Prisma compound unique keys like userId_literatureId: { userId, literatureId }
+      Object.assign(mongoFilter, value);
     } else if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
       // Prisma operator mapping: { contains: '...', in: [...], gte: '...', lte: '...' }
       const subFilter: any = {};

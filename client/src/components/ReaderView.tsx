@@ -16,6 +16,14 @@ import {
   Share2,
   Check,
   ExternalLink,
+  ZoomIn,
+  ZoomOut,
+  Sun,
+  Moon,
+  Coffee,
+  Volume2,
+  VolumeX,
+  Search,
 } from 'lucide-react';
 import { ThreadedComments } from './ThreadedComments';
 import { WhatsAppAiAssistant } from './WhatsAppAiAssistant';
@@ -27,6 +35,7 @@ interface ReaderViewProps {
   user: any;
   onBack: () => void;
   onOpenAuth: (mode: 'login' | 'register') => void;
+  onSearchExternal?: (queryText: string, languageCode?: string) => void;
 }
 
 interface DetailedLiterature extends LiteratureItem {
@@ -45,6 +54,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   user,
   onBack,
   onOpenAuth,
+  onSearchExternal,
 }) => {
   const [literature, setLiterature] = useState<DetailedLiterature | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -80,6 +90,103 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isFlipping, setIsFlipping] = useState<boolean>(false);
   const [flipDirection, setFlipDirection] = useState<'next' | 'prev'>('next');
+  const [wordsPerPage, setWordsPerPage] = useState<number>(85);
+  const [jumpPageInput, setJumpPageInput] = useState<string>('');
+
+  // Text Selection / Scholar Wikimedia Discovery Tooltip State
+  const [selectedText, setSelectedText] = useState<string>('');
+  const [selectionTooltipPos, setSelectionTooltipPos] = useState<{ x: number; y: number } | null>(null);
+
+  // Text Selection Listener
+  const handleSelectionChange = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed) {
+      setSelectionTooltipPos(null);
+      setSelectedText('');
+      return;
+    }
+
+    const text = selection.toString().trim();
+    if (!text || text.length < 2) {
+      setSelectionTooltipPos(null);
+      setSelectedText('');
+      return;
+    }
+
+    // Check that selection is inside literature reader
+    try {
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      if (rect && rect.width > 0) {
+        // Intelligent extraction for paragraphs: if longer than 120 chars, extract salient keywords
+        let queryToSearch = text;
+        if (text.length > 120) {
+          const sentences = text.split(/[।.\n]/).filter(s => s.trim().length > 0);
+          queryToSearch = sentences[0]?.trim() || text.substring(0, 80);
+        }
+
+        setSelectedText(queryToSearch);
+        setSelectionTooltipPos({
+          x: Math.max(10, rect.left + rect.width / 2),
+          y: Math.max(10, rect.top + window.scrollY - 46),
+        });
+      }
+    } catch {
+      // Fallback
+    }
+  };
+
+  useEffect(() => {
+    const handleMouseUp = () => {
+      setTimeout(handleSelectionChange, 100);
+    };
+
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchend', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchend', handleMouseUp);
+    };
+  }, []);
+
+  // Professional Reader Customization States (Font size, Theme, Audio Narration)
+  const [fontSize, setFontSize] = useState<'small' | 'medium' | 'large' | 'xlarge'>('medium');
+  const [readerTheme, setReaderTheme] = useState<'parchment' | 'ivory' | 'sepia' | 'night'>('parchment');
+  const [isNarrating, setIsNarrating] = useState<boolean>(false);
+
+  // Text-To-Speech Narration Toggle
+  const handleToggleNarration = () => {
+    if (!('speechSynthesis' in window)) {
+      setFeedbackMessage('Audio narration is not supported in this browser.');
+      return;
+    }
+
+    if (isNarrating) {
+      window.speechSynthesis.cancel();
+      setIsNarrating(false);
+      setFeedbackMessage('Audio narration paused.');
+    } else {
+      window.speechSynthesis.cancel();
+      const textToRead = displayMode === 'paginated' ? (pages[currentPage - 1] || literature?.content || '') : (literature?.content || '');
+      const utterance = new SpeechSynthesisUtterance(textToRead.slice(0, 3000));
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+      utterance.onend = () => setIsNarrating(false);
+      utterance.onerror = () => setIsNarrating(false);
+      window.speechSynthesis.speak(utterance);
+      setIsNarrating(true);
+      setFeedbackMessage('Classical audio narration started.');
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
 
 
@@ -357,27 +464,46 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       })
     : null;
 
-  // Split content into pages (explicit page breaks OR standard book pagination chunks of ~250 words)
-  const getPages = (text: string): string[] => {
+  // Split content into pages (explicit page breaks OR standard book pagination chunks)
+  const getPages = (text: string, chunkSize: number = 85): string[] => {
     if (!text || !text.trim()) return [''];
     const trimmed = text.trim();
     if (trimmed.includes('---page---') || trimmed.includes('<!-- pagebreak -->') || trimmed.includes('\f')) {
       const parts = trimmed.split(/---page---|<!-- pagebreak -->|\f/g).filter((s) => s.trim().length > 0);
+      // If explicit pages exist but user wants more granularity (e.g. 100-200 pages)
+      if (parts.length < 50 && chunkSize <= 100) {
+        const expanded: string[] = [];
+        for (const part of parts) {
+          const w = part.trim().split(/\s+/);
+          for (let i = 0; i < w.length; i += chunkSize) {
+            expanded.push(w.slice(i, i + chunkSize).join(' '));
+          }
+        }
+        return expanded.length > 0 ? expanded : parts;
+      }
       return parts.length > 0 ? parts : [trimmed];
     }
-    // Split into ~250 words chunks per page
+    // Split into granular chunks per page
     const words = trimmed.split(/\s+/);
     const pagesArr: string[] = [];
-    const wordsPerPage = 250;
-    for (let i = 0; i < words.length; i += wordsPerPage) {
-      pagesArr.push(words.slice(i, i + wordsPerPage).join(' '));
+    for (let i = 0; i < words.length; i += chunkSize) {
+      pagesArr.push(words.slice(i, i + chunkSize).join(' '));
     }
     return pagesArr.length > 0 ? pagesArr : [trimmed];
   };
 
-  const pages = getPages(literature.content);
+  const pages = getPages(literature.content, wordsPerPage);
   const totalPages = pages.length;
   const currentContentPageText = pages[currentPage - 1] || pages[0] || '';
+
+  const handleJumpToPage = (e: React.FormEvent) => {
+    e.preventDefault();
+    const target = parseInt(jumpPageInput.trim(), 10);
+    if (!isNaN(target) && target >= 1 && target <= totalPages) {
+      handlePageChange(target, target > currentPage ? 'next' : 'prev', true);
+      setJumpPageInput('');
+    }
+  };
 
   return (
     <div className="reader-view-container" id="reader-view-container">
@@ -492,7 +618,98 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
             <span style={{ opacity: 0.8, marginLeft: '4px' }}>({savesCount})</span>
           </button>
 
+          {/* Audio Narration (Text-to-Speech) */}
+          <button
+            className={`btn ${isNarrating ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+            onClick={handleToggleNarration}
+            id="btn-reader-narration"
+            title={isNarrating ? 'Pause Audio Narration' : 'Listen to Audio Narration (Text-to-Speech)'}
+          >
+            {isNarrating ? (
+              <>
+                <VolumeX size={14} style={{ marginRight: '4px' }} />
+                <span>Pause Audio</span>
+              </>
+            ) : (
+              <>
+                <Volume2 size={14} style={{ marginRight: '4px' }} />
+                <span>Listen Audio</span>
+              </>
+            )}
+          </button>
 
+          {/* Reader Theme Selector (Ivory, Parchment, Sepia, Night) */}
+          <div className="reader-theme-switcher" style={{ display: 'inline-flex', gap: '3px', background: 'var(--bg-secondary)', padding: '2px 4px', borderRadius: '4px', border: '1px solid var(--border-classic)' }}>
+            <button
+              type="button"
+              className={`theme-pill ${readerTheme === 'parchment' ? 'active' : ''}`}
+              onClick={() => setReaderTheme('parchment')}
+              title="Parchment Theme"
+              style={{ background: readerTheme === 'parchment' ? '#fcf9f2' : 'transparent', border: readerTheme === 'parchment' ? '1px solid #c5a059' : '1px solid transparent', padding: '3px 6px', borderRadius: '3px', cursor: 'pointer', fontSize: '0.78rem' }}
+            >
+              📜
+            </button>
+            <button
+              type="button"
+              className={`theme-pill ${readerTheme === 'ivory' ? 'active' : ''}`}
+              onClick={() => setReaderTheme('ivory')}
+              title="Clean Ivory Theme"
+              style={{ background: readerTheme === 'ivory' ? '#ffffff' : 'transparent', border: readerTheme === 'ivory' ? '1px solid #c5a059' : '1px solid transparent', padding: '3px 6px', borderRadius: '3px', cursor: 'pointer', fontSize: '0.78rem' }}
+            >
+              <Sun size={12} />
+            </button>
+            <button
+              type="button"
+              className={`theme-pill ${readerTheme === 'sepia' ? 'active' : ''}`}
+              onClick={() => setReaderTheme('sepia')}
+              title="Warm Sepia Theme"
+              style={{ background: readerTheme === 'sepia' ? '#f4ecd8' : 'transparent', border: readerTheme === 'sepia' ? '1px solid #c5a059' : '1px solid transparent', padding: '3px 6px', borderRadius: '3px', cursor: 'pointer', fontSize: '0.78rem' }}
+            >
+              <Coffee size={12} />
+            </button>
+            <button
+              type="button"
+              className={`theme-pill ${readerTheme === 'night' ? 'active' : ''}`}
+              onClick={() => setReaderTheme('night')}
+              title="Scholarly Dark / Night Theme"
+              style={{ background: readerTheme === 'night' ? '#1e140c' : 'transparent', color: readerTheme === 'night' ? '#c5a059' : 'inherit', border: readerTheme === 'night' ? '1px solid #c5a059' : '1px solid transparent', padding: '3px 6px', borderRadius: '3px', cursor: 'pointer', fontSize: '0.78rem' }}
+            >
+              <Moon size={12} />
+            </button>
+          </div>
+
+          {/* Typography Scale Controls */}
+          <div className="reader-font-controls" style={{ display: 'inline-flex', gap: '2px', background: 'var(--bg-secondary)', padding: '2px 4px', borderRadius: '4px', border: '1px solid var(--border-classic)' }}>
+            <button
+              type="button"
+              onClick={() => {
+                const sizes: Array<'small' | 'medium' | 'large' | 'xlarge'> = ['small', 'medium', 'large', 'xlarge'];
+                const curIdx = sizes.indexOf(fontSize);
+                if (curIdx > 0) setFontSize(sizes[curIdx - 1]);
+              }}
+              disabled={fontSize === 'small'}
+              title="Decrease Font Size"
+              style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '2px 5px', opacity: fontSize === 'small' ? 0.4 : 1 }}
+            >
+              <ZoomOut size={13} />
+            </button>
+            <span style={{ fontSize: '0.72rem', fontWeight: 600, padding: '0 4px', alignSelf: 'center', color: 'var(--text-secondary)' }}>
+              {fontSize === 'small' ? '85%' : fontSize === 'medium' ? '100%' : fontSize === 'large' ? '120%' : '140%'}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const sizes: Array<'small' | 'medium' | 'large' | 'xlarge'> = ['small', 'medium', 'large', 'xlarge'];
+                const curIdx = sizes.indexOf(fontSize);
+                if (curIdx < sizes.length - 1) setFontSize(sizes[curIdx + 1]);
+              }}
+              disabled={fontSize === 'xlarge'}
+              title="Increase Font Size"
+              style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '2px 5px', opacity: fontSize === 'xlarge' ? 0.4 : 1 }}
+            >
+              <ZoomIn size={13} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -572,7 +789,9 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                    literature.language === 'Marathi' ? 'मराठी साहित्य संग्रह • Athenæum Edition' :
                    literature.language === 'Gujarati' ? 'ગુજરાતી સાહિત્ય વારસો • Athenæum Edition' :
                    literature.language === 'Punjabi' ? 'ਪੰਜਾਬੀ ਸਾਹਿਤ ਸੰਗ੍ਰਹਿ • Athenæum Edition' :
-                   literature.language === 'Urdu' ? 'اردو ادب کا خزانہ • Athenæum Edition' :
+                   literature.language === 'Odia' ? 'ଓଡ଼ିଆ ସାହିତ୍ୟ ସମ୍ଭାର • Athenæum Edition' :
+                   literature.language === 'Assamese' ? 'অসমীয়া সাহিত্য সম্ভাৰ • Athenæum Edition' :
+                   literature.language === 'Konkani' ? 'कोंकणी साहित्य संग्रह • Athenæum Edition' :
                    `Athenæum Classical ${literature.language || 'Literature'} Edition`}
                 </div>
               </div>
@@ -622,11 +841,20 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                       Telugu: 'te',
                       Malayalam: 'ml',
                       Bengali: 'bn',
-                      Marathi: 'marathi',
+                      Marathi: 'mr',
                       Gujarati: 'gu',
                       Punjabi: 'pa',
-                      Urdu: 'ur',
+                      Odia: 'or',
+                      Assamese: 'as',
                       Sanskrit: 'sa',
+                      Konkani: 'gom',
+                      Kashmiri: 'ks',
+                      Nepali: 'ne',
+                      Sindhi: 'sd',
+                      Maithili: 'mai',
+                      Manipuri: 'mni',
+                      Santali: 'sat',
+                      Dogri: 'doi',
                       French: 'fr',
                       German: 'de',
                       Spanish: 'es',
@@ -763,7 +991,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
 
       {/* VIEWING MODE 2: LITERATURE CONTENT PAGES (Follows Cover Page) */}
       {viewingMode === 'content' && (
-        <article className="reader-article-wrapper" id="reader-article-content">
+        <article className={`reader-article-wrapper theme-${readerTheme} font-${fontSize}`} id="reader-article-content">
           {/* Header Bar */}
           <header className="reader-article-header">
             <div className="reader-meta-pills">
@@ -821,37 +1049,97 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
           {displayMode === 'paginated' ? (
             <>
               {/* Pagination Controls Top */}
-              <div className="reader-page-controls" id="reader-page-controls-top">
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  disabled={currentPage <= 1 || isFlipping}
-                  onClick={() => handlePageChange(currentPage - 1, 'prev')}
-                  id="btn-prev-page"
-                >
-                  <ChevronLeft size={16} />
-                  <span>Previous Page</span>
-                </button>
+              <div className="reader-page-controls" id="reader-page-controls-top" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    disabled={currentPage <= 1 || isFlipping}
+                    onClick={() => handlePageChange(currentPage - 1, 'prev')}
+                    id="btn-prev-page"
+                  >
+                    <ChevronLeft size={16} />
+                    <span>Previous</span>
+                  </button>
 
-                <div className="reader-page-indicator" id="reader-page-indicator">
-                  Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
+                  <div className="reader-page-indicator" id="reader-page-indicator">
+                    Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    disabled={currentPage >= totalPages || isFlipping}
+                    onClick={() => handlePageChange(currentPage + 1, 'next')}
+                    id="btn-next-page"
+                  >
+                    <span>Next</span>
+                    <ChevronRight size={16} />
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  disabled={currentPage >= totalPages || isFlipping}
-                  onClick={() => handlePageChange(currentPage + 1, 'next')}
-                  id="btn-next-page"
-                >
-                  <span>Next Page</span>
-                  <ChevronRight size={16} />
-                </button>
+                {/* Direct Jump to Page Input Form */}
+                <form onSubmit={handleJumpToPage} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Go to page:</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={totalPages}
+                    value={jumpPageInput}
+                    onChange={(e) => setJumpPageInput(e.target.value)}
+                    placeholder={String(currentPage)}
+                    style={{
+                      width: '60px',
+                      padding: '3px 6px',
+                      fontSize: '0.82rem',
+                      textAlign: 'center',
+                      border: '1px solid var(--border-classic)',
+                      borderRadius: '4px',
+                      background: 'var(--bg-primary)',
+                      color: 'var(--text-primary)',
+                    }}
+                  />
+                  <button type="submit" className="btn btn-secondary btn-sm" style={{ padding: '3px 8px', fontSize: '0.8rem' }}>
+                    Go
+                  </button>
+                </form>
+
+                {/* Page Density Selector: 100-200 pages vs standard */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Manuscript Length:</span>
+                  <button
+                    type="button"
+                    className={`btn ${wordsPerPage === 40 ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                    style={{ padding: '2px 7px', fontSize: '0.75rem' }}
+                    onClick={() => { setWordsPerPage(40); setCurrentPage(1); }}
+                    title="Compact folios: creates ~150-250 detailed pages"
+                  >
+                    150-200+ Pages
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn ${wordsPerPage === 85 ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                    style={{ padding: '2px 7px', fontSize: '0.75rem' }}
+                    onClick={() => { setWordsPerPage(85); setCurrentPage(1); }}
+                    title="Classic folios: creates ~80-120 pages"
+                  >
+                    80-120 Pages
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn ${wordsPerPage === 200 ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                    style={{ padding: '2px 7px', fontSize: '0.75rem' }}
+                    onClick={() => { setWordsPerPage(200); setCurrentPage(1); }}
+                    title="Standard chapters"
+                  >
+                    Standard
+                  </button>
+                </div>
               </div>
 
               {/* Current Page Literary Content with 3D Physical Parchment Page Turn Animation */}
               <div className="book-page-viewport">
-                <div className={`book-page-sheet ${isFlipping ? (flipDirection === 'next' ? 'flipping-next' : 'flipping-prev') : 'page-settled'}`}>
+                <div className={`book-page-sheet theme-${readerTheme} font-${fontSize} ${isFlipping ? (flipDirection === 'next' ? 'flipping-next' : 'flipping-prev') : 'page-settled'}`}>
                   <div className="book-page-inner-folio">
                     <div className="folio-header-indicator">
                       <span>Folio {currentPage}</span>
@@ -874,32 +1162,59 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
               </div>
 
               {/* Pagination Controls Bottom */}
-              <div className="reader-page-controls" id="reader-page-controls-bottom" style={{ marginTop: '2.5rem' }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  disabled={currentPage <= 1 || isFlipping}
-                  onClick={() => handlePageChange(currentPage - 1, 'prev', true)}
-                  id="btn-prev-page-bottom"
-                >
-                  <ChevronLeft size={16} />
-                  <span>Previous Page</span>
-                </button>
+              <div className="reader-page-controls" id="reader-page-controls-bottom" style={{ marginTop: '2.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    disabled={currentPage <= 1 || isFlipping}
+                    onClick={() => handlePageChange(currentPage - 1, 'prev', true)}
+                    id="btn-prev-page-bottom"
+                  >
+                    <ChevronLeft size={16} />
+                    <span>Previous Page</span>
+                  </button>
 
-                <span className="reader-page-indicator">
-                  Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
-                </span>
+                  <span className="reader-page-indicator">
+                    Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
+                  </span>
 
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  disabled={currentPage >= totalPages || isFlipping}
-                  onClick={() => handlePageChange(currentPage + 1, 'next', true)}
-                  id="btn-next-page-bottom"
-                >
-                  <span>Next Page</span>
-                  <ChevronRight size={16} />
-                </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    disabled={currentPage >= totalPages || isFlipping}
+                    onClick={() => handlePageChange(currentPage + 1, 'next', true)}
+                    id="btn-next-page-bottom"
+                  >
+                    <span>Next Page</span>
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleJumpToPage} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Jump to folio:</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={totalPages}
+                    value={jumpPageInput}
+                    onChange={(e) => setJumpPageInput(e.target.value)}
+                    placeholder={String(currentPage)}
+                    style={{
+                      width: '60px',
+                      padding: '3px 6px',
+                      fontSize: '0.82rem',
+                      textAlign: 'center',
+                      border: '1px solid var(--border-classic)',
+                      borderRadius: '4px',
+                      background: 'var(--bg-primary)',
+                      color: 'var(--text-primary)',
+                    }}
+                  />
+                  <button type="submit" className="btn btn-secondary btn-sm" style={{ padding: '3px 8px', fontSize: '0.8rem' }}>
+                    Turn
+                  </button>
+                </form>
               </div>
             </>
           ) : (
@@ -1121,6 +1436,42 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
         user={user}
         onOpenAuth={onOpenAuth}
       />
+
+      {/* Floating Text Selection Wikimedia Discovery Tooltip */}
+      {selectionTooltipPos && selectedText && onSearchExternal && (
+        <div
+          className="text-selection-discovery-popup"
+          style={{
+            position: 'absolute',
+            left: `${selectionTooltipPos.x}px`,
+            top: `${selectionTooltipPos.y}px`,
+            transform: 'translateX(-50%)',
+            zIndex: 9999,
+            backgroundColor: 'var(--accent-burgundy)',
+            color: '#fff',
+            borderRadius: '24px',
+            boxShadow: '0 4px 18px rgba(0,0,0,0.3)',
+            padding: '6px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            cursor: 'pointer',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            whiteSpace: 'nowrap',
+            border: '1px solid var(--accent-gold)',
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSearchExternal(selectedText);
+            setSelectionTooltipPos(null);
+          }}
+          title={`Search Wikimedia for "${selectedText}"`}
+        >
+          <Search size={14} style={{ color: 'var(--accent-gold)' }} />
+          <span>Search Wikimedia: &ldquo;{selectedText.length > 25 ? `${selectedText.slice(0, 25)}…` : selectedText}&rdquo;</span>
+        </div>
+      )}
     </div>
   );
 };
