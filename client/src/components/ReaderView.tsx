@@ -1264,21 +1264,6 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
           ) : (
             /* FULL LITERATURE CONTINUOUS DISPLAY: Displays all pages/chapters in chronological manuscript sequence */
             <div className="full-literature-container" id="full-literature-container">
-              {/* Quick Jump Index Pill Bar */}
-              <div className="folio-quick-index-bar">
-                <span className="quick-index-label">Folios & Chapters:</span>
-                <div className="quick-index-chips">
-                  {pages.map((_, idx) => (
-                    <a
-                      key={idx}
-                      href={`#folio-section-${idx + 1}`}
-                      className="folio-chip-link"
-                    >
-                      {idx + 1}
-                    </a>
-                  ))}
-                </div>
-              </div>
 
               {/* All Pages Rendered Chronologically */}
               <div className="full-literature-folios-list" id="reader-body-paragraphs">
