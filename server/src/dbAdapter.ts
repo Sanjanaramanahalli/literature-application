@@ -258,15 +258,31 @@ export const prismaMongoAdapter = {
   },
 
   literature: {
-    findUnique: async ({ where, include }: { where: any; include?: any }) => {
+    findUnique: async ({ where, include, select }: { where: any; include?: any; select?: any }) => {
       const doc = await LiteratureModel.findOne(convertWhereClause(where)).lean();
       if (!doc) return null;
-      return await populateLiterature(doc, include);
+      const populated = await populateLiterature(doc, include);
+      if (select && typeof select === 'object') {
+        const filtered: any = {};
+        for (const [key, val] of Object.entries(select)) {
+          if (val) filtered[key] = (populated as any)[key];
+        }
+        return filtered;
+      }
+      return populated;
     },
-    findFirst: async ({ where, include }: { where?: any; include?: any } = {}) => {
+    findFirst: async ({ where, include, select }: { where?: any; include?: any; select?: any } = {}) => {
       const doc = await LiteratureModel.findOne(convertWhereClause(where)).lean();
       if (!doc) return null;
-      return await populateLiterature(doc, include);
+      const populated = await populateLiterature(doc, include);
+      if (select && typeof select === 'object') {
+        const filtered: any = {};
+        for (const [key, val] of Object.entries(select)) {
+          if (val) filtered[key] = (populated as any)[key];
+        }
+        return filtered;
+      }
+      return populated;
     },
     findMany: async ({ where, include, orderBy, take, skip }: any = {}) => {
       let q = LiteratureModel.find(convertWhereClause(where));
