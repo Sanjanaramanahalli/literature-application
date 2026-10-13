@@ -25,7 +25,6 @@ import {
   VolumeX,
   Search,
   Sliders,
-  MoreHorizontal,
 } from 'lucide-react';
 import { ThreadedComments } from './ThreadedComments';
 import { WhatsAppAiAssistant } from './WhatsAppAiAssistant';
