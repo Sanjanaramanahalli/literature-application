@@ -51,7 +51,7 @@ literatureRouter.get('/', async (req: Request, res: Response): Promise<void> => 
       orderBy: { publicationDate: 'desc' },
     });
 
-    const enriched = items.map((item) => {
+    const formattedDbItems = items.map((item) => {
       const totalRatingsCount = item.ratings.length;
       const averageRating =
         totalRatingsCount > 0
@@ -71,10 +71,13 @@ literatureRouter.get('/', async (req: Request, res: Response): Promise<void> => 
         subject: item.subject,
         genre: item.genre,
         coverImage: item.coverImage,
+        thumbnailUrl: item.coverImage,
         publicationDate: item.publicationDate,
         creator: item.creator,
         category: item.category,
         tags: item.tags.map((t) => t.tag.name),
+        source: 'APPLICATION' as const,
+        sourceLabel: 'Published Literature',
         totalRatingsCount,
         averageRating,
         totalSavesCount: item.saves.length,
@@ -85,7 +88,68 @@ literatureRouter.get('/', async (req: Request, res: Response): Promise<void> => 
       };
     });
 
-    res.json({ literatures: enriched });
+    // If search query is provided, dynamically discover matching literature from Wikimedia Indian languages
+    if (search && String(search).trim()) {
+      try {
+        const queryStr = String(search).trim();
+        const langStr = language && String(language).toLowerCase() !== 'all' ? String(language) : 'auto';
+        const { WikimediaService } = await import('../services/wikimediaService.js');
+        const wikiData = await WikimediaService.searchAcrossIndianLanguages(queryStr, langStr, { limit: 15 });
+
+        const formattedWiki = wikiData.results.map((w) => ({
+          id: w.id,
+          title: w.title,
+          originalTitle: w.originalTitle,
+          subheading: w.author ? `By ${w.author}` : undefined,
+          brief: w.excerpt || w.description,
+          language: w.language,
+          genre: 'Indian Literature / Classical',
+          coverImage: w.thumbnailUrl,
+          thumbnailUrl: w.thumbnailUrl,
+          publicationDate: new Date().toISOString(),
+          creator: w.author ? { id: `author-${w.languageCode}`, name: w.author } : undefined,
+          source: 'WIKIMEDIA' as const,
+          sourceLabel: `Wikimedia / ${w.language.split(' ')[0]} Wikipedia`,
+          sourceUrl: w.sourceUrl,
+          canonicalUrl: w.canonicalUrl,
+          isFullTextAvailable: w.isFullTextAvailable,
+          fullTextSource: w.fullTextSource,
+          fullTextUrl: w.fullTextUrl,
+          attribution: w.attribution,
+          totalRatingsCount: 0,
+          averageRating: 0,
+          totalSavesCount: 0,
+          totalCommentsCount: 0,
+          likesCount: 0,
+          downvotesCount: 0,
+          popularityScore: 0,
+        }));
+
+        // Deduplicate
+        const seen = new Set<string>();
+        const combined: any[] = [];
+
+        for (const item of formattedDbItems) {
+          seen.add(item.title.toLowerCase().trim());
+          combined.push(item);
+        }
+
+        for (const item of formattedWiki) {
+          const key = item.title.toLowerCase().trim();
+          if (!seen.has(key)) {
+            seen.add(key);
+            combined.push(item);
+          }
+        }
+
+        res.json({ literatures: combined });
+        return;
+      } catch (wikiErr) {
+        console.warn('[LiteratureRouter] Wikimedia dynamic discovery error (fallback to DB items):', wikiErr);
+      }
+    }
+
+    res.json({ literatures: formattedDbItems });
   } catch (err) {
     console.error('Fetch literature error:', err);
     res.status(500).json({ error: 'Failed to retrieve literature.' });

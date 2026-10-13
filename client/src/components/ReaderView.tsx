@@ -1066,29 +1066,6 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
             )}
           </header>
 
-          {/* View Mode Banner / Selector inside Article */}
-          <div className="reader-view-mode-bar" id="reader-view-mode-bar">
-            <div className="view-mode-tab-group">
-              <button
-                type="button"
-                className={`view-mode-tab ${displayMode === 'full' ? 'active' : ''}`}
-                onClick={() => setDisplayMode('full')}
-                id="tab-mode-full"
-                title="Reads the entire work in continuous, scrollable layout"
-              >
-                <span>📜 Full Literature View</span>
-              </button>
-              <button
-                type="button"
-                className={`view-mode-tab ${displayMode === 'paginated' ? 'active' : ''}`}
-                onClick={() => setDisplayMode('paginated')}
-                id="tab-mode-paginated"
-                title="Interactive 3D physical book page-turn animation with flip transitions"
-              >
-                <span>📖 Page-by-Page Book View</span>
-              </button>
-            </div>
-          </div>
 
           {displayMode === 'paginated' ? (
             <>

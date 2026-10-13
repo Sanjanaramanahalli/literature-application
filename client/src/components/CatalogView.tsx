@@ -260,7 +260,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         </section>
       )}
 
-      {/* Wikipedia & World Literature Showcase Banner (Home) */}
+      {/* Indian Literature & Wikimedia Discovery Banner (Home) */}
       {currentTab === 'home' && (
         <section
           className="world-literature-banner-card"
@@ -283,14 +283,14 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '0.25rem 0.75rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '20px', border: '1px solid var(--border-classic)', marginBottom: '0.75rem' }}>
               <Globe size={14} style={{ color: 'var(--accent-burgundy)' }} />
               <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-burgundy)' }}>
-                Global Multilingual Archive
+                Indian Languages Discovery
               </span>
             </div>
             <h3 className="serif-title" style={{ fontSize: '1.65rem', color: 'var(--accent-burgundy)', margin: '0 0 0.5rem 0' }}>
-              Universal Multilingual Literature Repository
+              Dynamic Indian Literature Compendium
             </h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.96rem', lineHeight: '1.6', margin: 0 }}>
-              Search for any literary work, poet, novelist, or epic across <strong>Kannada (ಕನ್ನಡ)</strong>, <strong>Hindi (हिन्दी)</strong>, <strong>Sanskrit (संस्कृतम्)</strong>, <strong>Tamil (தமிழ்)</strong>, English, and world languages. Public domain works feature unabridged full text verified legally from <strong>Wikisource</strong>.
+              Search dynamically across all 14 supported Indian languages including <strong>Kannada (ಕನ್ನಡ)</strong>, <strong>Hindi (हिन्दी)</strong>, <strong>Tamil (தமிழ்)</strong>, <strong>Telugu (తెలుగు)</strong>, <strong>Bengali (বাংলা)</strong>, <strong>Marathi (मराठी)</strong>, <strong>Malayalam (മലയാളം)</strong>, <strong>Sanskrit (संस्कृतम्)</strong>, and more via official Wikimedia projects.
             </p>
           </div>
 
@@ -301,7 +301,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             id="btn-explore-world-literature-home"
             style={{ padding: '0.75rem 1.4rem', fontSize: '0.95rem', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
           >
-            <span>Explore World Literature</span>
+            <span>Explore Indian Literature</span>
             <ArrowRight size={16} />
           </button>
         </section>

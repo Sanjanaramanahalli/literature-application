@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { WikimediaService } from '../services/wikimediaService.js';
+import { SUPPORTED_INDIAN_LANGUAGES } from '../config/indianLanguages.js';
 
 export const externalLiteratureRouter = Router();
 
@@ -8,34 +9,21 @@ externalLiteratureRouter.get('/languages', (req: Request, res: Response): void =
   res.json({
     success: true,
     languages: [
-      { code: 'auto', name: 'Auto Detect Script' },
-      { code: 'kn', name: 'Kannada (ಕನ್ನಡ)' },
-      { code: 'hi', name: 'Hindi (हिन्दी)' },
-      { code: 'en', name: 'English' },
-      { code: 'ta', name: 'Tamil (தமிழ்)' },
-      { code: 'te', name: 'Telugu (తెలుగు)' },
-      { code: 'ml', name: 'Malayalam (മലയാളം)' },
-      { code: 'bn', name: 'Bengali (বাংলা)' },
-      { code: 'gu', name: 'Gujarati (ગુજરાતી)' },
-      { code: 'pa', name: 'Punjabi (ਪੰਜਾਬੀ)' },
-      { code: 'ur', name: 'Urdu (اردو)' },
-      { code: 'sa', name: 'Sanskrit (संस्कृतम्)' },
-      { code: 'fr', name: 'French (Français)' },
-      { code: 'de', name: 'German (Deutsch)' },
-      { code: 'es', name: 'Spanish (Español)' },
-      { code: 'it', name: 'Italian (Italiano)' },
-      { code: 'ru', name: 'Russian (Русский)' },
-      { code: 'zh', name: 'Chinese (中文)' },
-      { code: 'ja', name: 'Japanese (日本語)' },
-      { code: 'ar', name: 'Arabic (العربية)' },
+      { code: 'auto', name: 'Auto Detect (Indian Script)', nativeName: 'ಸ್ವಯಂಚಾಲಿತ' },
+      ...SUPPORTED_INDIAN_LANGUAGES.map((l) => ({
+        code: l.code,
+        name: `${l.name} (${l.nativeName})`,
+        nativeName: l.nativeName,
+        wiki: l.wiki,
+      })),
     ],
   });
 });
 
-// GET /api/external/search?q=...&lang=...
+// GET /api/external/search?q=...&lang=...&limit=...&offset=...
 externalLiteratureRouter.get('/search', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { q, lang } = req.query;
+    const { q, lang, limit, offset } = req.query;
     if (!q || !String(q).trim()) {
       res.status(400).json({ success: false, error: 'Search query is required.' });
       return;
@@ -43,21 +31,27 @@ externalLiteratureRouter.get('/search', async (req: Request, res: Response): Pro
 
     const queryStr = String(q).trim();
     const langStr = lang ? String(lang).trim() : 'auto';
+    const numLimit = limit ? Math.min(50, Math.max(1, Number(limit))) : 20;
+    const numOffset = offset ? Math.max(0, Number(offset)) : 0;
 
-    const results = await WikimediaService.searchLiterature(queryStr, langStr);
-    const detectedLang = WikimediaService.detectLanguageCode(queryStr);
-    const finalLang = langStr !== 'auto' ? langStr : detectedLang;
+    const searchResponse = await WikimediaService.searchAcrossIndianLanguages(
+      queryStr,
+      langStr,
+      { limit: numLimit, offset: numOffset }
+    );
+
     res.json({
       success: true,
       query: queryStr,
-      languageCode: finalLang,
-      detectedLanguage: detectedLang,
-      count: results.length,
-      results,
+      languageCode: langStr !== 'auto' ? langStr : searchResponse.detectedLanguage,
+      detectedLanguage: searchResponse.detectedLanguage,
+      total: searchResponse.total,
+      count: searchResponse.results.length,
+      results: searchResponse.results,
     });
   } catch (err: any) {
     console.error('[ExternalLiteratureRouter] Search error:', err);
-    res.status(500).json({ success: false, error: 'Failed to search external literature sources.' });
+    res.status(500).json({ success: false, error: 'Failed to search external Indian literature sources.' });
   }
 });
 
@@ -70,7 +64,7 @@ externalLiteratureRouter.get('/work/:lang/:title', async (req: Request, res: Res
       return;
     }
 
-    const detail = await WikimediaService.getWorkDetail(lang, decodeURIComponent(title));
+    const detail = await WikimediaService.getLiteraturePage(lang, decodeURIComponent(title));
     if (!detail) {
       res.status(404).json({ success: false, error: 'Literature work not found in external archives.' });
       return;

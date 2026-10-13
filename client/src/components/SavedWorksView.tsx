@@ -1,13 +1,17 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bookmark, Trash2, BookOpen, Star, Calendar, Globe, Tag } from 'lucide-react';
+import type { ExternalWorkDetail } from './ExternalLiteratureReader';
 import './SavedWorksView.css';
 
 interface SavedWork {
   id: string;
+  externalId?: string;
   title: string;
+  originalTitle?: string;
   subheading?: string | null;
   brief?: string | null;
   language?: string | null;
+  languageCode?: string | null;
   genre?: string | null;
   coverImage?: string | null;
   publicationDate?: string | null;
@@ -20,11 +24,19 @@ interface SavedWork {
   averageRating: number;
   totalRatingsCount: number;
   savedAt: string;
+  source?: 'APPLICATION' | 'WIKIMEDIA';
+  sourceLabel?: string;
+  sourceUrl?: string;
+  canonicalUrl?: string;
+  isFullTextAvailable?: boolean;
+  fullTextSource?: 'Wikisource' | 'None';
+  fullTextUrl?: string;
 }
 
 interface SavedWorksViewProps {
   user: any;
   onSelectLiterature: (id: string) => void;
+  onSelectExternalWork?: (work: ExternalWorkDetail) => void;
   onNavigateExplore: () => void;
   onOpenAuth: (mode: 'login' | 'register') => void;
 }
@@ -32,13 +44,13 @@ interface SavedWorksViewProps {
 export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
   user,
   onSelectLiterature,
+  onSelectExternalWork,
   onNavigateExplore,
   onOpenAuth,
 }) => {
   const [savedWorks, setSavedWorks] = useState<SavedWork[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  // Track which works are currently being removed â€” prevents double-click duplicate requests
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -55,6 +67,11 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
       setError(null);
       const token = localStorage.getItem('literature_token');
 
+      if (!token) {
+        setError('Your session has expired or you are not signed in. Please sign in again.');
+        return;
+      }
+
       const res = await fetch('/api/reader/saved', {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -62,11 +79,12 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
       });
 
       if (!res.ok) {
-        if (res.status === 401) {
-          setError('Your session has expired. Please sign in again.');
+        if (res.status === 401 || res.status === 403) {
+          setError('Your session has expired. Please sign in again to access your reading sanctuary.');
           return;
         }
-        throw new Error('Failed to fetch personal reading sanctuary.');
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to fetch personal reading sanctuary.');
       }
 
       const data = await res.json();
@@ -79,47 +97,109 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
     }
   };
 
-  const handleRemove = async (literatureId: string, e: React.MouseEvent) => {
+  const handleRemove = async (work: SavedWork, e: React.MouseEvent) => {
     e.stopPropagation();
+    const workKey = work.externalId || work.id;
 
-    // Prevent double-click: skip if this work is already being removed
-    if (removingIds.has(literatureId)) return;
-
-    setRemovingIds((prev) => new Set(prev).add(literatureId));
+    if (removingIds.has(workKey)) return;
+    setRemovingIds((prev) => new Set(prev).add(workKey));
 
     try {
       const token = localStorage.getItem('literature_token');
-      const res = await fetch(`/api/reader/literature/${literatureId}/save`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      if (work.source === 'WIKIMEDIA' || work.externalId) {
+        // Remove external saved work
+        const res = await fetch('/api/reader/external/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            externalId: work.externalId || work.id,
+            title: work.title,
+            sourceUrl: work.sourceUrl || work.canonicalUrl || 'https://wikipedia.org',
+          }),
+        });
 
-      if (res.ok) {
-        const data = await res.json();
-        // Only remove from local list if the toggle resulted in an unsave (saved: false)
-        if (!data.saved) {
-          setSavedWorks((prev) => prev.filter((w) => w.id !== literatureId));
+        if (res.ok) {
+          const data = await res.json();
+          if (!data.saved) {
+            setSavedWorks((prev) => prev.filter((w) => (w.externalId || w.id) !== workKey));
+          }
         }
       } else {
-        console.error('Remove request failed with status:', res.status);
+        // Remove standard DB literature
+        const res = await fetch(`/api/reader/literature/${work.id}/save`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (!data.saved) {
+            setSavedWorks((prev) => prev.filter((w) => w.id !== work.id));
+          }
+        }
       }
     } catch (err) {
       console.error('Failed to remove saved work:', err);
     } finally {
       setRemovingIds((prev) => {
         const next = new Set(prev);
-        next.delete(literatureId);
+        next.delete(workKey);
         return next;
       });
+    }
+  };
+
+  const handleOpenWork = async (work: SavedWork) => {
+    if (work.source === 'WIKIMEDIA' || work.externalId) {
+      if (onSelectExternalWork) {
+        // Fetch or build ExternalWorkDetail
+        const langCode = work.languageCode || 'kn';
+        try {
+          const res = await fetch(`/api/external/work/${encodeURIComponent(langCode)}/${encodeURIComponent(work.title)}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.work) {
+              onSelectExternalWork(data.work);
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('Could not fetch work full details:', e);
+        }
+
+        // Fallback construct
+        onSelectExternalWork({
+          id: work.externalId || work.id,
+          title: work.title,
+          language: work.language || 'Indian Literature',
+          languageCode: langCode,
+          extract: work.brief || '',
+          thumbnailUrl: work.coverImage || undefined,
+          sourceUrl: work.sourceUrl || work.canonicalUrl || `https://${langCode}.wikipedia.org`,
+          isFullTextAvailable: !!work.isFullTextAvailable,
+          fullTextSource: work.fullTextSource,
+          fullTextUrl: work.fullTextUrl,
+          attribution: {
+            source: work.sourceLabel || 'Wikimedia',
+            license: 'CC BY-SA 4.0',
+            url: work.sourceUrl || `https://${langCode}.wikipedia.org`,
+          },
+        });
+      }
+    } else {
+      onSelectLiterature(work.id);
     }
   };
 
   if (!user) {
     return (
       <div className="saved-empty-state" id="saved-unauth-state">
-        <div className="saved-empty-icon">ðŸ”–</div>
+        <div className="saved-empty-icon">📖</div>
         <h2 className="serif-title saved-empty-title">Personal Reading Sanctuary</h2>
         <p className="saved-empty-desc">
           Sign in or create an account to curate your private library of classic manuscripts and philosophical reflections.
@@ -138,10 +218,10 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
   return (
     <div className="saved-works-container" id="saved-works-view">
       <header className="saved-header">
-        <span className="ornament-line">âœ¦ âœ¦ âœ¦</span>
+        <span className="ornament-line">✦ ✦ ✦</span>
         <h1 className="serif-title saved-main-title">Personal Reading Sanctuary</h1>
         <p className="saved-main-subtitle">
-          Your hand-curated collection of preserved manuscripts, essays, and philosophical treatises.
+          Your curated collection of preserved manuscripts and discovered Indian literature.
         </p>
       </header>
 
@@ -152,17 +232,24 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
         </div>
       ) : error ? (
         <div className="saved-empty-state" id="saved-error-state">
-          <p>âš ï¸ {error}</p>
-          <button className="btn btn-secondary" onClick={fetchSavedWorks}>
-            Retry Loading
-          </button>
+          <p>⚠️ {error}</p>
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', marginTop: '1rem', flexWrap: 'wrap' }}>
+            <button className="btn btn-secondary" onClick={fetchSavedWorks}>
+              Retry Loading
+            </button>
+            {error.includes('session') || error.includes('sign in') ? (
+              <button className="btn btn-primary" onClick={() => onOpenAuth('login')}>
+                Sign In
+              </button>
+            ) : null}
+          </div>
         </div>
       ) : savedWorks.length === 0 ? (
         <div className="saved-empty-state" id="saved-empty-state">
-          <div className="saved-empty-icon">ðŸ“–</div>
+          <div className="saved-empty-icon">📖</div>
           <h2 className="serif-title saved-empty-title">Your Reading Shelf is Empty</h2>
           <p className="saved-empty-desc">
-            You have not yet added any manuscripts to your personal collection. Explore the compendium and bookmark works for deep study.
+            You have not yet bookmarked any literature to your personal collection. Explore the compendium and bookmark works for deep study.
           </p>
           <button
             className="btn btn-primary"
@@ -177,7 +264,7 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
           <div style={{ textAlign: 'center' }}>
             <div className="saved-count-badge" id="saved-count-badge">
               <Bookmark size={15} fill="var(--accent-burgundy)" color="var(--accent-burgundy)" />
-              <span>{savedWorks.length} {savedWorks.length === 1 ? 'Manuscript Saved' : 'Manuscripts Saved'}</span>
+              <span>{savedWorks.length} {savedWorks.length === 1 ? 'Work Saved' : 'Works Saved'}</span>
             </div>
           </div>
 
@@ -191,20 +278,20 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
                   })
                 : null;
 
-              const isRemoving = removingIds.has(work.id);
+              const workKey = work.externalId || work.id;
+              const isRemoving = removingIds.has(workKey);
 
               return (
                 <article
-                  key={work.id}
+                  key={workKey}
                   className="saved-card"
-                  id={`saved-card-${work.id}`}
+                  id={`saved-card-${workKey}`}
                   data-testid="saved-card"
                 >
-                  {/* Cover image thumbnail â€” shown when available */}
                   {work.coverImage && (
                     <div
                       className="saved-card-cover"
-                      onClick={() => onSelectLiterature(work.id)}
+                      onClick={() => handleOpenWork(work)}
                       title={`Read ${work.title}`}
                       style={{ cursor: 'pointer' }}
                     >
@@ -224,6 +311,11 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
                       {work.category && (
                         <span className="tag-badge burgundy">{work.category.name}</span>
                       )}
+                      {work.sourceLabel && (
+                        <span className="tag-badge" style={{ backgroundColor: 'var(--accent-gold-subtle)', color: 'var(--accent-burgundy)' }}>
+                          {work.sourceLabel}
+                        </span>
+                      )}
                       {formattedDate && (
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                           <Calendar size={12} style={{ display: 'inline', marginRight: '3px' }} />
@@ -235,7 +327,7 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
                     <div>
                       <h3
                         className="saved-card-title"
-                        onClick={() => onSelectLiterature(work.id)}
+                        onClick={() => handleOpenWork(work)}
                         title={`Read ${work.title}`}
                       >
                         {work.title}
@@ -247,7 +339,6 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
                         </p>
                       )}
 
-                      {/* Language + Genre metadata chips */}
                       {(work.language || work.genre) && (
                         <div className="saved-card-metadata">
                           {work.language && (
@@ -273,21 +364,23 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
                     </div>
 
                     <div>
-                      <div className="saved-card-meta">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Star size={14} fill="var(--accent-gold)" color="var(--accent-gold)" />
-                          <strong style={{ color: 'var(--accent-burgundy)' }}>
-                            {work.averageRating > 0 ? work.averageRating.toFixed(1) : 'New'}
-                          </strong>
-                          <span>({work.totalRatingsCount})</span>
+                      {work.totalRatingsCount > 0 && (
+                        <div className="saved-card-meta">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <Star size={14} fill="var(--accent-gold)" color="var(--accent-gold)" />
+                            <strong style={{ color: 'var(--accent-burgundy)' }}>
+                              {work.averageRating.toFixed(1)}
+                            </strong>
+                            <span>({work.totalRatingsCount})</span>
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       <div className="saved-card-actions">
                         <button
                           className="btn btn-primary btn-sm btn-read-now"
-                          onClick={() => onSelectLiterature(work.id)}
-                          id={`btn-read-saved-${work.id}`}
+                          onClick={() => handleOpenWork(work)}
+                          id={`btn-read-saved-${workKey}`}
                         >
                           <BookOpen size={14} style={{ marginRight: '4px' }} />
                           Read Work
@@ -295,10 +388,10 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
 
                         <button
                           className="btn-unsave"
-                          onClick={(e) => handleRemove(work.id, e)}
+                          onClick={(e) => handleRemove(work, e)}
                           disabled={isRemoving}
                           title={isRemoving ? 'Removing...' : 'Remove from Reading Sanctuary'}
-                          id={`btn-remove-saved-${work.id}`}
+                          id={`btn-remove-saved-${workKey}`}
                           style={{ opacity: isRemoving ? 0.6 : 1, cursor: isRemoving ? 'not-allowed' : 'pointer' }}
                         >
                           <Trash2 size={14} />
@@ -316,4 +409,3 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
     </div>
   );
 };
-

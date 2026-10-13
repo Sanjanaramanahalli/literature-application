@@ -20,6 +20,7 @@ export const App: React.FC = () => {
   const [selectedLiteratureId, setSelectedLiteratureId] = useState<string | null>(null);
   const [selectedArtCraft, setSelectedArtCraft] = useState<ArtCraftItem | null>(null);
   const [selectedExternalWork, setSelectedExternalWork] = useState<ExternalWorkDetail | null>(null);
+  const [searchNavFilters, setSearchNavFilters] = useState<{ query?: string; language?: string } | null>(null);
   const [user, setUser] = useState<any>(null);
   
   // Auth Modal State
@@ -131,6 +132,11 @@ export const App: React.FC = () => {
             user={user}
             onBack={() => setSelectedLiteratureId(null)}
             onOpenAuth={handleOpenAuth}
+            onSearchExternal={(queryText, languageCode) => {
+              setSelectedLiteratureId(null);
+              setSearchNavFilters({ query: queryText, language: languageCode || 'auto' });
+              setCurrentTab('world-literature');
+            }}
           />
         ) : selectedExternalWork ? (
           <ExternalLiteratureReader
@@ -156,6 +162,7 @@ export const App: React.FC = () => {
                   setSelectedArtCraft(craft);
                 }}
                 onNavigateWorldLiterature={() => {
+                  setSearchNavFilters(null);
                   setCurrentTab('world-literature');
                 }}
               />
@@ -171,8 +178,9 @@ export const App: React.FC = () => {
 
             {currentTab === 'world-literature' && (
               <SearchView
-                key="world-literature-view"
-                initialMode="external"
+                key={`world-literature-${searchNavFilters?.query || 'all'}`}
+                initialMode="literature"
+                initialFilters={searchNavFilters || undefined}
                 user={user}
                 onOpenAuth={handleOpenAuth}
                 onSelectLiterature={(item) => {
@@ -190,6 +198,7 @@ export const App: React.FC = () => {
             {currentTab === 'search' && (
               <SearchView
                 key="classic-search-view"
+                initialFilters={searchNavFilters || undefined}
                 user={user}
                 onOpenAuth={handleOpenAuth}
                 onSelectLiterature={(item) => {
@@ -203,38 +212,38 @@ export const App: React.FC = () => {
                 }}
               />
             )}
+            {currentTab === 'saved' && (
+              <SavedWorksView
+                key={currentTab}
+                user={user}
+                onSelectLiterature={(id) => setSelectedLiteratureId(id)}
+                onSelectExternalWork={(work) => setSelectedExternalWork(work)}
+                onNavigateExplore={() => setCurrentTab('home')}
+                onOpenAuth={handleOpenAuth}
+              />
+            )}
+
+            {currentTab === 'admin' && (
+              <AdminEditorialView
+                user={user}
+                onOpenAuth={handleOpenAuth}
+                onNavigateAdminSignIn={() => setCurrentTab('admin-signin')}
+                onViewLiterature={(id) => {
+                  setSelectedLiteratureId(id);
+                }}
+              />
+            )}
+
+            {currentTab === 'admin-signin' && (
+              <AdminSignInPage
+                onSuccess={(authenticatedAdmin) => {
+                  setUser(authenticatedAdmin);
+                  setCurrentTab('admin');
+                }}
+                onNavigateHome={() => setCurrentTab('home')}
+              />
+            )}
           </>
-        )}
-
-        {currentTab === 'saved' && (
-          <SavedWorksView
-            key={currentTab}
-            user={user}
-            onSelectLiterature={(id) => setSelectedLiteratureId(id)}
-            onNavigateExplore={() => setCurrentTab('home')}
-            onOpenAuth={handleOpenAuth}
-          />
-        )}
-
-        {currentTab === 'admin' && (
-          <AdminEditorialView
-            user={user}
-            onOpenAuth={handleOpenAuth}
-            onNavigateAdminSignIn={() => setCurrentTab('admin-signin')}
-            onViewLiterature={(id) => {
-              setSelectedLiteratureId(id);
-            }}
-          />
-        )}
-
-        {currentTab === 'admin-signin' && (
-          <AdminSignInPage
-            onSuccess={(authenticatedAdmin) => {
-              setUser(authenticatedAdmin);
-              setCurrentTab('admin');
-            }}
-            onNavigateHome={() => setCurrentTab('home')}
-          />
         )}
       </main>
 

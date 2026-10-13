@@ -162,6 +162,11 @@ export const LiteratureCard: React.FC<LiteratureCardProps> = ({
 
       <div className="card-content">
         <div className="card-meta-top">
+          {item.language && (
+            <span className="tag-badge language-pill" style={{ backgroundColor: 'var(--accent-burgundy-subtle, rgba(128, 0, 32, 0.08))', color: 'var(--accent-burgundy)', borderColor: 'var(--accent-burgundy)' }} data-testid="card-language">
+              🌐 {item.language}
+            </span>
+          )}
           {item.category && (
             <span className="tag-badge category-pill" data-testid="card-category">
               {item.category.name}

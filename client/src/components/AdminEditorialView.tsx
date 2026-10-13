@@ -415,10 +415,18 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
         setRecentActivity(data.recentActivity || []);
         setLastRefreshedTime(new Date().toLocaleTimeString());
       } else {
+        if (res.status === 401 || res.status === 403) {
+          setAlertMsg({
+            type: 'error',
+            text: 'Admin session expired or unauthorized. Please re-authenticate as an Administrator to load dashboard telemetry.',
+          });
+          return;
+        }
         throw new Error('Failed to retrieve dashboard metrics.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch dashboard KPIs:', err);
+      // Only set alert if not already set by 401/403 check
       setAlertMsg({ type: 'error', text: 'Failed to retrieve real-time dashboard metrics.' });
     } finally {
       setKpiLoading(false);
@@ -565,15 +573,16 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
     }
   };
 
-  // Upload cover to backend /api/admin/upload-cover
+  // Upload cover to backend /api/admin/upload-cover with automatic fallback
   const uploadCoverToServer = async (): Promise<string | null> => {
     if (!coverFile) return null;
     setUploadingCover(true);
     const token = localStorage.getItem('literature_token');
-    const formData = new FormData();
-    formData.append('coverImage', coverFile);
 
     try {
+      const formData = new FormData();
+      formData.append('coverImage', coverFile);
+
       const res = await fetch('/api/admin/upload-cover', {
         method: 'POST',
         headers: {
@@ -582,14 +591,34 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
         body: formData,
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to upload cover image.');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.coverUrl) {
+          return data.coverUrl;
+        }
       }
-      return data.coverUrl;
+      console.warn('[AdminEditorialView] Server cover upload returned non-200. Using inline data URL fallback.');
+    } catch (uploadErr) {
+      console.warn('[AdminEditorialView] Cover upload request failed:', uploadErr);
     } finally {
       setUploadingCover(false);
     }
+
+    // Fallback: Convert to Base64 data URL so manuscript always persists with the cover image
+    return new Promise<string | null>((resolve) => {
+      try {
+        const reader = new FileReader();
+        reader.onload = () => {
+          resolve(typeof reader.result === 'string' ? reader.result : null);
+        };
+        reader.onerror = () => {
+          resolve(null);
+        };
+        reader.readAsDataURL(coverFile);
+      } catch {
+        resolve(null);
+      }
+    });
   };
 
   // Calculate Page Count Helper
@@ -711,8 +740,9 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
       setTagsInput('');
       removeCoverImage();
 
-      // Refresh list
+      // Refresh list and dashboard metrics
       fetchArchivalWorks();
+      fetchDashboardKpis();
     } catch (err: any) {
       setAlertMsg({ type: 'error', text: err.message || 'An error occurred during submission.' });
     } finally {
@@ -1687,12 +1717,22 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                     <option value="Tamil">Tamil (தமிழ்)</option>
                     <option value="Telugu">Telugu (తెలుగు)</option>
                     <option value="Malayalam">Malayalam (മലയാളം)</option>
-                    <option value="Bengali">Bengali (বাংলা)</option>
                     <option value="Marathi">Marathi (मराठी)</option>
+                    <option value="Bengali">Bengali (বাংলা)</option>
                     <option value="Gujarati">Gujarati (ગુજરાતી)</option>
                     <option value="Punjabi">Punjabi (ਪੰਜਾਬੀ)</option>
-                    <option value="Urdu">Urdu (اردو)</option>
+                    <option value="Odia">Odia (ଓଡ଼ିଆ)</option>
+                    <option value="Assamese">Assamese (অসমীয়া)</option>
                     <option value="Sanskrit">Sanskrit (संस्कृतम्)</option>
+                    <option value="Konkani">Konkani (कोंकणी)</option>
+                    <option value="Kashmiri">Kashmiri (कॉशुर)</option>
+                    <option value="Nepali">Nepali (नेपाली)</option>
+                    <option value="Sindhi">Sindhi (सिन्धी)</option>
+                    <option value="Maithili">Maithili (मैथिली)</option>
+                    <option value="Manipuri">Manipuri (মৈতৈলোন্)</option>
+                    <option value="Santali">Santali (ᱥᱟᱱᱛᱟᱲᱤ)</option>
+                    <option value="Dogri">Dogri (डोगरी)</option>
+                    <option value="English">English</option>
                     <option value="Ancient Greek">Ancient Greek</option>
                     <option value="Latin">Latin</option>
                   </select>

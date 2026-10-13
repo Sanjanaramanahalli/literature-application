@@ -49,15 +49,26 @@ export const ExternalLiteratureReader: React.FC<ExternalLiteratureReaderProps> =
   const [readingTheme, setReadingTheme] = useState<'light' | 'sepia' | 'dark'>('sepia');
   const [copied, setCopied] = useState<boolean>(false);
 
-  // Pagination for long full texts
+  // Pagination for long full texts: user can toggle density for 100-200 pages
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const pageSize = 3500; // characters per page for smooth reading
+  const [pageSize, setPageSize] = useState<number>(850); // ~150 words per page creates 100-200 pages for epic texts
+  const [jumpInput, setJumpInput] = useState<string>('');
   const contentToPaginate = work.content || '';
   const totalPages = Math.max(1, Math.ceil(contentToPaginate.length / pageSize));
 
   const currentContentSlice = contentToPaginate
     ? contentToPaginate.substring((currentPage - 1) * pageSize, currentPage * pageSize)
     : '';
+
+  const handleJump = (e: React.FormEvent) => {
+    e.preventDefault();
+    const target = parseInt(jumpInput.trim(), 10);
+    if (!isNaN(target) && target >= 1 && target <= totalPages) {
+      setCurrentPage(target);
+      setJumpInput('');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -180,30 +191,76 @@ export const ExternalLiteratureReader: React.FC<ExternalLiteratureReaderProps> =
 
               {/* Pagination if long work */}
               {totalPages > 1 && (
-                <div className="reader-pagination-bar">
-                  <button
-                    className="btn btn-secondary btn-sm"
-                    disabled={currentPage === 1}
-                    onClick={() => {
-                      setCurrentPage(currentPage - 1);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                  >
-                    Previous Section
-                  </button>
-                  <span className="pagination-text">
-                    Part {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    className="btn btn-secondary btn-sm"
-                    disabled={currentPage === totalPages}
-                    onClick={() => {
-                      setCurrentPage(currentPage + 1);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                  >
-                    Next Section
-                  </button>
+                <div className="reader-pagination-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: 'rgba(0, 0, 0, 0.03)', borderRadius: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      disabled={currentPage === 1}
+                      onClick={() => {
+                        setCurrentPage(currentPage - 1);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    >
+                      Previous
+                    </button>
+                    <span className="pagination-text">
+                      Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
+                    </span>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      disabled={currentPage === totalPages}
+                      onClick={() => {
+                        setCurrentPage(currentPage + 1);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    >
+                      Next
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleJump} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span style={{ fontSize: '0.8rem' }}>Go to page:</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={totalPages}
+                      value={jumpInput}
+                      onChange={(e) => setJumpInput(e.target.value)}
+                      placeholder={String(currentPage)}
+                      style={{
+                        width: '55px',
+                        padding: '3px 5px',
+                        fontSize: '0.8rem',
+                        textAlign: 'center',
+                        border: '1px solid #ccc',
+                        borderRadius: '4px',
+                      }}
+                    />
+                    <button type="submit" className="btn btn-secondary btn-sm" style={{ padding: '3px 7px', fontSize: '0.78rem' }}>
+                      Go
+                    </button>
+                  </form>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem' }}>
+                    <span>Density:</span>
+                    <button
+                      type="button"
+                      className={`btn ${pageSize === 400 ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                      style={{ padding: '2px 6px', fontSize: '0.75rem' }}
+                      onClick={() => { setPageSize(400); setCurrentPage(1); }}
+                      title="Compact folios: creates 100-200+ pages"
+                    >
+                      100-200 Pages
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn ${pageSize === 850 ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                      style={{ padding: '2px 6px', fontSize: '0.75rem' }}
+                      onClick={() => { setPageSize(850); setCurrentPage(1); }}
+                    >
+                      Standard
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -237,8 +294,17 @@ export const ExternalLiteratureReader: React.FC<ExternalLiteratureReaderProps> =
                 className={`prose-content summary-text font-${fontFamily}`}
                 style={{ fontSize: `${fontSize}px` }}
               >
-                <h3 className="section-subtitle">Encyclopedic Synopsis</h3>
-                <p className="manuscript-paragraph">{work.extract}</p>
+                <h3 className="section-subtitle">Encyclopedic Synopsis & Archival Record</h3>
+                {work.extract && work.extract.trim() ? (
+                  work.extract.split('\n\n').map((para, idx) => (
+                    <p key={idx} className="manuscript-paragraph">{para}</p>
+                  ))
+                ) : (
+                  <p className="manuscript-paragraph">
+                    {work.title} is documented in classical Indian literature archives under {work.language}.
+                    You can inspect the complete biographical and literary citations directly on the archival source folio.
+                  </p>
+                )}
               </div>
             </div>
           )}
