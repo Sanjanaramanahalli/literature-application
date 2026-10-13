@@ -182,7 +182,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  // Fetch Google OAuth configuration from server
+  // Fetch Google OAuth configuration from server & ensure GIS client script is loaded
   React.useEffect(() => {
     let isMounted = true;
     const loadGoogleConfig = async () => {
@@ -198,6 +198,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         console.error('[Google Auth] Could not retrieve Google OAuth client configuration:', err);
       }
     };
+
+    // Ensure official Google Identity Services script is actively loaded
+    if (!document.querySelector('script[src*="accounts.google.com/gsi/client"]')) {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+
     if (isOpen) {
       loadGoogleConfig();
     }
