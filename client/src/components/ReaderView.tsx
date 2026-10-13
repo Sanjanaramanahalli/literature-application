@@ -24,6 +24,8 @@ import {
   Volume2,
   VolumeX,
   Search,
+  Sliders,
+  MoreHorizontal,
 } from 'lucide-react';
 import { ThreadedComments } from './ThreadedComments';
 import { WhatsAppAiAssistant } from './WhatsAppAiAssistant';
@@ -92,6 +94,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   const [flipDirection, setFlipDirection] = useState<'next' | 'prev'>('next');
   const [wordsPerPage, setWordsPerPage] = useState<number>(85);
   const [jumpPageInput, setJumpPageInput] = useState<string>('');
+  const [showReaderSettings, setShowReaderSettings] = useState<boolean>(false);
 
   // Text Selection / Scholar Wikimedia Discovery Tooltip State
   const [selectedText, setSelectedText] = useState<string>('');
@@ -526,12 +529,12 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                 {displayMode === 'full' ? (
                   <>
                     <BookOpen size={14} style={{ marginRight: '4px' }} />
-                    <span>Page-by-Page View</span>
+                    <span>Page-by-Page</span>
                   </>
                 ) : (
                   <>
                     <AlignLeft size={14} style={{ marginRight: '4px' }} />
-                    <span>Full Literature View</span>
+                    <span>Full View</span>
                   </>
                 )}
               </button>
@@ -543,7 +546,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                 title="Return to Manuscript Cover Page"
               >
                 <Layers size={14} style={{ marginRight: '4px' }} />
-                <span>Cover Page</span>
+                <span>Cover</span>
               </button>
             </>
           )}
@@ -561,8 +564,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
               fill={userVote === 'LIKE' ? 'currentColor' : 'transparent'}
               style={{ marginRight: '4px' }}
             />
-            <span>Like</span>
-            <span style={{ opacity: 0.9, marginLeft: '4px', fontWeight: 600 }}>({likesCount})</span>
+            <span>Like ({likesCount})</span>
           </button>
 
           {/* Reader Downvote Action */}
@@ -578,8 +580,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
               fill={userVote === 'DOWNVOTE' ? 'currentColor' : 'transparent'}
               style={{ marginRight: '4px' }}
             />
-            <span>Downvote</span>
-            <span style={{ opacity: 0.9, marginLeft: '4px', fontWeight: 600 }}>({downvotesCount})</span>
+            <span>({downvotesCount})</span>
           </button>
 
           {/* Reader Share Action */}
@@ -602,6 +603,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
             )}
           </button>
 
+          {/* Save Action */}
           <button
             className={`btn ${isSaved ? 'btn-primary' : 'btn-secondary'} btn-sm`}
             onClick={handleToggleSave}
@@ -614,101 +616,143 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
               fill={isSaved ? 'currentColor' : 'transparent'}
               style={{ marginRight: '4px' }}
             />
-            <span>{isSaved ? 'Saved in Sanctuary' : 'Save to Sanctuary'}</span>
+            <span>{isSaved ? 'Saved' : 'Save'}</span>
             <span style={{ opacity: 0.8, marginLeft: '4px' }}>({savesCount})</span>
           </button>
 
-          {/* Audio Narration (Text-to-Speech) */}
-          <button
-            className={`btn ${isNarrating ? 'btn-primary' : 'btn-secondary'} btn-sm`}
-            onClick={handleToggleNarration}
-            id="btn-reader-narration"
-            title={isNarrating ? 'Pause Audio Narration' : 'Listen to Audio Narration (Text-to-Speech)'}
-          >
-            {isNarrating ? (
-              <>
-                <VolumeX size={14} style={{ marginRight: '4px' }} />
-                <span>Pause Audio</span>
-              </>
-            ) : (
-              <>
-                <Volume2 size={14} style={{ marginRight: '4px' }} />
-                <span>Listen Audio</span>
-              </>
+          {/* Settings / Display Toggle (Theme, Audio, Font) */}
+          <div style={{ position: 'relative' }}>
+            <button
+              className={`btn ${showReaderSettings ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+              onClick={() => setShowReaderSettings(!showReaderSettings)}
+              id="btn-reader-settings-toggle"
+              title="Reading Sanctuary Display Options (Theme, Audio Narration, Font Scale)"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+            >
+              <Sliders size={14} />
+              <span>Options</span>
+            </button>
+
+            {showReaderSettings && (
+              <div
+                className="reader-settings-dropdown"
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  right: 0,
+                  backgroundColor: 'var(--bg-primary)',
+                  border: '1px solid var(--border-classic)',
+                  borderRadius: 'var(--radius-md)',
+                  boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)',
+                  padding: '12px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                  zIndex: 200,
+                  minWidth: '240px',
+                }}
+              >
+                {/* Audio Narration inside Options */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Audio Narration:</span>
+                  <button
+                    className={`btn ${isNarrating ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                    onClick={handleToggleNarration}
+                    id="btn-reader-narration"
+                    style={{ padding: '3px 8px', fontSize: '0.78rem' }}
+                  >
+                    {isNarrating ? (
+                      <>
+                        <VolumeX size={12} style={{ marginRight: '4px' }} />
+                        <span>Pause</span>
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 size={12} style={{ marginRight: '4px' }} />
+                        <span>Listen</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Theme Selector */}
+                <div>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>Theme:</div>
+                  <div className="reader-theme-switcher" style={{ display: 'flex', gap: '4px' }}>
+                    <button
+                      type="button"
+                      className={`theme-pill ${readerTheme === 'parchment' ? 'active' : ''}`}
+                      onClick={() => setReaderTheme('parchment')}
+                      title="Parchment Theme"
+                      style={{ flex: 1, padding: '4px 6px', borderRadius: '4px', border: readerTheme === 'parchment' ? '2px solid var(--accent-burgundy)' : '1px solid var(--border-classic)', background: '#fcf9f2', cursor: 'pointer', fontSize: '0.75rem' }}
+                    >
+                      📜 Parch
+                    </button>
+                    <button
+                      type="button"
+                      className={`theme-pill ${readerTheme === 'ivory' ? 'active' : ''}`}
+                      onClick={() => setReaderTheme('ivory')}
+                      title="Clean Ivory Theme"
+                      style={{ flex: 1, padding: '4px 6px', borderRadius: '4px', border: readerTheme === 'ivory' ? '2px solid var(--accent-burgundy)' : '1px solid var(--border-classic)', background: '#ffffff', cursor: 'pointer', fontSize: '0.75rem' }}
+                    >
+                      <Sun size={11} style={{ marginRight: '2px', display: 'inline' }} /> Ivory
+                    </button>
+                    <button
+                      type="button"
+                      className={`theme-pill ${readerTheme === 'sepia' ? 'active' : ''}`}
+                      onClick={() => setReaderTheme('sepia')}
+                      title="Warm Sepia Theme"
+                      style={{ flex: 1, padding: '4px 6px', borderRadius: '4px', border: readerTheme === 'sepia' ? '2px solid var(--accent-burgundy)' : '1px solid var(--border-classic)', background: '#f4ecd8', cursor: 'pointer', fontSize: '0.75rem' }}
+                    >
+                      <Coffee size={11} style={{ marginRight: '2px', display: 'inline' }} /> Sepia
+                    </button>
+                    <button
+                      type="button"
+                      className={`theme-pill ${readerTheme === 'night' ? 'active' : ''}`}
+                      onClick={() => setReaderTheme('night')}
+                      title="Scholarly Dark / Night Theme"
+                      style={{ flex: 1, padding: '4px 6px', borderRadius: '4px', border: readerTheme === 'night' ? '2px solid #c5a059' : '1px solid var(--border-classic)', background: '#1e140c', color: '#c5a059', cursor: 'pointer', fontSize: '0.75rem' }}
+                    >
+                      <Moon size={11} style={{ marginRight: '2px', display: 'inline' }} /> Night
+                    </button>
+                  </div>
+                </div>
+
+                {/* Font Scaling */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Text Size:</span>
+                  <div className="reader-font-controls" style={{ display: 'inline-flex', gap: '3px', background: 'var(--bg-secondary)', padding: '2px 4px', borderRadius: '4px', border: '1px solid var(--border-classic)' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const sizes: Array<'small' | 'medium' | 'large' | 'xlarge'> = ['small', 'medium', 'large', 'xlarge'];
+                        const curIdx = sizes.indexOf(fontSize);
+                        if (curIdx > 0) setFontSize(sizes[curIdx - 1]);
+                      }}
+                      disabled={fontSize === 'small'}
+                      style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '2px 6px' }}
+                    >
+                      <ZoomOut size={13} />
+                    </button>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '0 6px', alignSelf: 'center', color: 'var(--text-secondary)' }}>
+                      {fontSize === 'small' ? '85%' : fontSize === 'medium' ? '100%' : fontSize === 'large' ? '120%' : '140%'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const sizes: Array<'small' | 'medium' | 'large' | 'xlarge'> = ['small', 'medium', 'large', 'xlarge'];
+                        const curIdx = sizes.indexOf(fontSize);
+                        if (curIdx < sizes.length - 1) setFontSize(sizes[curIdx + 1]);
+                      }}
+                      disabled={fontSize === 'xlarge'}
+                      style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '2px 6px' }}
+                    >
+                      <ZoomIn size={13} />
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
-          </button>
-
-          {/* Reader Theme Selector (Ivory, Parchment, Sepia, Night) */}
-          <div className="reader-theme-switcher" style={{ display: 'inline-flex', gap: '3px', background: 'var(--bg-secondary)', padding: '2px 4px', borderRadius: '4px', border: '1px solid var(--border-classic)' }}>
-            <button
-              type="button"
-              className={`theme-pill ${readerTheme === 'parchment' ? 'active' : ''}`}
-              onClick={() => setReaderTheme('parchment')}
-              title="Parchment Theme"
-              style={{ background: readerTheme === 'parchment' ? '#fcf9f2' : 'transparent', border: readerTheme === 'parchment' ? '1px solid #c5a059' : '1px solid transparent', padding: '3px 6px', borderRadius: '3px', cursor: 'pointer', fontSize: '0.78rem' }}
-            >
-              📜
-            </button>
-            <button
-              type="button"
-              className={`theme-pill ${readerTheme === 'ivory' ? 'active' : ''}`}
-              onClick={() => setReaderTheme('ivory')}
-              title="Clean Ivory Theme"
-              style={{ background: readerTheme === 'ivory' ? '#ffffff' : 'transparent', border: readerTheme === 'ivory' ? '1px solid #c5a059' : '1px solid transparent', padding: '3px 6px', borderRadius: '3px', cursor: 'pointer', fontSize: '0.78rem' }}
-            >
-              <Sun size={12} />
-            </button>
-            <button
-              type="button"
-              className={`theme-pill ${readerTheme === 'sepia' ? 'active' : ''}`}
-              onClick={() => setReaderTheme('sepia')}
-              title="Warm Sepia Theme"
-              style={{ background: readerTheme === 'sepia' ? '#f4ecd8' : 'transparent', border: readerTheme === 'sepia' ? '1px solid #c5a059' : '1px solid transparent', padding: '3px 6px', borderRadius: '3px', cursor: 'pointer', fontSize: '0.78rem' }}
-            >
-              <Coffee size={12} />
-            </button>
-            <button
-              type="button"
-              className={`theme-pill ${readerTheme === 'night' ? 'active' : ''}`}
-              onClick={() => setReaderTheme('night')}
-              title="Scholarly Dark / Night Theme"
-              style={{ background: readerTheme === 'night' ? '#1e140c' : 'transparent', color: readerTheme === 'night' ? '#c5a059' : 'inherit', border: readerTheme === 'night' ? '1px solid #c5a059' : '1px solid transparent', padding: '3px 6px', borderRadius: '3px', cursor: 'pointer', fontSize: '0.78rem' }}
-            >
-              <Moon size={12} />
-            </button>
-          </div>
-
-          {/* Typography Scale Controls */}
-          <div className="reader-font-controls" style={{ display: 'inline-flex', gap: '2px', background: 'var(--bg-secondary)', padding: '2px 4px', borderRadius: '4px', border: '1px solid var(--border-classic)' }}>
-            <button
-              type="button"
-              onClick={() => {
-                const sizes: Array<'small' | 'medium' | 'large' | 'xlarge'> = ['small', 'medium', 'large', 'xlarge'];
-                const curIdx = sizes.indexOf(fontSize);
-                if (curIdx > 0) setFontSize(sizes[curIdx - 1]);
-              }}
-              disabled={fontSize === 'small'}
-              title="Decrease Font Size"
-              style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '2px 5px', opacity: fontSize === 'small' ? 0.4 : 1 }}
-            >
-              <ZoomOut size={13} />
-            </button>
-            <span style={{ fontSize: '0.72rem', fontWeight: 600, padding: '0 4px', alignSelf: 'center', color: 'var(--text-secondary)' }}>
-              {fontSize === 'small' ? '85%' : fontSize === 'medium' ? '100%' : fontSize === 'large' ? '120%' : '140%'}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                const sizes: Array<'small' | 'medium' | 'large' | 'xlarge'> = ['small', 'medium', 'large', 'xlarge'];
-                const curIdx = sizes.indexOf(fontSize);
-                if (curIdx < sizes.length - 1) setFontSize(sizes[curIdx + 1]);
-              }}
-              disabled={fontSize === 'xlarge'}
-              title="Increase Font Size"
-              style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '2px 5px', opacity: fontSize === 'xlarge' ? 0.4 : 1 }}
-            >
-              <ZoomIn size={13} />
-            </button>
           </div>
         </div>
       </div>

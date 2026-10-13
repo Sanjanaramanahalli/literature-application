@@ -625,3 +625,94 @@ const handleDashboardStats = async (req: AuthRequest, res: Response): Promise<vo
 
 adminRouter.get('/dashboard/kpis', authenticateToken, requireRole('ADMIN'), handleDashboardStats);
 adminRouter.get('/dashboard/stats', authenticateToken, requireRole('ADMIN'), handleDashboardStats);
+
+// Real-time Admin Notifications: new likes, comments, and registered users
+adminRouter.get('/notifications', authenticateToken, requireRole('ADMIN'), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const notifications: Array<{
+      id: string;
+      type: 'LIKE' | 'COMMENT' | 'NEW_USER' | 'SAVE';
+      title: string;
+      message: string;
+      actor: string;
+      createdAt: Date;
+      read?: boolean;
+    }> = [];
+
+    // 1. Recent Likes on Literature
+    const recentVotes = await prisma.literatureVote.findMany({
+      take: 10,
+      where: { type: 'LIKE' },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    for (const v of recentVotes) {
+      const user = await prisma.user.findUnique({ where: { id: v.userId }, select: { name: true } });
+      const lit = await prisma.literature.findUnique({ where: { id: v.literatureId }, select: { title: true } });
+      if (user && lit) {
+        notifications.push({
+          id: `notif-like-${v.id}`,
+          type: 'LIKE',
+          title: 'New Literature Like',
+          message: `${user.name} liked "${lit.title}"`,
+          actor: user.name,
+          createdAt: v.createdAt || new Date(),
+        });
+      }
+    }
+
+    // 2. Recent Comments
+    const recentComments = await prisma.comment.findMany({
+      take: 10,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { name: true } },
+        literature: { select: { title: true } },
+      },
+    });
+
+    for (const c of recentComments) {
+      if (c.user && c.literature) {
+        notifications.push({
+          id: `notif-comment-${c.id}`,
+          type: 'COMMENT',
+          title: 'New Scholarly Comment',
+          message: `${c.user.name} commented on "${c.literature.title}": "${c.content.slice(0, 60)}${c.content.length > 60 ? '...' : ''}"`,
+          actor: c.user.name,
+          createdAt: c.createdAt || new Date(),
+        });
+      }
+    }
+
+    // 3. New Readers/Users Registered
+    const recentUsers = await prisma.user.findMany({
+      take: 10,
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, name: true, role: true, email: true, createdAt: true },
+    });
+
+    for (const u of recentUsers) {
+      notifications.push({
+        id: `notif-user-${u.id}`,
+        type: 'NEW_USER',
+        title: 'New User Registered',
+        message: `${u.name} registered as a ${u.role} (${u.email})`,
+        actor: u.name,
+        createdAt: u.createdAt || new Date(),
+      });
+    }
+
+    const sorted = notifications
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 15);
+
+    res.json({
+      notifications: sorted,
+      unreadCount: sorted.length,
+    });
+  } catch (err) {
+    console.error('Admin notifications fetch error:', err);
+    res.status(500).json({ error: 'Failed to retrieve notifications.' });
+  }
+});
+
