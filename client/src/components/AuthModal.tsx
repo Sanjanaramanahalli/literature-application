@@ -103,13 +103,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !password) {
+      setError('Please provide both your registered email address and password.');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: cleanEmail, password }),
       });
       const data = await res.json();
 
@@ -122,7 +129,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       onSuccess(data.user, data.token);
       onClose();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Invalid email or password.');
     } finally {
       setLoading(false);
     }
@@ -199,7 +206,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     };
   }, [isOpen]);
 
-  // 3. Initiate official Google OAuth / Identity flow
+  // Format Google OAuth errors to explicitly address origin_mismatch and configuration problems
+  const parseGoogleAuthError = (errObj: any): string => {
+    const rawError = (errObj?.error_description || errObj?.error || errObj?.message || String(errObj || '')).toLowerCase();
+    const currentOrigin = window.location.origin;
+
+    if (rawError.includes('origin_mismatch') || rawError.includes('origin mismatch') || rawError.includes('400')) {
+      return `Google OAuth Error 400 (origin_mismatch): The current origin "${currentOrigin}" is not listed in Authorized JavaScript Origins in Google Cloud Console. Please add "${currentOrigin}" to your Google OAuth client credentials.`;
+    }
+    if (rawError.includes('popup_closed') || rawError.includes('closed_by_user')) {
+      return 'Google sign-in window was closed before completing authentication.';
+    }
+    if (rawError.includes('access_denied')) {
+      return 'Google sign-in was cancelled or access was denied.';
+    }
+    if (rawError.includes('idpiframe_initialization_failed')) {
+      return `Google sign-in initialization failed. Please ensure cookies and popups are permitted for origin "${currentOrigin}".`;
+    }
+    return errObj?.error_description || errObj?.message || errObj?.error || 'Google authentication failed.';
+  };
 
   // 3. Initiate official Google OAuth / Identity flow
   const handleGoogleSignIn = () => {
@@ -220,7 +245,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     try {
-      // Direct official Google OAuth2 Authorization Screen (Guaranteed popup in all browsers)
+      const google = (window as any).google;
+
+      // Primary: Official Google Identity Services (GIS) Token Client
+      // This is the Google-recommended approach that cleanly handles Google accounts,
+      // consent, and returns access_token directly to callback without cross-origin URL polling issues.
+      if (google && google.accounts && google.accounts.oauth2) {
+        const tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: clientId,
+          scope: 'openid email profile',
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse && tokenResponse.access_token) {
+              await exchangeAccessToken(tokenResponse.access_token);
+            } else if (tokenResponse && tokenResponse.error) {
+              setGoogleLoading(false);
+              setError(parseGoogleAuthError(tokenResponse));
+            } else {
+              setGoogleLoading(false);
+            }
+          },
+          error_callback: (nonOAuthError: any) => {
+            console.error('[Google Auth] GIS client error:', nonOAuthError);
+            setGoogleLoading(false);
+            setError(parseGoogleAuthError(nonOAuthError));
+          },
+        });
+        tokenClient.requestAccessToken({ prompt: 'select_account' });
+        return;
+      }
+
+      // Fallback: Popup with OAuth2 authorization endpoint
       const redirectUri = window.location.origin;
       const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
         clientId
@@ -235,66 +289,55 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       );
 
       if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-        // Fallback: If popup blocker blocked the small window, open via Google Identity Services
-        const google = (window as any).google;
-        if (google && google.accounts && google.accounts.oauth2) {
-          const tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: clientId,
-            scope: 'openid email profile',
-            callback: async (tokenResponse: any) => {
-              if (tokenResponse && tokenResponse.access_token) {
-                await exchangeAccessToken(tokenResponse.access_token);
-              } else {
-                setGoogleLoading(false);
-              }
-            },
-            error_callback: (nonOAuthError: any) => {
-              console.error('[Google Auth] GIS client error:', nonOAuthError);
-              setGoogleLoading(false);
-              if (nonOAuthError?.message) {
-                setError(`Google Sign-In: ${nonOAuthError.message}`);
-              }
-            },
-          });
-          tokenClient.requestAccessToken({ prompt: 'select_account' });
-        } else {
-          setGoogleLoading(false);
-          setError('Please allow popups for this site to sign in with Google.');
-        }
-      } else {
-        // Listen for token in redirected popup
-        const checkInterval = setInterval(async () => {
-          try {
-            if (popup.closed) {
-              clearInterval(checkInterval);
-              setGoogleLoading(false);
-              return;
-            }
-
-            const currentUrl = popup.location.href;
-            if (currentUrl && currentUrl.includes('access_token=')) {
-              clearInterval(checkInterval);
-              const hash = popup.location.hash || popup.location.search;
-              popup.close();
-
-              const params = new URLSearchParams(hash.replace(/^#/, '?'));
-              const accessToken = params.get('access_token');
-
-              if (accessToken) {
-                await exchangeAccessToken(accessToken);
-              } else {
-                setGoogleLoading(false);
-              }
-            }
-          } catch (e) {
-            // Cross-origin access error while on accounts.google.com is expected until redirect
-          }
-        }, 500);
+        setGoogleLoading(false);
+        setError('Please allow popups for this site to sign in with Google.');
+        return;
       }
+
+      const checkInterval = setInterval(async () => {
+        try {
+          if (popup.closed) {
+            clearInterval(checkInterval);
+            setGoogleLoading(false);
+            return;
+          }
+
+          // In case redirect back to same origin occurs
+          let currentUrl = '';
+          try {
+            currentUrl = popup.location.href;
+          } catch (crossOriginErr) {
+            // Expected while user is on accounts.google.com
+            return;
+          }
+
+          if (currentUrl && (currentUrl.includes('access_token=') || currentUrl.includes('#') || currentUrl.includes('error='))) {
+            clearInterval(checkInterval);
+            const hash = popup.location.hash || popup.location.search;
+            popup.close();
+
+            const params = new URLSearchParams(hash.replace(/^#/, '?'));
+            const accessToken = params.get('access_token');
+            const oauthErr = params.get('error');
+            const errDesc = params.get('error_description');
+
+            if (accessToken) {
+              await exchangeAccessToken(accessToken);
+            } else if (oauthErr || errDesc) {
+              setGoogleLoading(false);
+              setError(parseGoogleAuthError({ error: oauthErr, error_description: errDesc }));
+            } else {
+              setGoogleLoading(false);
+            }
+          }
+        } catch (e) {
+          // Cross-origin access error is expected until redirect
+        }
+      }, 500);
     } catch (err: any) {
       console.error('[Google Auth] Exception during initialization:', err);
       setGoogleLoading(false);
-      setError('Failed to initiate Google authentication. Please check browser popups.');
+      setError(parseGoogleAuthError(err));
     }
   };
 
@@ -329,7 +372,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       onSuccess(data.user, data.token);
       onClose();
     } catch (e: any) {
-      setError(e.message || 'Google authentication failed.');
+      setError(parseGoogleAuthError(e));
     } finally {
       setGoogleLoading(false);
     }

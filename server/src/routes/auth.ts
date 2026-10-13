@@ -249,11 +249,21 @@ authRouter.post('/admin-login', async (req: Request, res: Response): Promise<voi
 // 3. Google OAuth Configuration Endpoint (Public client ID for frontend GIS initialization)
 authRouter.get('/google/config', (req: Request, res: Response): void => {
   const clientId = process.env.GOOGLE_CLIENT_ID || '';
+  const configuredOrigins = process.env.GOOGLE_AUTHORIZED_ORIGINS 
+    ? process.env.GOOGLE_AUTHORIZED_ORIGINS.split(',').map((o) => o.trim())
+    : ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5000', 'http://127.0.0.1:5000'];
+  const host = req.get('host') || 'localhost:5000';
+  const protocol = req.protocol || 'http';
+  const currentOrigin = `${protocol}://${host}`;
+
   res.json({
     clientId,
     isConfigured: !!clientId && clientId.includes('.apps.googleusercontent.com'),
+    authorizedOrigins: configuredOrigins,
+    currentOrigin,
   });
 });
+
 
 // 3b. Official Google OAuth Authentication & Token Verification
 authRouter.post('/google', async (req: Request, res: Response): Promise<void> => {
