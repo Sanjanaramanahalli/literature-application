@@ -207,10 +207,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   }, [isOpen]);
 
   const parseGoogleAuthError = (errObj: any): string => {
+    const errorType = (errObj?.type || '').toLowerCase();
     const errorCode = (errObj?.error || '').toLowerCase();
     const errorDesc = (errObj?.error_description || '').toLowerCase();
     const errorMessage = (errObj?.message || '').toLowerCase();
-    const rawError = `${errorCode} ${errorDesc} ${errorMessage} ${String(errObj || '')}`.toLowerCase();
+    const rawError = `${errorType} ${errorCode} ${errorDesc} ${errorMessage} ${String(errObj || '')}`.toLowerCase();
     const currentOrigin = window.location.origin;
 
     if (rawError.includes('origin_mismatch') || rawError.includes('origin mismatch') || rawError.includes('400')) {
@@ -219,13 +220,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     if (errorCode === 'access_denied' || rawError.includes('access_denied')) {
       return 'Google sign-in was cancelled or access was denied.';
     }
-    if (rawError.includes('popup_closed') || rawError.includes('closed_by_user')) {
+    if (errorType === 'popup_closed' || rawError.includes('popup_closed') || rawError.includes('closed_by_user')) {
       return 'Google sign-in window was closed before completing authentication.';
+    }
+    if (errorType === 'popup_failed_to_open' || rawError.includes('popup_failed_to_open')) {
+      return 'Popup was blocked by your browser. Please allow popups for this site.';
     }
     if (rawError.includes('idpiframe_initialization_failed')) {
       return `Google sign-in initialization failed. Please ensure cookies and popups are permitted for origin "${currentOrigin}".`;
     }
-    return errObj?.error_description || errObj?.message || errObj?.error || 'Google authentication failed.';
+    return errObj?.error_description || errObj?.message || errObj?.error || errObj?.type || 'Google authentication failed.';
   };
 
   // 3. Initiate official Google OAuth / Identity flow
