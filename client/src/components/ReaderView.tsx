@@ -95,6 +95,19 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   const [wordsPerPage, setWordsPerPage] = useState<number>(85);
   const [jumpPageInput, setJumpPageInput] = useState<string>('');
   const [showReaderSettings, setShowReaderSettings] = useState<boolean>(false);
+  const readerSettingsRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (readerSettingsRef.current && !readerSettingsRef.current.contains(e.target as Node)) {
+        setShowReaderSettings(false);
+      }
+    };
+    if (showReaderSettings) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [showReaderSettings]);
 
   // Text Selection / Scholar Wikimedia Discovery Tooltip State
   const [selectedText, setSelectedText] = useState<string>('');
@@ -621,7 +634,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
           </button>
 
           {/* Settings / Display Toggle (Theme, Audio, Font) */}
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative' }} ref={readerSettingsRef}>
             <button
               className={`btn ${showReaderSettings ? 'btn-primary' : 'btn-secondary'} btn-sm`}
               onClick={() => setShowReaderSettings(!showReaderSettings)}
