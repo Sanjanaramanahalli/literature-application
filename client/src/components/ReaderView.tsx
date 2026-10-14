@@ -97,7 +97,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isFlipping, setIsFlipping] = useState<boolean>(false);
   const [flipDirection, setFlipDirection] = useState<'next' | 'prev'>('next');
-  const [wordsPerPage, setWordsPerPage] = useState<number>(85);
+  const [wordsPerPage, setWordsPerPage] = useState<number>(350);
   const [jumpPageInput, setJumpPageInput] = useState<string>('');
   const [showReaderSettings, setShowReaderSettings] = useState<boolean>(false);
   const readerSettingsRef = React.useRef<HTMLDivElement>(null);
@@ -487,31 +487,89 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       })
     : null;
 
-  // Split content into pages (explicit page breaks OR standard book pagination chunks)
-  const getPages = (text: string, chunkSize: number = 85): string[] => {
+  // Split content into full, substantial A4 pages preventing sparse 3-4 line pages
+  const getPages = (text: string, chunkSize: number = 350): string[] => {
     if (!text || !text.trim()) return [''];
     const trimmed = text.trim();
-    if (trimmed.includes('---page---') || trimmed.includes('<!-- pagebreak -->') || trimmed.includes('\f')) {
-      const parts = trimmed.split(/---page---|<!-- pagebreak -->|\f/g).filter((s) => s.trim().length > 0);
-      // If explicit pages exist but user wants more granularity (e.g. 100-200 pages)
-      if (parts.length < 50 && chunkSize <= 100) {
-        const expanded: string[] = [];
-        for (const part of parts) {
-          const w = part.trim().split(/\s+/);
-          for (let i = 0; i < w.length; i += chunkSize) {
-            expanded.push(w.slice(i, i + chunkSize).join(' '));
+
+    // Check if text has explicit section/page separators
+    const hasExplicitBreaks =
+      trimmed.includes('---page---') ||
+      trimmed.includes('<!-- pagebreak -->') ||
+      trimmed.includes('\f');
+
+    if (hasExplicitBreaks) {
+      const parts = trimmed
+        .split(/---page---|<!-- pagebreak -->|\f/g)
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+
+      // Merge sparse fragments so each A4 sheet is properly filled (at least 200 words unless at end of chapter)
+      const filledPages: string[] = [];
+      let currentBuffer: string[] = [];
+      let currentWordCount = 0;
+
+      for (const part of parts) {
+        const words = part.split(/\s+/).filter(Boolean);
+        // If a single part is excessively large (> chunkSize * 1.4), split it
+        if (words.length > chunkSize * 1.3) {
+          if (currentBuffer.length > 0) {
+            filledPages.push(currentBuffer.join('\n\n'));
+            currentBuffer = [];
+            currentWordCount = 0;
+          }
+          for (let i = 0; i < words.length; i += chunkSize) {
+            filledPages.push(words.slice(i, i + chunkSize).join(' '));
+          }
+        } else {
+          // If adding this part exceeds chunkSize and we already have sufficient content, commit buffer
+          if (currentWordCount >= Math.min(chunkSize * 0.75, 250)) {
+            filledPages.push(currentBuffer.join('\n\n'));
+            currentBuffer = [part];
+            currentWordCount = words.length;
+          } else {
+            currentBuffer.push(part);
+            currentWordCount += words.length;
           }
         }
-        return expanded.length > 0 ? expanded : parts;
       }
-      return parts.length > 0 ? parts : [trimmed];
+
+      if (currentBuffer.length > 0) {
+        filledPages.push(currentBuffer.join('\n\n'));
+      }
+
+      return filledPages.length > 0 ? filledPages : parts;
     }
-    // Split into granular chunks per page
-    const words = trimmed.split(/\s+/);
+
+    // Standard continuous literary text without explicit breaks:
+    // Split by paragraphs to preserve natural literary prose structure without chopping mid-sentence
+    const paragraphs = trimmed.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
     const pagesArr: string[] = [];
-    for (let i = 0; i < words.length; i += chunkSize) {
-      pagesArr.push(words.slice(i, i + chunkSize).join(' '));
+    let pageBuffer: string[] = [];
+    let wordAccumulator = 0;
+
+    for (const paragraph of paragraphs) {
+      const pWords = paragraph.split(/\s+/).filter(Boolean).length;
+      if (wordAccumulator + pWords > chunkSize && wordAccumulator >= Math.min(chunkSize * 0.65, 200)) {
+        pagesArr.push(pageBuffer.join('\n\n'));
+        pageBuffer = [paragraph];
+        wordAccumulator = pWords;
+      } else {
+        pageBuffer.push(paragraph);
+        wordAccumulator += pWords;
+      }
     }
+
+    if (pageBuffer.length > 0) {
+      // If the last page has very few lines and previous page exists, merge if not overwhelming
+      if (wordAccumulator < 100 && pagesArr.length > 0) {
+        const prev = pagesArr.pop()!;
+        pagesArr.push(`${prev}\n\n${pageBuffer.join('\n\n')}`);
+      } else {
+        pagesArr.push(pageBuffer.join('\n\n'));
+      }
+    }
+
     return pagesArr.length > 0 ? pagesArr : [trimmed];
   };
 
@@ -1148,35 +1206,35 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                   </button>
                 </form>
 
-                {/* Page Density Selector: 100-200 pages vs standard */}
+                {/* Page Density Selector: Full A4 Folio Density */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Manuscript Length:</span>
+                  <span style={{ color: 'var(--text-muted)' }}>A4 Page Density:</span>
                   <button
                     type="button"
-                    className={`btn ${wordsPerPage === 40 ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                    className={`btn ${wordsPerPage === 350 ? 'btn-primary' : 'btn-secondary'} btn-sm`}
                     style={{ padding: '2px 7px', fontSize: '0.75rem' }}
-                    onClick={() => { setWordsPerPage(40); setCurrentPage(1); }}
-                    title="Compact folios: creates ~150-250 detailed pages"
+                    onClick={() => { setWordsPerPage(350); setCurrentPage(1); }}
+                    title="Full A4 Sheet: ~300-400 words filling the entire page comfortably"
                   >
-                    150-200+ Pages
+                    Full A4 (Standard)
                   </button>
                   <button
                     type="button"
-                    className={`btn ${wordsPerPage === 85 ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                    className={`btn ${wordsPerPage === 500 ? 'btn-primary' : 'btn-secondary'} btn-sm`}
                     style={{ padding: '2px 7px', fontSize: '0.75rem' }}
-                    onClick={() => { setWordsPerPage(85); setCurrentPage(1); }}
-                    title="Classic folios: creates ~80-120 pages"
+                    onClick={() => { setWordsPerPage(500); setCurrentPage(1); }}
+                    title="Dense Folio: ~450-550 words for dense scholarly reading"
                   >
-                    80-120 Pages
+                    Dense A4
                   </button>
                   <button
                     type="button"
-                    className={`btn ${wordsPerPage === 200 ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                    className={`btn ${wordsPerPage === 220 ? 'btn-primary' : 'btn-secondary'} btn-sm`}
                     style={{ padding: '2px 7px', fontSize: '0.75rem' }}
-                    onClick={() => { setWordsPerPage(200); setCurrentPage(1); }}
-                    title="Standard chapters"
+                    onClick={() => { setWordsPerPage(220); setCurrentPage(1); }}
+                    title="Illustrated Folio: ~200-250 words with large illustrated plates"
                   >
-                    Standard
+                    Illustrated A4
                   </button>
                 </div>
               </div>

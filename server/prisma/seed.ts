@@ -194,11 +194,18 @@ async function main() {
     tagNames.map((name) => prisma.tag.create({ data: { name } }))
   );
 
-  // Helper to generate 15-page canonical manuscript texts
-  const create15PageContent = (headerTitle: string, baseText: string): string => {
+  // Helper to generate rich, substantial 15-page canonical manuscript texts filling A4 pages
+  const create15PageContent = (headerTitle: string, baseText: string, extraPassages: string[] = []): string => {
     const pages: string[] = [];
     for (let p = 1; p <= 15; p++) {
-      pages.push(`[ Folio ${p} — ${headerTitle} ]\n\n${baseText}\n\n[End of Folio ${p} archival entry]`);
+      const extra = extraPassages[(p - 1) % (extraPassages.length || 1)] || '';
+      pages.push(
+        `[ Folio ${p} — ${headerTitle} ]\n\n${baseText}\n\n${extra}\n\n` +
+        `The contemplation of this chapter reveals the deeper currents of the human spirit. ` +
+        `In the silence of the archival chamber, each word resonates across centuries of thought, ` +
+        `inviting the reader to reflect upon the enduring truths of life, art, and destiny.\n\n` +
+        `[End of Folio ${p} archival entry]`
+      );
     }
     return pages.join('\n\n---page---\n\n');
   };
@@ -228,8 +235,14 @@ async function main() {
       brief: 'Tolstoy’s novella examining the mortal dread, bureaucratic vanity, and ultimate spiritual grace of a high-court judge.',
       content: create15PageContent(
         'The Death of Ivan Ilyich',
-        `During an interval in the Melvinski trial in the large building of the Law Courts the members and public prosecutor met in Ivan Egorovich Shebek’s private room, where the conversation turned on the celebrated Krasovski case.
-Ivan Ilyich’s life had been most simple and most ordinary and therefore most terrible. He had been a member of the Court of Justice, and died at the age of forty-five. His father was an official who had made his career in Petersburg in various ministries and departments.`
+        `During an interval in the Melvinski trial in the large building of the Law Courts the members and public prosecutor met in Ivan Egorovich Shebek’s private room, where the conversation turned on the celebrated Krasovski case. Fyodor Vasilievich strongly maintained that it was not within the jurisdiction of the Court, while Ivan Egorovich persisted in his opinion.
+Ivan Ilyich’s life had been most simple and most ordinary and therefore most terrible. He had been a member of the Court of Justice, and died at the age of forty-five. His father was an official who had made his career in Petersburg in various ministries and departments.
+To look at him, you would have seen a man who had mastered every social grace and decorum, yet whose inward soul was beginning to discern the tragic hollowness of worldly praise. Every day in the court he dispensed judgments with impeccable precision, yet in the quiet evening chamber an existential whisper began to question the very foundation of his achievements.`,
+        [
+          `He remembered how his mother had embraced him, how his university friends had argued about justice in the midnight salons, and how radiant the future had once seemed before the creeping chill of officialdom settled upon his heart.`,
+          `Peter Ivanovich sighed, thinking of his own health, of the whist game he had promised to play that evening, and of the subtle boundary separating the living from the departed.`,
+          `In those final hours, as the light of dawn pierced through the curtains, Ivan Ilyich realized that true life had always been present—not in the ambitious triumphs of the courtroom, but in the spontaneous compassion of the human heart.`
+        ]
       ),
       language: 'English',
       subject: 'Mortality & Ethics',
@@ -249,8 +262,14 @@ Ivan Ilyich’s life had been most simple and most ordinary and therefore most t
       brief: 'Virginia Woolf dismantles Edwardian materialism to champion an authentic rendering of the luminous halo of lived consciousness.',
       content: create15PageContent(
         'Modern Fiction & The Common Reader',
-        `In making any survey, even the freest and loosest, of modern fiction, it is difficult not to take it for granted that the modern practice of the art is somehow an improvement upon the old.
-Look within and life, it seems, is very far from being “like this”. Examine for a moment an ordinary mind on an ordinary day. The mind receives a myriad impressions—trivial, fantastic, evanescent, or engraved with the sharpness of steel.`
+        `In making any survey, even the freest and loosest, of modern fiction, it is difficult not to take it for granted that the modern practice of the art is somehow an improvement upon the old. With their simple tools and primitive materials, it might be said, Fielding did well and Jane Austen even better, but compare their opportunities with ours!
+Look within and life, it seems, is very far from being “like this”. Examine for a moment an ordinary mind on an ordinary day. The mind receives a myriad impressions—trivial, fantastic, evanescent, or engraved with the sharpness of steel. From all sides they come, an incessant shower of innumerable atoms; and as they fall, as they shape themselves into the life of Monday or Tuesday, the accent falls differently from of old.
+Life is not a series of gig lamps symmetrically arranged; life is a luminous halo, a semi-transparent envelope surrounding us from the beginning of consciousness to the end. Is it not the task of the novelist to convey this varying, this unknown and uncircumscribed spirit, whatever aberration or complexity it may display, with as little mixture of the alien and external as possible?`,
+        [
+          `Let us record the atoms as they fall upon the mind in the order in which they fall, let us trace the pattern, however disconnected and incoherent in appearance, which each sight or incident scores upon the consciousness.`,
+          `The problem for the writer of today is to construct a form that will embrace and present these turbulent, iridescent streams of mental impressions without losing the classical discipline of verbal beauty.`,
+          `To read a great work of literature is to partake in the perpetual dialogue between human consciousness and the infinite canvas of existence.`
+        ]
       ),
       language: 'English',
       subject: 'Literary Criticism',
@@ -268,10 +287,20 @@ Look within and life, it seems, is very far from being “like this”. Examine 
       title: 'The Seagull (Draft Archival Translation)',
       subheading: 'A Comedy in Four Acts',
       brief: 'Chekhov’s exploration of romantic entanglements, theatrical ambition, and artistic vanity at a Russian country estate.',
-      content: `ACT I. The park on SORIN’S estate. A broad avenue leads toward a lake. A makeshift stage has been erected for an outdoor theatrical performance.
+      content: `ACT I. The park on SORIN’S estate. A broad avenue leads toward a lake. A makeshift stage has been erected for an outdoor theatrical performance, the curtain drawn against the evening breeze.
+The sun has just set. Behind the makeshift stage, over the water, the evening sky is luminous with soft violet and amber light.
+Enter MEDVEDENKO and MASHA, returning from a walk along the birch grove.
 
 MEDVEDENKO: Why do you always wear black?
-MASHA: I am in mourning for my life. I am unhappy.`,
+MASHA: I am in mourning for my life. I am unhappy.
+MEDVEDENKO: Why? I cannot understand it. You are healthy, and your father, though not rich, is comfortable enough. My life is far harder than yours. I receive only twenty-three rubles a month, and from that they deduct for my pension, yet I do not wear mourning.
+MASHA: It isn't a matter of money. Even a beggar can be happy.
+MEDVEDENKO: In theory, yes; but in practice, here am I, my mother, my two sisters, and my little brother, all living on twenty-three rubles. One must eat and drink, one must buy tea and sugar, one must have tobacco. It’s an uphill struggle.
+MASHA: [Glancing at the stage] The play will begin soon.
+MEDVEDENKO: Yes. Treplev has written it, and Nina Zarechnaya is to act in it. They are in love with each other, and tonight their souls will unite in an effort to create a new artistic form. But my soul and yours have no point of contact. I love you; I cannot stay at home for longing for you. Every day I walk four miles here and four miles back, and meet only with coldness on your part.
+MASHA: What rubbish! [Takes snuff] Your love touches me, but I cannot return it, that is all. [Offers him the snuff-box] Have some?
+MEDVEDENKO: I have no appetite for it. [A pause]
+MASHA: It is close; there will probably be rain tonight. You are always philosophising or talking about money. You think there is no greater misfortune than poverty, but to my mind it is a thousand times easier to go about in rags and beg than... but you wouldn't understand.`,
       language: 'English',
       subject: 'Art and Unrequited Love',
       genre: 'Drama',

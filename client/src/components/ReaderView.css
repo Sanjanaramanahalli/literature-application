@@ -521,7 +521,7 @@
 .a4-page-sheet {
   width: 100%;
   max-width: 794px;
-  min-height: 1000px;
+  min-height: 540px;
   background: #fcf9f2;
   border-radius: 3px 6px 6px 3px;
   box-shadow: 
@@ -550,11 +550,11 @@
   border-radius: 2px;
 }
 
-/* Folio inner wrapper with authentic A4 parchment margins (25-30mm visual margin) */
+/* Folio inner wrapper with authentic A4 parchment margins */
 .book-page-inner-folio,
 .a4-inner-folio {
-  padding: 3.5rem 3.75rem;
-  min-height: 1000px;
+  padding: 3rem 3.5rem;
+  min-height: 540px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -938,7 +938,7 @@
 
 .full-literature-folio-card.a4-full-folio-sheet {
   max-width: 794px;
-  min-height: 1000px;
+  min-height: 540px;
   margin: 0 auto;
 }
 
