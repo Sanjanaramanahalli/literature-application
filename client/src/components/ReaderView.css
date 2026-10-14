@@ -75,12 +75,12 @@
 
 /* Distraction-free Reading Sanctuary Article Container */
 .reader-article-wrapper {
-  max-width: 760px;
+  max-width: 860px;
   margin: 0 auto;
   background: var(--bg-primary);
   border: 1px solid var(--border-classic);
   border-radius: var(--radius-lg);
-  padding: 3.5rem 3rem;
+  padding: 3rem 2.5rem;
   box-shadow: 0 4px 24px rgba(44, 24, 16, 0.05);
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
@@ -502,43 +502,144 @@
 }
 
 /* 3D Physical Book Page Viewport & Realistic Page-Turn Animations */
+/* 3D Physical Book Page Viewport & Authentic A4 Sheet Dimensions */
 .book-page-viewport {
   perspective: 1800px;
   position: relative;
   width: 100%;
-  margin: 1.5rem 0 2rem;
+  margin: 1.5rem auto 2.5rem;
+  display: flex;
+  justify-content: center;
 }
 
-.book-page-sheet {
+.book-page-viewport.a4-viewport {
+  max-width: 794px;
+}
+
+/* Authentic A4 Size Sheet (210mm x 297mm proportion: 1 to 1.414) */
+.book-page-sheet,
+.a4-page-sheet {
+  width: 100%;
+  max-width: 794px;
+  min-height: 1000px;
   background: #fcf9f2;
-  border-radius: 4px 10px 10px 4px;
+  border-radius: 3px 6px 6px 3px;
   box-shadow: 
-    -4px 0 12px rgba(0, 0, 0, 0.08),
-    4px 12px 30px rgba(44, 24, 16, 0.1),
-    0 0 0 1px rgba(184, 134, 11, 0.15);
+    -6px 0 16px rgba(0, 0, 0, 0.08),
+    0 16px 36px rgba(44, 24, 16, 0.12),
+    0 0 0 1px rgba(184, 134, 11, 0.22);
   transform-origin: left center;
   transform-style: preserve-3d;
   transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.28s ease, filter 0.28s ease;
   position: relative;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
-/* Folio inner wrapper with authentic parchment background texture & margin guidelines */
-.book-page-inner-folio {
-  padding: 3rem 3.5rem;
-  min-height: 520px;
+/* Authentic A4 Sheet Watermark / Paper Margins */
+.book-page-sheet::before,
+.a4-page-sheet::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  border: 1px solid rgba(184, 134, 11, 0.12);
+  pointer-events: none;
+  border-radius: 2px;
+}
+
+/* Folio inner wrapper with authentic A4 parchment margins (25-30mm visual margin) */
+.book-page-inner-folio,
+.a4-inner-folio {
+  padding: 3.5rem 3.75rem;
+  min-height: 1000px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   background: linear-gradient(
     to right,
-    rgba(0, 0, 0, 0.04) 0%,
-    rgba(255, 255, 255, 0.2) 3%,
-    rgba(255, 255, 255, 0) 8%,
+    rgba(0, 0, 0, 0.05) 0%,
+    rgba(255, 255, 255, 0.25) 2.5%,
+    rgba(255, 255, 255, 0) 7%,
     rgba(255, 255, 255, 0) 95%,
-    rgba(0, 0, 0, 0.02) 100%
+    rgba(0, 0, 0, 0.03) 100%
   );
-  border-left: 3px solid rgba(139, 69, 19, 0.2);
+  border-left: 4px solid rgba(139, 69, 19, 0.25);
+  box-sizing: border-box;
+}
+
+/* Embedded Literature Page Illustration Styles */
+.literature-page-illustration {
+  margin: 1.25rem 0 2rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.illustration-frame {
+  position: relative;
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid rgba(184, 134, 11, 0.35);
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 
+    0 4px 14px rgba(44, 24, 16, 0.08),
+    inset 0 0 10px rgba(184, 134, 11, 0.06);
+}
+
+.illustration-img {
+  width: 100%;
+  max-height: 380px;
+  object-fit: cover;
+  border-radius: 2px;
+  display: block;
+  filter: contrast(1.03) brightness(0.98);
+  transition: transform 0.3s ease;
+}
+
+.illustration-frame:hover .illustration-img {
+  transform: scale(1.015);
+}
+
+.illustration-overlay-glare {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, transparent 60%);
+}
+
+.illustration-caption {
+  margin-top: 0.75rem;
+  font-family: var(--font-heading);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+  max-width: 90%;
+}
+
+.illustration-caption-text {
+  font-size: 0.88rem;
+  font-style: italic;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.illustration-source-tag {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-gold);
+  font-weight: 600;
 }
 
 .folio-header-indicator {
@@ -822,17 +923,41 @@
 
 .full-literature-folio-card {
   background: #fcf9f2;
-  border-radius: 8px;
-  border: 1px solid rgba(184, 134, 11, 0.2);
+  border-radius: 3px 6px 6px 3px;
+  border: 1px solid rgba(184, 134, 11, 0.22);
   border-left: 4px solid var(--accent-burgundy);
-  box-shadow: 0 4px 18px rgba(44, 24, 16, 0.04);
-  padding: 2.5rem 2.8rem;
+  box-shadow: 
+    -4px 0 14px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(44, 24, 16, 0.08);
+  padding: 3rem 3.5rem;
   scroll-margin-top: 80px;
   transition: box-shadow 0.2s ease;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.full-literature-folio-card.a4-full-folio-sheet {
+  max-width: 794px;
+  min-height: 1000px;
+  margin: 0 auto;
+}
+
+.full-literature-folio-card::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  border: 1px solid rgba(184, 134, 11, 0.1);
+  pointer-events: none;
+  border-radius: 2px;
 }
 
 .full-literature-folio-card:hover {
-  box-shadow: 0 8px 26px rgba(44, 24, 16, 0.08);
+  box-shadow: 
+    -6px 0 18px rgba(0, 0, 0, 0.08),
+    0 12px 32px rgba(44, 24, 16, 0.12);
 }
 
 .full-folio-header {
@@ -1135,5 +1260,85 @@
   .full-folio-footer {
     font-size: 0.75rem;
   }
+  .illustration-img {
+    max-height: 240px;
+  }
+  .illustration-frame {
+    padding: 4px;
+  }
+  .a4-page-sheet,
+  .full-literature-folio-card.a4-full-folio-sheet {
+    min-height: auto;
+  }
+  .book-page-inner-folio.a4-inner-folio {
+    min-height: auto;
+  }
 }
 
+/* Print Stylesheet for Real A4 Size Printing */
+@page {
+  size: A4 portrait;
+  margin: 15mm 15mm 15mm 15mm;
+}
+
+@media print {
+  .reader-navigation-bar,
+  .reader-page-controls,
+  .reader-rating-section,
+  .scholar-discovery-tooltip,
+  .whatsapp-chat-bubble,
+  .main-header,
+  .main-footer,
+  .tag-badge {
+    display: none !important;
+  }
+
+  body, html {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .reader-article-wrapper {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+  }
+
+  .book-page-sheet,
+  .a4-page-sheet,
+  .full-literature-folio-card.a4-full-folio-sheet {
+    max-width: 100% !important;
+    min-height: auto !important;
+    box-shadow: none !important;
+    border: none !important;
+    page-break-after: always;
+    background: #ffffff !important;
+  }
+
+  .book-page-sheet::before,
+  .a4-page-sheet::before,
+  .full-literature-folio-card::before {
+    display: none !important;
+  }
+
+  .book-page-inner-folio,
+  .a4-inner-folio {
+    padding: 0 !important;
+    min-height: auto !important;
+    border: none !important;
+    background: none !important;
+  }
+
+  .illustration-frame {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    background: transparent !important;
+  }
+
+  .reader-content-body p {
+    color: #111111 !important;
+  }
+}

@@ -29,6 +29,7 @@ import {
 import { ThreadedComments } from './ThreadedComments';
 import { WhatsAppAiAssistant } from './WhatsAppAiAssistant';
 import type { LiteratureItem } from './LiteratureCard';
+import { getLiteratureIllustrations } from '../config/literatureIllustrations';
 import './ReaderView.css';
 
 interface ReaderViewProps {
@@ -517,6 +518,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   const pages = getPages(literature.content, wordsPerPage);
   const totalPages = pages.length;
   const currentContentPageText = pages[currentPage - 1] || pages[0] || '';
+  const illustrations = getLiteratureIllustrations(literature.title, literature.language);
 
   const handleJumpToPage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1179,15 +1181,43 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                 </div>
               </div>
 
-              {/* Current Page Literary Content with 3D Physical Parchment Page Turn Animation */}
-              <div className="book-page-viewport">
-                <div className={`book-page-sheet theme-${readerTheme} font-${fontSize} ${isFlipping ? (flipDirection === 'next' ? 'flipping-next' : 'flipping-prev') : 'page-settled'}`}>
-                  <div className="book-page-inner-folio">
+              {/* A4 Size Literary Sheet with Authentic Proportions & Embedded Manuscript Illustrations */}
+              <div className="book-page-viewport a4-viewport">
+                <div className={`book-page-sheet a4-page-sheet theme-${readerTheme} font-${fontSize} ${isFlipping ? (flipDirection === 'next' ? 'flipping-next' : 'flipping-prev') : 'page-settled'}`} id="a4-page-sheet" data-testid="a4-page-sheet">
+                  <div className="book-page-inner-folio a4-inner-folio">
                     <div className="folio-header-indicator">
                       <span>Folio {currentPage}</span>
                       <span>{literature.title}</span>
                       <span>{literature.language}</span>
                     </div>
+
+                    {/* Related Contextual Illustration embedded inside the literature page */}
+                    {(() => {
+                      const pageIllustration = illustrations.find((item) => item.page === currentPage) ||
+                        (currentPage === 1 && illustrations[0] ? illustrations[0] : null);
+
+                      if (!pageIllustration) return null;
+
+                      return (
+                        <figure className="literature-page-illustration" data-testid="literature-illustration">
+                          <div className="illustration-frame">
+                            <img
+                              src={pageIllustration.src}
+                              alt={pageIllustration.alt}
+                              className="illustration-img"
+                              loading="lazy"
+                            />
+                            <div className="illustration-overlay-glare" />
+                          </div>
+                          <figcaption className="illustration-caption">
+                            <span className="illustration-caption-text">{pageIllustration.caption}</span>
+                            {pageIllustration.sourceText && (
+                              <span className="illustration-source-tag">{pageIllustration.sourceText}</span>
+                            )}
+                          </figcaption>
+                        </figure>
+                      );
+                    })()}
 
                     <div className="reader-content-body" id="reader-body-paragraphs">
                       {currentContentPageText.split('\n\n').map((para, index) => (
@@ -1196,8 +1226,8 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                     </div>
 
                     <div className="folio-footer-indicator">
-                      <span>Athenæum Classic Manuscript Edition</span>
-                      <span>— {currentPage} —</span>
+                      <span>Athenæum Classic Manuscript Edition • A4 Folio</span>
+                      <span>— {currentPage} of {totalPages} —</span>
                     </div>
                   </div>
                 </div>
@@ -1263,35 +1293,63 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
             /* FULL LITERATURE CONTINUOUS DISPLAY: Displays all pages/chapters in chronological manuscript sequence */
             <div className="full-literature-container" id="full-literature-container">
 
-              {/* All Pages Rendered Chronologically */}
+              {/* All Pages Rendered Chronologically as A4 Manuscript Sheets */}
               <div className="full-literature-folios-list" id="reader-body-paragraphs">
-                {pages.map((pageText, pageIndex) => (
-                  <section
-                    key={pageIndex}
-                    id={`folio-section-${pageIndex + 1}`}
-                    className="full-literature-folio-card"
-                  >
-                    <div className="full-folio-header">
-                      <div className="full-folio-badge">
-                        <span>Folio {pageIndex + 1} of {totalPages}</span>
-                      </div>
-                      <div className="full-folio-title-mini">
-                        <span>{literature.title}</span>
-                      </div>
-                    </div>
+                {pages.map((pageText, pageIndex) => {
+                  const folioNum = pageIndex + 1;
+                  const folioIllustration = illustrations.find((item) => item.page === folioNum) ||
+                    (folioNum === 1 && illustrations[0] ? illustrations[0] : null);
 
-                    <div className="reader-content-body full-mode-body">
-                      {pageText.split('\n\n').map((para, pIdx) => (
-                        <p key={pIdx}>{para}</p>
-                      ))}
-                    </div>
+                  return (
+                    <section
+                      key={pageIndex}
+                      id={`folio-section-${folioNum}`}
+                      className="full-literature-folio-card a4-full-folio-sheet"
+                      data-testid={`a4-full-folio-${folioNum}`}
+                    >
+                      <div className="full-folio-header">
+                        <div className="full-folio-badge">
+                          <span>Folio {folioNum} of {totalPages} • A4 Sheet</span>
+                        </div>
+                        <div className="full-folio-title-mini">
+                          <span>{literature.title}</span>
+                        </div>
+                      </div>
 
-                    <div className="full-folio-footer">
-                      <span className="full-folio-rule">❦</span>
-                      <span className="full-folio-page-num">— {pageIndex + 1} —</span>
-                    </div>
-                  </section>
-                ))}
+                      {/* Embedded Illustration for the folio */}
+                      {folioIllustration && (
+                        <figure className="literature-page-illustration full-folio-illustration" data-testid="literature-illustration">
+                          <div className="illustration-frame">
+                            <img
+                              src={folioIllustration.src}
+                              alt={folioIllustration.alt}
+                              className="illustration-img"
+                              loading="lazy"
+                            />
+                            <div className="illustration-overlay-glare" />
+                          </div>
+                          <figcaption className="illustration-caption">
+                            <span className="illustration-caption-text">{folioIllustration.caption}</span>
+                            {folioIllustration.sourceText && (
+                              <span className="illustration-source-tag">{folioIllustration.sourceText}</span>
+                            )}
+                          </figcaption>
+                        </figure>
+                      )}
+
+                      <div className="reader-content-body full-mode-body">
+                        {pageText.split('\n\n').map((para, pIdx) => (
+                          <p key={pIdx}>{para}</p>
+                        ))}
+                      </div>
+
+                      <div className="full-folio-footer">
+                        <span className="full-folio-rule">❦</span>
+                        <span className="full-folio-page-num">— Folio {folioNum} —</span>
+                      </div>
+                    </section>
+                  );
+                })}
               </div>
             </div>
           )}

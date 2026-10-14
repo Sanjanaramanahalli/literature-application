@@ -48,6 +48,8 @@ export const App: React.FC = () => {
     setUser(authenticatedUser);
     if (authenticatedUser?.role === 'ADMIN') {
       setCurrentTab('admin');
+    } else {
+      setCurrentTab('saved');
     }
   };
 
