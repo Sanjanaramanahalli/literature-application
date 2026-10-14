@@ -10,7 +10,14 @@ export async function initDatabase(): Promise<typeof prismaMongoAdapter> {
   }
 
   try {
-    await connectMongo();
+    const conn = await connectMongo();
+    if (!conn) {
+      // Running in serverless in-memory mode
+      const { seedMemoryStore } = await import('./memoryStore.js');
+      await seedMemoryStore();
+      isInitialized = true;
+      return prismaMongoAdapter;
+    }
     // Auto-seed if the database is currently empty
     const count = await prismaMongoAdapter.literature.count();
     if (count === 0) {

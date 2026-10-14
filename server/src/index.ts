@@ -20,7 +20,16 @@ const isVercel = !!process.env.VERCEL;
 const uploadsPath = isVercel
   ? path.join(os.tmpdir(), 'uploads')
   : path.join(__dirname, '../uploads');
-app.use('/uploads', express.static(uploadsPath));
+// Ensure database/store is initialized before servicing any route
+app.use(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await initDatabase();
+    next();
+  } catch (err) {
+    console.error('[Database Middleware] Init error:', err);
+    next(err);
+  }
+});
 
 // Routes
 import { authRouter } from './routes/auth.js';

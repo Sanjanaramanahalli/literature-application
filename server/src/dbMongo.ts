@@ -5,8 +5,13 @@ dotenv.config();
 
 let isConnected = false;
 let memoryServerInstance: any = null;
+let isMemoryMode = false;
 
-export async function connectMongo(): Promise<typeof mongoose> {
+export function isUsingMemoryStore(): boolean {
+  return isMemoryMode;
+}
+
+export async function connectMongo(): Promise<typeof mongoose | null> {
   if (isConnected && mongoose.connection.readyState === 1) {
     return mongoose;
   }
@@ -21,11 +26,17 @@ export async function connectMongo(): Promise<typeof mongoose> {
         serverSelectionTimeoutMS: 8000,
       });
       isConnected = true;
+      isMemoryMode = false;
       console.log('[MongoDB] Connected successfully to MongoDB:', mongoose.connection.host);
       return mongoose;
     } catch (err: any) {
       console.error('[MongoDB] Connection error with configured URI:', err.message || err);
-      // Fallback for development/testing if URI is unreachable
+      // In serverless/Vercel, if external Mongo fails or is unconfigured, fall back to memoryStore
+      if (process.env.VERCEL) {
+        console.warn('[MongoDB] Vercel environment detected. Using fast zero-dependency in-memory data store.');
+        isMemoryMode = true;
+        return null;
+      }
       if (process.env.NODE_ENV !== 'production') {
         console.warn('[MongoDB] Falling back to automated in-memory MongoDB server for testing...');
         return await startInMemoryMongo();
@@ -34,7 +45,14 @@ export async function connectMongo(): Promise<typeof mongoose> {
     }
   }
 
-  // 2. In development or test mode, if no MONGODB_URI is provided yet, auto-spin Memory Server
+  // 2. On Vercel serverless environment, MongoMemoryServer cannot run binaries; use fast pure JS memoryStore
+  if (process.env.VERCEL) {
+    console.log('[MongoDB] Serverless environment without external MONGODB_URI. Using fast in-memory store.');
+    isMemoryMode = true;
+    return null;
+  }
+
+  // 3. In local development or test mode, auto-spin Memory Server
   console.log('[MongoDB] No external MONGODB_URI found. Initializing automated MongoDB instance...');
   return await startInMemoryMongo();
 }
