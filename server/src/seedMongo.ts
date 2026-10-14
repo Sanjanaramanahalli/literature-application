@@ -14,6 +14,7 @@ import {
   rashmirathiPages,
   gabanPages,
 } from './classicalLiteratureTexts.js';
+import { expandedClassicalLibrary } from './expandedClassicalLibrary.js';
 import { indianArtCraftsData } from './seedArtCraftData.js';
 
 export async function seedMongoDatabase() {
@@ -167,7 +168,62 @@ export async function seedMongoDatabase() {
     },
   });
 
-  // 6. Seed Art & Crafts
+  // 6. Seed all 135 expanded canonical masterworks (45 English, 45 Hindi, 45 Kannada)
+  console.log(`[Seeder] Seeding expanded classical library (${expandedClassicalLibrary.length} masterworks)...`);
+  const catSlugMap = new Map<string, string>([
+    ['classics', catClassics.id],
+    ['drama', catDrama.id],
+    ['poetry', catPoetry.id],
+    ['philosophy', catPhilosophy.id],
+  ]);
+
+  const existingCreators = await prisma.creator.findMany();
+  const creatorNameToId = new Map<string, string>();
+  for (const c of existingCreators) {
+    creatorNameToId.set(c.name.toLowerCase().trim(), c.id);
+  }
+
+  for (const item of expandedClassicalLibrary) {
+    const existing = await prisma.literature.findFirst({
+      where: { title: item.title },
+    });
+    if (existing) continue;
+
+    const authorNorm = item.author.trim();
+    let creatorId = creatorNameToId.get(authorNorm.toLowerCase());
+    if (!creatorId) {
+      const createdCreator = await prisma.creator.create({
+        data: {
+          name: authorNorm,
+          bio: `Eminent author and literary visionary of classical ${item.language} letters.`,
+          roleType: 'AUTHOR',
+        },
+      });
+      creatorId = String(createdCreator.id);
+      creatorNameToId.set(authorNorm.toLowerCase(), creatorId);
+    }
+
+    const assignedCategoryId = catSlugMap.get(item.categorySlug) || catClassics.id;
+
+    await prisma.literature.create({
+      data: {
+        title: item.title,
+        subheading: item.subheading,
+        brief: item.brief,
+        content: item.content,
+        language: item.language,
+        genre: item.genre,
+        subject: item.subject,
+        publicationStatus: 'PUBLISHED',
+        publicationDate: new Date('1900-01-01'),
+        creatorId,
+        categoryId: assignedCategoryId,
+        coverImage: item.coverImage,
+      },
+    });
+  }
+
+  // 7. Seed Art & Crafts
   if (Array.isArray(indianArtCraftsData) && indianArtCraftsData.length > 0) {
     for (const craft of indianArtCraftsData.slice(0, 30)) {
       await prisma.artCraft.create({ data: craft });

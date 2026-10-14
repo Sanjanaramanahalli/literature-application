@@ -14,6 +14,7 @@ import {
   rashmirathiPages,
   gabanPages,
 } from './classicalLiteratureTexts.js';
+import { expandedClassicalLibrary } from './expandedClassicalLibrary.js';
 import { indianArtCraftsData } from './seedArtCraftData.js';
 
 export interface MemoryStore {
@@ -376,6 +377,65 @@ export async function seedMemoryStore() {
     rashmirathi,
     gaban,
   ];
+
+  // Integrate all 135 expanded canonical masterworks (45 English, 45 Hindi, 45 Kannada)
+  const categoryMap: Record<string, string> = {
+    classics: catClassics.id,
+    drama: catDrama.id,
+    poetry: catPoetry.id,
+    philosophy: catPhilosophy.id,
+  };
+
+  const creatorMap = new Map<string, string>();
+  for (const c of memoryStore.creators) {
+    creatorMap.set(c.name.toLowerCase().trim(), c.id);
+  }
+
+  for (const item of expandedClassicalLibrary) {
+    // If literature already exists by title or id, skip or update
+    const existingLit = memoryStore.literatures.find(
+      (l) => l.id === item.id || l.title.toLowerCase() === item.title.toLowerCase()
+    );
+    if (existingLit) continue;
+
+    // Ensure creator exists
+    const authorNorm = item.author.trim();
+    let creatorId = creatorMap.get(authorNorm.toLowerCase());
+    if (!creatorId) {
+      creatorId = 'creator_' + Math.abs(authorNorm.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0)).toString(16);
+      const newCreator = {
+        id: creatorId,
+        name: authorNorm,
+        bio: `Eminent author and literary visionary of classical ${item.language} letters.`,
+        avatarUrl: null,
+        roleType: 'AUTHOR',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      memoryStore.creators.push(newCreator);
+      creatorMap.set(authorNorm.toLowerCase(), creatorId);
+    }
+
+    const assignedCatId = categoryMap[item.categorySlug] || catClassics.id;
+
+    memoryStore.literatures.push({
+      id: item.id,
+      title: item.title,
+      subheading: item.subheading,
+      brief: item.brief,
+      content: item.content,
+      language: item.language,
+      genre: item.genre,
+      subject: item.subject,
+      publicationStatus: 'PUBLISHED',
+      publicationDate: new Date('1900-01-01'),
+      creatorId,
+      categoryId: assignedCatId,
+      coverImage: item.coverImage,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+  }
 
   // Ratings
   memoryStore.ratings = [

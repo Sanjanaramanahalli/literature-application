@@ -173,7 +173,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
 
   // Professional Reader Customization States (Font size, Theme, Audio Narration)
   const [fontSize, setFontSize] = useState<'small' | 'medium' | 'large' | 'xlarge'>('medium');
-  const [readerTheme, setReaderTheme] = useState<'parchment' | 'ivory' | 'sepia' | 'night'>('parchment');
+  const [readerTheme, setReaderTheme] = useState<'parchment' | 'ivory' | 'sepia' | 'night'>('ivory');
   const [isNarrating, setIsNarrating] = useState<boolean>(false);
 
   // Text-To-Speech Narration Toggle
@@ -487,7 +487,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       })
     : null;
 
-  // Split content into full, substantial A4 pages preventing sparse empty pages while ensuring generous 100-200 page archival volume
+  // Split content into full, substantial A4 pages with 100% pure language consistency (never mixing languages)
   const getPages = (text: string, chunkSize: number = 50): string[] => {
     if (!text || !text.trim()) return [''];
     const trimmed = text.trim();
@@ -502,33 +502,24 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       ? trimmed.split(/---page---|<!-- pagebreak -->|\f/g).map((s) => s.trim()).filter((s) => s.length > 0)
       : trimmed.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
-    // If the text is already pre-structured with 100-200 rich folios (e.g. from seed create15PageContent)
-    if (rawParts.length >= 100 && rawParts.length <= 200 && chunkSize >= 80) {
+    // If explicit breaks were used and match our rich folio count, return them directly
+    if (hasExplicitBreaks && rawParts.length >= 10 && chunkSize >= 80) {
       return rawParts;
     }
 
-    const reflections = [
-      'In the silence of the archival chamber, each word resonates across centuries of thought, inviting the reader to reflect upon the enduring truths of life, art, and destiny.',
-      'As the narrative advances across this folio, the psychological tapestry deepens. The classical characters grapple with moral imperatives, unearthing universal struggles that echo through world literature.',
-      'Here the text captures the delicate cadence of introspection. Philosophy and human vulnerability merge seamlessly upon the parchment, presenting a timeless tableau of sorrow, longing, and triumph.',
-      'In this passage, the author\'s mastery of atmosphere becomes vividly apparent. Every phrase carries subtle symbolic weight, illuminating the hidden motivations that drive mortal existence.',
-      'The historical resonance of this folio stands as a testament to the preservation of classical letters. Across cultural frontiers, these sentiments endure unimpaired by the passage of ages.',
-      'Examining the cadence of this archival excerpt reveals how classical rhetoric mirrors the rhythms of human heartbeat and conversational candor.',
-      'Within these lines lie the ethical crossroads of the narrative. The tension between duty and personal desire unfolds with dramatic precision.',
-      'A serene clarity pervades this section of the work. The prose achieves that rare balance between aesthetic grace and rigorous intellectual inquiry.'
-    ];
-
-    // Deconstruct all parts into meaningful dramatic/prose/poetic lines or sentences
+    // Deconstruct all parts into meaningful dramatic/prose/poetic lines or paragraphs
     const allFolioUnits: string[] = [];
     for (const part of rawParts) {
       const lines = part.split('\n').map((l) => l.trim()).filter(Boolean);
       if (lines.length > 1) {
         lines.forEach((l) => allFolioUnits.push(l));
       } else {
-        const sentences = part.match(/[^.!?]+[.!?]+(\s+|$)|[^.!?]+$/g) || [part];
+        const sentences = part.match(/[^.!?।]+[.!?।]+(\s+|$)|[^.!?।]+$/g) || [part];
         sentences.map((s) => s.trim()).filter(Boolean).forEach((s) => allFolioUnits.push(s));
       }
     }
+
+    if (allFolioUnits.length === 0) return [trimmed];
 
     // Determine target page count based on chunkSize setting:
     // chunkSize 50: Target 100-200 pages (default 125-150 pages)
@@ -543,17 +534,15 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
 
     for (let i = 0; i < allFolioUnits.length; i += idealUnitsPerPage) {
       const chunk = allFolioUnits.slice(i, i + idealUnitsPerPage).join('\n\n');
-      const fIdx = pagesArr.length;
-      const ref = reflections[fIdx % reflections.length];
-      pagesArr.push(`${chunk}\n\n${ref}`);
+      pagesArr.push(chunk);
       if (pagesArr.length >= 170 && i + idealUnitsPerPage < allFolioUnits.length) {
         pagesArr[pagesArr.length - 1] += '\n\n' + allFolioUnits.slice(i + idealUnitsPerPage).join('\n\n');
         break;
       }
     }
 
-    // When in 100-200 pages mode (chunkSize <= 60), ensure page count is at least 105 and at most 190
-    if (chunkSize <= 60 && pagesArr.length < 105) {
+    // When in 100-200 pages mode (chunkSize <= 60), ensure page count is at least 105 and at most 195
+    if (chunkSize <= 60 && pagesArr.length < 105 && allFolioUnits.length >= 20) {
       while (pagesArr.length < 105) {
         const expanded: string[] = [];
         const factor = Math.ceil(110 / pagesArr.length);
@@ -563,10 +552,10 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
           const step = Math.max(1, Math.floor(pLines.length / factor));
           for (let l = 0; l < pLines.length; l += step) {
             const sub = pLines.slice(l, l + step).join('\n\n');
-            const ref = reflections[expanded.length % reflections.length];
-            expanded.push(sub.includes(ref) ? sub : `${sub}\n\n${ref}`);
+            if (sub.trim()) expanded.push(sub.trim());
           }
         }
+        if (expanded.length <= pagesArr.length) break;
         pagesArr = expanded;
       }
     }

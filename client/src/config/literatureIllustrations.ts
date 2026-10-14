@@ -138,108 +138,24 @@ export const getLiteratureIllustrations = (title: string, _language?: string): L
   ];
 };
 
-/**
- * Returns an authentic, contextually related illustration for ANY folio page (1 to 200),
- * ensuring every single A4 page sheet is visually rich with artwork, engravings, and folio headers.
- */
 export const getIllustrationForFolio = (
   title: string,
   language: string | undefined,
   folioPage: number,
-  totalFolios: number
-): LiteratureIllustration => {
+  _totalFolios: number
+): LiteratureIllustration | null => {
+  // Only show the unique frontispiece illustration on Folio 1.
+  // All subsequent pages (2+) are purely focused on high text content to ensure
+  // a balanced text-to-image ratio and eliminate repeated image clutter.
+  if (folioPage !== 1) {
+    return null;
+  }
+
   const specificList = getLiteratureIllustrations(title, language);
+  if (specificList.length > 0) {
+    return specificList[0];
+  }
 
-  // If there is an exact page match in the literature-specific illustrations, prioritize it
-  const exact = specificList.find((item) => item.page === folioPage);
-  if (exact) return exact;
-
-  // Curated gallery of authentic classical illustrations for cycling across all 100-200 pages
-  const masterGallery: { src: string; alt: string; theme: string; source: string }[] = [
-    {
-      src: '/illustrations/hamlet-ghost.jpg',
-      alt: 'Classical dramatic apparition upon the castle ramparts',
-      theme: 'Tragic Portents & Royal Solitude',
-      source: 'Shakespeare Memorial Archival Press',
-    },
-    {
-      src: '/illustrations/hamlet-soliloquy.jpg',
-      alt: 'Prince contemplating mortality and metaphysical truth',
-      theme: 'Philosophical Meditation & Human Vulnerability',
-      source: 'Athenæum Folio Engravings',
-    },
-    {
-      src: '/illustrations/godan-village.jpg',
-      alt: 'Awadh agrarian countryside and rural peasant dwellings',
-      theme: 'Agrarian Life & Enduring Peasant Dignity',
-      source: 'Premchand Memorial Archive',
-    },
-    {
-      src: '/illustrations/godan-pastoral.jpg',
-      alt: 'Pastoral twilight and sacred bovine symbolism',
-      theme: 'Pastoral Solitude & Rural Landscape',
-      source: 'Classic Indian Realism Series',
-    },
-    {
-      src: '/illustrations/malegalalli-western-ghats.jpg',
-      alt: 'Lush rainforest canopy and mountain mist',
-      theme: 'Western Ghats Ecology & Forest Splendor',
-      source: 'Kuvempu Sahitya Sansthana',
-    },
-    {
-      src: '/illustrations/malegalalli-rain.jpg',
-      alt: 'Monsoon deluge sweeping over the sacred riverbanks',
-      theme: 'Monsoon Deluge & Nature Consciousness',
-      source: 'Illustrated Sahitya Centenary Editions',
-    },
-    {
-      src: '/illustrations/ramayana-epic.jpg',
-      alt: 'Epic celestial sunrise over mountain hermitage',
-      theme: 'Epic Cosmology & Dharma',
-      source: 'Jnanpith Commemorative Archival Plate',
-    },
-    {
-      src: '/illustrations/kamayani-himalayas.jpg',
-      alt: 'Eternal snow peaks of the sacred Himalayas',
-      theme: 'Himalayan Grandeur & Cosmic Regeneration',
-      source: 'Chhayavaad Poetic Gallery',
-    },
-    {
-      src: '/illustrations/madhushala-tavern.jpg',
-      alt: 'Mystic tavern and philosophical cup of life',
-      theme: 'Existential Allegory & Lyrical Solace',
-      source: 'Bachchan Centenary Archival Folio',
-    },
-    {
-      src: '/illustrations/rashmirathi-chariot.jpg',
-      alt: 'Sun chariot illuminating the martial field of Kurukshetra',
-      theme: 'Solar Chariot & Martial Heroism',
-      source: 'Dinkar Rashtrakavi Memorial Editions',
-    },
-    {
-      src: '/illustrations/pride-prejudice-ballroom.jpg',
-      alt: 'Classical assembly hall and Regency dialogue',
-      theme: 'Social Tapestry & Human Wit',
-      source: 'Classical Illustrated Library',
-    },
-    {
-      src: '/illustrations/classical-manuscript-etching.jpg',
-      alt: 'Authentic parchment woodcut engraving',
-      theme: 'Archival Illuminated Manuscript',
-      source: 'Athenæum Classic Folio Collection',
-    },
-  ];
-
-  // Pick index deterministic on title and folio page so each page gets a consistent, thematic illustration
-  const titleHash = (title || '').split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  const galleryIndex = (titleHash + folioPage) % masterGallery.length;
-  const item = masterGallery[galleryIndex];
-
-  return {
-    src: item.src,
-    alt: `${item.alt} — ${title}`,
-    caption: `Folio ${folioPage} Archival Plate: ${item.theme} — Accompanying the classical study of "${title}".`,
-    sourceText: `${item.source} • Plate ${folioPage} of ${totalFolios}`,
-    page: folioPage,
-  };
+  return null;
 };
+

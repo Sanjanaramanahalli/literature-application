@@ -14,6 +14,7 @@ import {
   rashmirathiPages,
   gabanPages,
 } from './classicalLiteratureTexts.js';
+import { expandedClassicalLibrary } from '../src/expandedClassicalLibrary.js';
 
 const prisma = new PrismaClient();
 
@@ -752,6 +753,61 @@ MASHA: It is close; there will probably be rain tonight. You are always philosop
       literatureId: lit14Rashmirathi.id,
     },
   });
+
+  // 10. Seed all 135 expanded canonical masterworks (45 English, 45 Hindi, 45 Kannada)
+  console.log(`Seeding expanded classical library (${expandedClassicalLibrary.length} titles)...`);
+  const catSlugMap = new Map<string, string>();
+  for (const cat of categories) {
+    catSlugMap.set(cat.slug, cat.id);
+  }
+
+  // Cache existing creators by name
+  const existingCreators = await prisma.creator.findMany();
+  const creatorNameToId = new Map<string, string>();
+  for (const c of existingCreators) {
+    creatorNameToId.set(c.name.toLowerCase().trim(), c.id);
+  }
+
+  for (const item of expandedClassicalLibrary) {
+    // Check if literature already exists by title
+    const existing = await prisma.literature.findFirst({
+      where: { title: item.title },
+    });
+    if (existing) continue;
+
+    const authorNorm = item.author.trim();
+    let creatorId = creatorNameToId.get(authorNorm.toLowerCase());
+    if (!creatorId) {
+      const createdCreator = await prisma.creator.create({
+        data: {
+          name: authorNorm,
+          bio: `Eminent author and literary visionary of classical ${item.language} letters.`,
+          roleType: 'AUTHOR',
+        },
+      });
+      creatorId = createdCreator.id;
+      creatorNameToId.set(authorNorm.toLowerCase(), creatorId);
+    }
+
+    const assignedCategoryId = catSlugMap.get(item.categorySlug) || catClassics.id;
+
+    await prisma.literature.create({
+      data: {
+        title: item.title,
+        subheading: item.subheading,
+        brief: item.brief,
+        content: item.content,
+        language: item.language,
+        genre: item.genre,
+        subject: item.subject,
+        publicationStatus: 'PUBLISHED',
+        publicationDate: new Date('1900-01-01'),
+        creatorId,
+        categoryId: assignedCategoryId,
+        coverImage: item.coverImage,
+      },
+    });
+  }
 
   // Seed Indian Art & Crafts (28 States)
   try {
