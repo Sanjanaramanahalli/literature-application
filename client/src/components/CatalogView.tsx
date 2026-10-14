@@ -4,6 +4,7 @@ import { LiteratureCard } from './LiteratureCard';
 import type { LiteratureItem } from './LiteratureCard';
 import { ArtCraftCard } from './ArtCraftCard';
 import type { ArtCraftItem } from './ArtCraftCard';
+import { getApiUrl } from '../config/api';
 import './CatalogView.css';
 
 interface Category {
@@ -23,6 +24,8 @@ interface CatalogViewProps {
   onOpenAuth?: (mode: 'login' | 'register') => void;
 }
 
+const CATALOG_CACHE_KEY = 'athenaeum_catalog_cache';
+
 export const CatalogView: React.FC<CatalogViewProps> = ({
   currentTab,
   onSelectLiterature,
@@ -31,37 +34,57 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   user,
   onOpenAuth,
 }) => {
-  const [featured, setFeatured] = useState<LiteratureItem | null>(null);
-  const [popular, setPopular] = useState<LiteratureItem[]>([]);
-  const [newReleases, setNewReleases] = useState<LiteratureItem[]>([]);
-  const [allLiteratures, setAllLiteratures] = useState<LiteratureItem[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [artCrafts, setArtCrafts] = useState<ArtCraftItem[]>([]);
+  // Initialize with cached catalog data if present to ensure instant, zero-flicker loading
+  const getInitialCachedData = () => {
+    try {
+      const cached = localStorage.getItem(CATALOG_CACHE_KEY);
+      if (cached) return JSON.parse(cached);
+    } catch {
+      // Ignore cache parse error
+    }
+    return null;
+  };
+
+  const initialCache = getInitialCachedData();
+
+  const [featured, setFeatured] = useState<LiteratureItem | null>(initialCache?.featured || null);
+  const [popular, setPopular] = useState<LiteratureItem[]>(initialCache?.popular || []);
+  const [newReleases, setNewReleases] = useState<LiteratureItem[]>(initialCache?.newReleases || []);
+  const [allLiteratures, setAllLiteratures] = useState<LiteratureItem[]>(initialCache?.allLiteratures || []);
+  const [categories, setCategories] = useState<Category[]>(initialCache?.categories || []);
+  const [artCrafts, setArtCrafts] = useState<ArtCraftItem[]>(initialCache?.artCrafts || []);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(!initialCache);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCatalogData();
   }, []);
 
-  const fetchCatalogData = async () => {
+  const fetchCatalogData = async (retryCount = 0) => {
     try {
-      setLoading(true);
+      if (!initialCache && retryCount === 0) {
+        setLoading(true);
+      }
       setError(null);
 
       // Fetch featured, popular, new releases, all literature, categories, and art-craft in parallel
       const [featRes, popRes, newRes, allRes, catRes, craftRes] = await Promise.all([
-        fetch('/api/literature/featured'),
-        fetch('/api/literature/popular'),
-        fetch('/api/literature/new-releases?limit=6'),
-        fetch('/api/literature'),
-        fetch('/api/literature/categories'),
-        fetch('/api/art-craft?limit=6'),
+        fetch(getApiUrl('/api/literature/featured')),
+        fetch(getApiUrl('/api/literature/popular')),
+        fetch(getApiUrl('/api/literature/new-releases?limit=6')),
+        fetch(getApiUrl('/api/literature')),
+        fetch(getApiUrl('/api/literature/categories')),
+        fetch(getApiUrl('/api/art-craft?limit=6')),
       ]);
 
       if (!featRes.ok || !popRes.ok || !newRes.ok || !allRes.ok || !catRes.ok) {
+        // If first attempt failed, auto-retry once after 400ms before showing error
+        if (retryCount < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 400));
+          return fetchCatalogData(retryCount + 1);
+        }
         throw new Error('Failed to load literary catalog resources.');
       }
 
@@ -74,15 +97,42 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         craftRes.ok ? craftRes.json() : Promise.resolve({ items: [] }),
       ]);
 
-      setFeatured(featData.featured || null);
-      setPopular(popData.popular || []);
-      setNewReleases(newData.newReleases || []);
-      setAllLiteratures(allData.literatures || []);
-      setCategories(catData.categories || []);
-      setArtCrafts(craftData.items || craftData.artCrafts || (Array.isArray(craftData) ? craftData : []));
+      const loadedFeatured = featData.featured || null;
+      const loadedPopular = popData.popular || [];
+      const loadedNewReleases = newData.newReleases || [];
+      const loadedAll = allData.literatures || [];
+      const loadedCategories = catData.categories || [];
+      const loadedArtCrafts = craftData.items || craftData.artCrafts || (Array.isArray(craftData) ? craftData : []);
+
+      setFeatured(loadedFeatured);
+      setPopular(loadedPopular);
+      setNewReleases(loadedNewReleases);
+      setAllLiteratures(loadedAll);
+      setCategories(loadedCategories);
+      setArtCrafts(loadedArtCrafts);
+
+      // Save to localStorage cache so opening the page never displays a cold-start blank error
+      try {
+        localStorage.setItem(
+          CATALOG_CACHE_KEY,
+          JSON.stringify({
+            featured: loadedFeatured,
+            popular: loadedPopular,
+            newReleases: loadedNewReleases,
+            allLiteratures: loadedAll,
+            categories: loadedCategories,
+            artCrafts: loadedArtCrafts,
+          })
+        );
+      } catch {
+        // Ignore quota/private mode cache errors
+      }
     } catch (err: any) {
       console.error('Catalog fetch error:', err);
-      setError(err.message || 'Unable to connect to the literary repository.');
+      // If we have cached content already, do not show error screen
+      if (allLiteratures.length === 0 && !featured) {
+        setError(err.message || 'Unable to connect to the literary repository.');
+      }
     } finally {
       setLoading(false);
     }
@@ -117,7 +167,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           <p className="error-msg">{error}</p>
           <button
             className="btn btn-secondary"
-            onClick={fetchCatalogData}
+            onClick={() => fetchCatalogData(0)}
             id="btn-retry-catalog"
           >
             Attempt Re-connection
