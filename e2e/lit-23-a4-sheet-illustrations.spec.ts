@@ -86,6 +86,18 @@ test.describe('Sprint - Literature Page A4 Size Sheet and Embedded Illustrations
       await expect(a4PageSheet).toBeVisible();
       const pageIndicator = page.locator('#reader-page-indicator');
       await expect(pageIndicator).toContainText(/Page 2/i);
+
+      // Verify Page 2 also has an embedded illustration
+      const page2Illustration = page.locator('[data-testid="literature-illustration"]').first();
+      await expect(page2Illustration).toBeVisible();
+      const page2Img = page2Illustration.locator('img');
+      await expect(page2Img).toBeVisible();
+      const page2ImgSrc = await page2Img.getAttribute('src');
+      expect(page2ImgSrc).toBeTruthy();
+
+      // Verify Page 2 has filled text
+      const page2Body = page.locator('#reader-body-paragraphs p');
+      expect(await page2Body.count()).toBeGreaterThan(0);
     }
 
     // 9. Switch to Full Literature View and verify A4 sheets there as well
