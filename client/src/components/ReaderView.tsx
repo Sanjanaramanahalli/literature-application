@@ -82,6 +82,11 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
 
   // Share notification state
   const [copiedShare, setCopiedShare] = useState<boolean>(false);
+  const [coverImageFailed, setCoverImageFailed] = useState<boolean>(false);
+
+  useEffect(() => {
+    setCoverImageFailed(false);
+  }, [literature?.id, literature?.coverImage]);
 
   // Dedicated Cover Page & Pagination States
   // 'cover' = initial view showing Cover Page first
@@ -809,7 +814,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       {viewingMode === 'cover' && (
         <section className="reader-cover-page-card" id="reader-cover-page" data-testid="reader-cover-page">
           <div className="cover-page-inner">
-            {literature.coverImage ? (
+            {literature.coverImage && !coverImageFailed ? (
               <div className="cover-page-artwork-container">
                 <div className="book-3d-wrapper">
                   <div className="book-spine-shadow" />
@@ -825,9 +830,8 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                       alt={`Cover artwork for ${literature.title}`}
                       className="cover-page-main-img"
                       id="reader-cover-image"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=85';
+                      onError={() => {
+                        setCoverImageFailed(true);
                       }}
                     />
                     <div className="book-spine-ridge" />
@@ -845,16 +849,19 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                    literature.language === 'Marathi' ? 'मराठी साहित्य संग्रह • Athenæum Edition' :
                    literature.language === 'Gujarati' ? 'ગુજરાતી સાહિત્ય વારસો • Athenæum Edition' :
                    literature.language === 'Punjabi' ? 'ਪੰਜਾਬੀ ਸਾਹਿਤ ਸੰਗ੍ਰਹਿ • Athenæum Edition' :
-                   literature.language === 'Odia' ? 'ଓଡ଼ିଆ ସାହିତ୍ୟ ସମ୍ଭାର • Athenæum Edition' :
+                   literature.language === 'Odia' ? 'ଓଡ଼ିଆ ସಾହିତ୍ୟ ସମ୍ଭାର • Athenæum Edition' :
                    literature.language === 'Assamese' ? 'অসমীয়া সাহিত্য সম্ভাৰ • Athenæum Edition' :
                    literature.language === 'Konkani' ? 'कोंकणी साहित्य संग्रह • Athenæum Edition' :
                    `Athenæum Classical ${literature.language || 'Literature'} Edition`}
                 </div>
               </div>
             ) : (
-              <div className="cover-page-placeholder-artwork">
+              <div className="cover-page-placeholder-artwork" data-testid="reader-cover-placeholder">
                 <BookOpen size={64} className="cover-placeholder-icon" />
                 <span>Canonical Manuscript</span>
+                <span style={{ fontSize: '0.85rem', opacity: 0.8, marginTop: '4px' }}>
+                  {literature.title}
+                </span>
               </div>
             )}
 

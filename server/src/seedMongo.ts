@@ -113,7 +113,7 @@ export async function seedMongoDatabase() {
       publicationDate: new Date('1603-01-01'),
       creatorId: shakespeare.id,
       categoryId: catDrama.id,
-      coverImage: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=85',
+      coverImage: '/covers/hamlet.jpg',
     },
   });
 
@@ -130,7 +130,7 @@ export async function seedMongoDatabase() {
       publicationDate: new Date('1936-01-01'),
       creatorId: premchand.id,
       categoryId: catClassics.id,
-      coverImage: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=85',
+      coverImage: '/covers/hindi-godan.jpg',
     },
   });
 
@@ -147,7 +147,7 @@ export async function seedMongoDatabase() {
       publicationDate: new Date('1967-01-01'),
       creatorId: kuvempu.id,
       categoryId: catClassics.id,
-      coverImage: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=85',
+      coverImage: '/covers/kannada-malegalalli.jpg',
     },
   });
 

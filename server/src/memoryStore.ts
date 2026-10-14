@@ -159,7 +159,7 @@ export async function seedMemoryStore() {
     publicationDate: new Date('1603-01-01'),
     creatorId: shakespeare.id,
     categoryId: catDrama.id,
-    coverImage: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=85',
+    coverImage: '/covers/hamlet.jpg',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -177,7 +177,7 @@ export async function seedMemoryStore() {
     publicationDate: new Date('1936-01-01'),
     creatorId: premchand.id,
     categoryId: catClassics.id,
-    coverImage: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=85',
+    coverImage: '/covers/hindi-godan.jpg',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -195,7 +195,7 @@ export async function seedMemoryStore() {
     publicationDate: new Date('1967-01-01'),
     creatorId: kuvempu.id,
     categoryId: catClassics.id,
-    coverImage: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=85',
+    coverImage: '/covers/kannada-malegalalli.jpg',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -213,7 +213,7 @@ export async function seedMemoryStore() {
     publicationDate: new Date('1949-01-01'),
     creatorId: kuvempu.id,
     categoryId: catPoetry.id,
-    coverImage: 'https://images.unsplash.com/photo-1532012164546-f432f2e3edd3?w=600&q=85',
+    coverImage: '/covers/kannada-ramayana-darshanam.jpg',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -231,7 +231,7 @@ export async function seedMemoryStore() {
     publicationDate: new Date('1964-01-01'),
     creatorId: kuvempu.id,
     categoryId: catPoetry.id,
-    coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600&q=85',
+    coverImage: '/covers/kannada-nakutanti.jpg',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -249,7 +249,7 @@ export async function seedMemoryStore() {
     publicationDate: new Date('1965-01-01'),
     creatorId: kuvempu.id,
     categoryId: catClassics.id,
-    coverImage: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600&q=85',
+    coverImage: '/covers/kannada-samskara.jpg',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -267,7 +267,7 @@ export async function seedMemoryStore() {
     publicationDate: new Date('1947-01-01'),
     creatorId: kuvempu.id,
     categoryId: catDrama.id,
-    coverImage: 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?w=600&q=85',
+    coverImage: '/covers/kannada-natakagalu.jpg',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -285,7 +285,7 @@ export async function seedMemoryStore() {
     publicationDate: new Date('1930-01-01'),
     creatorId: kuvempu.id,
     categoryId: catPoetry.id,
-    coverImage: 'https://images.unsplash.com/photo-1519791883288-dc8bd696e667?w=600&q=85',
+    coverImage: '/covers/kannada-kavya.jpg',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -303,7 +303,7 @@ export async function seedMemoryStore() {
     publicationDate: new Date('1936-01-01'),
     creatorId: premchand.id,
     categoryId: catPoetry.id,
-    coverImage: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=600&q=85',
+    coverImage: '/covers/hindi-kamayani.jpg',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -321,7 +321,7 @@ export async function seedMemoryStore() {
     publicationDate: new Date('1935-01-01'),
     creatorId: premchand.id,
     categoryId: catPhilosophy.id,
-    coverImage: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=600&q=85',
+    coverImage: '/covers/hindi-madhushala.jpg',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -339,7 +339,7 @@ export async function seedMemoryStore() {
     publicationDate: new Date('1952-01-01'),
     creatorId: premchand.id,
     categoryId: catPoetry.id,
-    coverImage: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=600&q=85',
+    coverImage: '/covers/hindi-rashmirathi.jpg',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -357,7 +357,7 @@ export async function seedMemoryStore() {
     publicationDate: new Date('1931-01-01'),
     creatorId: premchand.id,
     categoryId: catClassics.id,
-    coverImage: 'https://images.unsplash.com/photo-1476275466078-4007374efbbe?w=600&q=85',
+    coverImage: '/covers/hindi-gaban.jpg',
     createdAt: new Date(),
     updatedAt: new Date(),
   };

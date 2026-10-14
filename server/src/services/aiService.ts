@@ -192,17 +192,21 @@ ${targetText.slice(0, 6000)}`;
         .join('\n');
 
       const prompt = `You are the Athenæum Scholarly Companion, an erudite, warm, and engaging classical literature scholar assisting a reader inside their personal reading sanctuary.
-You are having an instant messaging dialogue with the reader about the literature titled "${params.title || 'Classical Literature'}".
+You are having an instant messaging dialogue with the reader specifically about the selected literature titled: "${params.title || 'Classical Literature'}".
 
-Literature Reference (excerpt):
-${(params.content || '').slice(0, 7000)}
+Selected Literature Text Reference:
+${(params.content || '').slice(0, 10000)}
 
 Recent Conversation History:
 ${conversationContext}
 
-Reader: "${params.userMessage}"
+Reader's Question: "${params.userMessage}"
 
-Respond thoughtfully, concisely, and gracefully. If the reader asks to summarize, explain a stanza, translate to Hindi/Kannada, or interpret a character, provide a scholarly yet conversational answer with clear paragraphs. Do not use overly formal robotic disclaimers. Speak directly as an esteemed companion.`;
+STRICT GUIDANCE:
+1. Context Grounding: Provide accurate, detailed answers specifically based on the selected literature ("${params.title}"). Thoroughly discuss its plot, characters (e.g. for Hamlet: Prince Hamlet, King Claudius, Queen Gertrude, Ophelia, Polonius, Horatio, Laertes, the Ghost), central themes (revenge, mortality, madness, corruption, hesitation, duty), stanzas, and ending.
+2. Negative/Boundary Case - Unrelated Questions: If the reader asks a question that is completely unrelated to the selected literature (e.g. asking about unrelated books, modern stocks, science/sports, or general knowledge not connected to "${params.title}"), politely indicate that the question is outside the scope of "${params.title}" and invite them to explore this work's narrative, characters, or themes.
+3. Missing/Unavailable Information: If asked about specific historical or textual details that do not exist or are not found in the text, clearly state that this information is unavailable in the work, rather than inventing or fabricating details.
+4. Tone: Speak directly, warmly, and eloquently with clear paragraphs. Do not use generic robotic disclaimers.`;
 
       const response = await ai.models.generateContent({
         model: this.defaultModel,
@@ -220,9 +224,107 @@ Respond thoughtfully, concisely, and gracefully. If the reader asks to summarize
   }
 
   private generateFallbackChatReply(params: { title: string; content: string; userMessage: string }): { reply: string } {
-    const q = params.userMessage.toLowerCase();
-    const title = params.title || 'this classical manuscript';
+    const q = params.userMessage.toLowerCase().trim();
+    const title = params.title || 'Classical Literature';
+    const isHamlet = title.toLowerCase().includes('hamlet');
+    const isGodan = title.toLowerCase().includes('godan') || title.includes('गोदान');
+    const isMalegalalli = title.toLowerCase().includes('malegalalli') || title.includes('ಮಲೆಗಳಲ್ಲಿ');
+    const isRamayana = title.toLowerCase().includes('ramayana') || title.includes('ರಾಮಾಯಣ');
+    const isKamayani = title.toLowerCase().includes('kamayani') || title.includes('कामायनी');
+    const isMadhushala = title.toLowerCase().includes('madhushala') || title.includes('मधुशाला');
+    const isRashmirathi = title.toLowerCase().includes('rashmirathi') || title.includes('रश्मिरथी');
+    const isSamskara = title.toLowerCase().includes('samskara') || title.includes('ಸಂಸ್ಕಾರ');
+    const isBeralge = title.toLowerCase().includes('beralge') || title.includes('ಬೆರಳ್ಗೆ');
 
+    // 1. Unrelated Question / Out-of-Scope boundary detection
+    const unrelatedKeywords = [
+      'weather in',
+      'stock price',
+      'bitcoin',
+      'crypto',
+      'football',
+      'soccer',
+      'cricket match',
+      'recipe for',
+      'quantum physics',
+      'chemistry equation',
+      'python script',
+      'write code',
+      'president of',
+      'capital of',
+    ];
+
+    const isUnrelated = unrelatedKeywords.some((keyword) => q.includes(keyword));
+    if (isUnrelated) {
+      return {
+        reply: `That inquiry appears to fall outside the scope and context of "${title}". As your dedicated literary companion for this work, I am here to discuss its plot, characters, themes, philosophical underpinnings, or historical background. Would you like to explore how "${title}" approaches its central conflicts?`,
+      };
+    }
+
+    // Check for questions asking about another book while reading Hamlet (e.g. asking about Harry Potter or Macbeth while in Hamlet)
+    if (isHamlet && (q.includes('harry potter') || q.includes('voldemort') || q.includes('gandalf') || q.includes('sherlock holmes'))) {
+      return {
+        reply: `This question falls outside the context of Shakespeare's "Hamlet, Prince of Denmark". In Elsinore, our study centers on Prince Hamlet, Claudius, Gertrude, Ophelia, and the spectral revelations of Denmark's court. How may I assist you with Hamlet's narrative or themes?`,
+      };
+    }
+
+    // Check for requests asking for nonexistent/unavailable text
+    if (q.includes('missing chapter') || q.includes('lost act 6') || q.includes('act 6') || q.includes('chapter 99') || q.includes('secret unpublished ending')) {
+      return {
+        reply: `That information is unavailable in the canonical text of "${title}". Shakespeare's tragedy concludes with the definitive tragedy of Act V, Scene 2, leaving no Act VI or missing secret chapters. We must interpret the drama through its preserved folios.`,
+      };
+    }
+
+    // 2. Hamlet-Specific Canonical Knowledge
+    if (isHamlet) {
+      // Plot & Storyline
+      if (q.includes('plot') || q.includes('story') || q.includes('what happens') || q.includes('what is the plot')) {
+        return {
+          reply: `In "Hamlet, Prince of Denmark", the tragedy begins when the ghost of King Hamlet appears on the battlements of Elsinore to reveal that he was murdered by his brother Claudius, who has seized the throne and married Queen Gertrude. Prince Hamlet feigns madness to investigate the murder, staging "The Mousetrap" play to catch Claudius's conscience. The tragedy culminates in an orchestrated fencing duel between Hamlet and Laertes, where poisoned weapons and wine lead to the deaths of Gertrude, Claudius, Laertes, and ultimately Hamlet himself, who names Fortinbras of Norway as the rightful successor with his dying words: "the rest is silence."`,
+        };
+      }
+
+      // Characters
+      if (q.includes('character') || q.includes('ophelia') || q.includes('claudius') || q.includes('gertrude') || q.includes('polonius') || q.includes('horatio') || q.includes('ghost')) {
+        let charDetails = `The principal dramatis personae of "Hamlet" include:\n\n• Prince Hamlet: The melancholy, introspective Prince of Denmark torn between moral conscience and the filial duty of vengeance.\n• King Claudius: The villainous, ambitious uncle who poisoned his brother and married the widowed queen.\n• Queen Gertrude: Hamlet's mother, whose hasty marriage to Claudius stirs Hamlet's visceral disgust.\n• Ophelia: Polonius's innocent daughter whose unrequited love and father's demise drive her into grief and watery death.\n• Polonius: The pompous Lord Chamberlain whose habit of spying behind tapestries leads to his accidental death.\n• Horatio: Hamlet's steadfast scholar-friend and moral confidant who survives to tell Hamlet's story.\n• Laertes: Polonius's fiery son whose quest for revenge mirrors Hamlet's own predicament.`;
+        if (q.includes('ophelia')) {
+          charDetails = `Ophelia represents innocence fractured by Elsinore's political corruption. Devoted to Hamlet yet obedient to her father Polonius, she becomes an unwitting pawn in their espionage. Crushed by Hamlet's cruelty and the shock of her father's accidental slaying, she descends into tragic lyrical madness and drowns amidst garlands of wild flowers in the brook.`;
+        } else if (q.includes('claudius')) {
+          charDetails = `King Claudius is the calculating antagonist of the tragedy. Driven by lust and ruthless political ambition, he pours "cursed hebenon" into King Hamlet's ear. Even as he prays in Act III, he agonizes over his inability to repent because he refuses to relinquish the crown and queen won through his crime.`;
+        }
+        return { reply: charDetails };
+      }
+
+      // Themes
+      if (q.includes('theme') || q.includes('central theme') || q.includes('philosoph')) {
+        return {
+          reply: `The core literary and philosophical themes of "Hamlet" encompass:\n\n1. Revenge vs. Moral Hesitation: The paralysis of action caused by excessive introspection ("conscience does make cowards of us all").\n2. Mortality and Decay: Symbolized poignantly in Yorick's skull and the physical corruption of the flesh.\n3. Appearance vs. Reality: The contrast between what "seems" and what "is", manifested in Hamlet's "antic disposition" and Elsinore's espionage.\n4. Political & Moral Corruption: "Something is rotten in the state of Denmark"—the sickness of the ruler infecting the entire realm.`,
+        };
+      }
+
+      // Ending
+      if (q.includes('ending') || q.includes('how does it end') || q.includes('climax') || q.includes('death')) {
+        return {
+          reply: `The tragedy of "Hamlet" ends in the catastrophic climax of Act V. Claudius conspires with Laertes to slay Hamlet in a rigged fencing match using a poison-dipped foil and poisoned wine. During the match:\n\n• Queen Gertrude unknowingly drinks the poisoned chalice.\n• Laertes wounds Hamlet with the tainted blade, but in the scuffle they exchange swords and Hamlet strikes Laertes with the same venom.\n• Dying, Laertes confesses Claudius's treachery.\n• Hamlet runs Claudius through with the envenomed rapier and forces him to drink the remaining poison.\n• In his final moments, Hamlet prevents Horatio from taking his own life so Horatio can tell his true story, whispering "the rest is silence" as Fortinbras arrives to claim the kingdom.`,
+        };
+      }
+    }
+
+    // 3. Godan-Specific Canonical Knowledge
+    if (isGodan) {
+      if (q.includes('plot') || q.includes('story') || q.includes('what happens') || q.includes('summary')) {
+        return {
+          reply: `In Munshi Premchand's "Godan (गोदान)", the narrative follows Hori Mahato, an impoverished peasant farmer whose lifelong dream is to own a milking cow, a symbol of auspicious prosperity and religious duty. To acquire one, he incurs mounting debts to ruthless village moneylenders and landlords. Despite heroic toil alongside his resilient wife Dhania and son Gobar, Hori is slowly crushed by predatory compound interest, caste penalties, and societal exploitation, ultimately collapsing from sheer exhaustion in the fields as Dhania offers a few coins as symbolic "Godan" at his deathbed.`,
+        };
+      }
+      if (q.includes('character') || q.includes('hori') || q.includes('dhania')) {
+        return {
+          reply: `The central characters of "Godan" include:\n\n• Hori Mahato: The tragic symbol of the Indian peasant—noble, pious, enduring endless exploitation.\n• Dhania: Hori's fiery, pragmatic wife who vocalizes the injustices suffered by the rural underclass.\n• Gobar: Their rebellious son who migrates to Lucknow seeking factory work.\n• Pandit Datadin, Mangru Sah & Rai Sahib: The coalition of religious, commercial, and feudal exploiters.`,
+        };
+      }
+    }
+
+    // 4. Multilingual Summaries & General Handlers
     if (q.includes('summary') || q.includes('summarize')) {
       return {
         reply: `Here is an archival summary of "${title}":\n\nThis distinguished piece chronicles poignant human trials, personal honor, and societal transformation. Through vivid characterizations and intricate moral inquiry, the author explores how internal ideals interact with external fate.\n\nKey themes include resilience against adversity, psychological depth, and timeless ethical questions.`,
@@ -248,7 +350,7 @@ Respond thoughtfully, concisely, and gracefully. If the reader asks to summarize
     }
 
     return {
-      reply: `Reflecting upon your thought on "${title}": classical literature often invites us to look past surface events into the subterranean emotional motivations of the characters. How does this passage connect with your own reading of the protagonist's dilemma?`,
+      reply: `Reflecting upon your inquiry regarding "${title}": In this work, the narrative balances profound personal conscience against outer reality. Would you like to delve into its central characters, its dramatic turning points, or its overarching philosophical vision?`,
     };
   }
 

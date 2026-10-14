@@ -128,11 +128,16 @@ export const LiteratureCard: React.FC<LiteratureCardProps> = ({
       })
     : null;
 
-  // Fallback cover if image fails or not provided
-  let coverSrc = item.coverImage || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80';
+  let coverSrc = item.coverImage || '';
   if (coverSrc.startsWith('/uploads')) {
     coverSrc = `${coverSrc}`;
   }
+
+  const [imageFailed, setImageFailed] = React.useState<boolean>(!item.coverImage);
+
+  React.useEffect(() => {
+    setImageFailed(!item.coverImage);
+  }, [item.coverImage]);
 
   return (
     <article
@@ -141,18 +146,24 @@ export const LiteratureCard: React.FC<LiteratureCardProps> = ({
       id={`literature-card-${item.id}`}
       onClick={() => onSelect && onSelect(item)}
     >
-      <div className="card-cover-wrapper">
-        <img
-          src={coverSrc}
-          alt={`Cover for ${item.title}`}
-          className="card-cover-img"
-          loading="lazy"
-          onError={(e) => {
-            // graceful fallback to placeholder book cover
-            (e.target as HTMLImageElement).src =
-              'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80';
-          }}
-        />
+      <div className="card-cover-wrapper" data-testid="card-cover-wrapper">
+        {!imageFailed && coverSrc ? (
+          <img
+            src={coverSrc}
+            alt={`Cover for ${item.title}`}
+            className="card-cover-img"
+            loading="lazy"
+            onError={() => {
+              setImageFailed(true);
+            }}
+          />
+        ) : (
+          <div className="card-cover-placeholder" data-testid="card-cover-placeholder">
+            <span className="placeholder-book-icon">📖</span>
+            <span className="placeholder-text">{item.title}</span>
+            <span className="placeholder-subtext">{item.language || 'Archival Edition'}</span>
+          </div>
+        )}
         {badge && (
           <span className={`card-ribbon ribbon-${badgeType}`}>
             {badge}

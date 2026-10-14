@@ -183,7 +183,7 @@ export const WhatsAppAiAssistant: React.FC<WhatsAppAiAssistantProps> = ({
       {isOpen && (
         <div className="wa-chat-window" id="wa-chat-window">
           {/* Header Bar */}
-          <div className="wa-header">
+          <div className="wa-header" data-testid="wa-chat-header">
             <div className="wa-header-left">
               <div className="wa-avatar">
                 <Sparkles size={20} />
@@ -191,8 +191,8 @@ export const WhatsAppAiAssistant: React.FC<WhatsAppAiAssistantProps> = ({
               </div>
               <div className="wa-title-area">
                 <h4 className="wa-name">Scholarly Companion</h4>
-                <span className="wa-status">
-                  {loading ? 'typing...' : 'online • Google Gemini 2.5'}
+                <span className="wa-status" data-testid="wa-chat-status">
+                  {loading ? 'typing...' : `active • ${literatureTitle || 'Literature'}`}
                 </span>
               </div>
             </div>
