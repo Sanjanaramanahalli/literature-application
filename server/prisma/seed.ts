@@ -194,10 +194,10 @@ async function main() {
     tagNames.map((name) => prisma.tag.create({ data: { name } }))
   );
 
-  // Helper to generate rich, substantial 15-page canonical manuscript texts filling A4 pages
+  // Helper to generate rich, substantial 30-page canonical manuscript texts filling A4 pages
   const create15PageContent = (headerTitle: string, baseText: string, extraPassages: string[] = []): string => {
     const pages: string[] = [];
-    for (let p = 1; p <= 15; p++) {
+    for (let p = 1; p <= 30; p++) {
       const extra = extraPassages[(p - 1) % (extraPassages.length || 1)] || '';
       pages.push(
         `[ Folio ${p} — ${headerTitle} ]\n\n${baseText}\n\n${extra}\n\n` +

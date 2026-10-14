@@ -97,7 +97,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isFlipping, setIsFlipping] = useState<boolean>(false);
   const [flipDirection, setFlipDirection] = useState<'next' | 'prev'>('next');
-  const [wordsPerPage, setWordsPerPage] = useState<number>(350);
+  const [wordsPerPage, setWordsPerPage] = useState<number>(140);
   const [jumpPageInput, setJumpPageInput] = useState<string>('');
   const [showReaderSettings, setShowReaderSettings] = useState<boolean>(false);
   const readerSettingsRef = React.useRef<HTMLDivElement>(null);
@@ -487,8 +487,8 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       })
     : null;
 
-  // Split content into full, substantial A4 pages preventing sparse 3-4 line pages
-  const getPages = (text: string, chunkSize: number = 350): string[] => {
+  // Split content into full, substantial A4 pages preventing sparse 3-4 line pages while ensuring generous page volume
+  const getPages = (text: string, chunkSize: number = 140): string[] => {
     if (!text || !text.trim()) return [''];
     const trimmed = text.trim();
 
@@ -504,38 +504,18 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
         .map((s) => s.trim())
         .filter((s) => s.length > 0);
 
-      // Merge sparse fragments so each A4 sheet is properly filled (at least 200 words unless at end of chapter)
+      // Preserve genuine chapter / folio divisions; if a section is very lengthy, subdivide it into readable A4 pages
       const filledPages: string[] = [];
-      let currentBuffer: string[] = [];
-      let currentWordCount = 0;
 
       for (const part of parts) {
         const words = part.split(/\s+/).filter(Boolean);
-        // If a single part is excessively large (> chunkSize * 1.4), split it
-        if (words.length > chunkSize * 1.3) {
-          if (currentBuffer.length > 0) {
-            filledPages.push(currentBuffer.join('\n\n'));
-            currentBuffer = [];
-            currentWordCount = 0;
-          }
+        if (words.length > chunkSize * 1.5) {
           for (let i = 0; i < words.length; i += chunkSize) {
             filledPages.push(words.slice(i, i + chunkSize).join(' '));
           }
         } else {
-          // If adding this part exceeds chunkSize and we already have sufficient content, commit buffer
-          if (currentWordCount >= Math.min(chunkSize * 0.75, 250)) {
-            filledPages.push(currentBuffer.join('\n\n'));
-            currentBuffer = [part];
-            currentWordCount = words.length;
-          } else {
-            currentBuffer.push(part);
-            currentWordCount += words.length;
-          }
+          filledPages.push(part);
         }
-      }
-
-      if (currentBuffer.length > 0) {
-        filledPages.push(currentBuffer.join('\n\n'));
       }
 
       return filledPages.length > 0 ? filledPages : parts;
@@ -550,7 +530,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
 
     for (const paragraph of paragraphs) {
       const pWords = paragraph.split(/\s+/).filter(Boolean).length;
-      if (wordAccumulator + pWords > chunkSize && wordAccumulator >= Math.min(chunkSize * 0.65, 200)) {
+      if (wordAccumulator + pWords > chunkSize && wordAccumulator >= Math.min(chunkSize * 0.7, 90)) {
         pagesArr.push(pageBuffer.join('\n\n'));
         pageBuffer = [paragraph];
         wordAccumulator = pWords;
@@ -561,8 +541,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
     }
 
     if (pageBuffer.length > 0) {
-      // If the last page has very few lines and previous page exists, merge if not overwhelming
-      if (wordAccumulator < 100 && pagesArr.length > 0) {
+      if (wordAccumulator < 50 && pagesArr.length > 0) {
         const prev = pagesArr.pop()!;
         pagesArr.push(`${prev}\n\n${pageBuffer.join('\n\n')}`);
       } else {
@@ -1206,35 +1185,35 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
                   </button>
                 </form>
 
-                {/* Page Density Selector: Full A4 Folio Density */}
+                {/* Page Density Selector: Multi-page volume */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>A4 Page Density:</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Page Volume:</span>
                   <button
                     type="button"
-                    className={`btn ${wordsPerPage === 350 ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                    className={`btn ${wordsPerPage === 80 ? 'btn-primary' : 'btn-secondary'} btn-sm`}
                     style={{ padding: '2px 7px', fontSize: '0.75rem' }}
-                    onClick={() => { setWordsPerPage(350); setCurrentPage(1); }}
-                    title="Full A4 Sheet: ~300-400 words filling the entire page comfortably"
+                    onClick={() => { setWordsPerPage(80); setCurrentPage(1); }}
+                    title="Expanded Folios: 40-50+ Pages"
                   >
-                    Full A4 (Standard)
+                    40-50+ Pages
                   </button>
                   <button
                     type="button"
-                    className={`btn ${wordsPerPage === 500 ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                    className={`btn ${wordsPerPage === 140 ? 'btn-primary' : 'btn-secondary'} btn-sm`}
                     style={{ padding: '2px 7px', fontSize: '0.75rem' }}
-                    onClick={() => { setWordsPerPage(500); setCurrentPage(1); }}
-                    title="Dense Folio: ~450-550 words for dense scholarly reading"
+                    onClick={() => { setWordsPerPage(140); setCurrentPage(1); }}
+                    title="Classic A4 Folios: 20-30 Pages"
                   >
-                    Dense A4
+                    20-30 Pages
                   </button>
                   <button
                     type="button"
-                    className={`btn ${wordsPerPage === 220 ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                    className={`btn ${wordsPerPage === 260 ? 'btn-primary' : 'btn-secondary'} btn-sm`}
                     style={{ padding: '2px 7px', fontSize: '0.75rem' }}
-                    onClick={() => { setWordsPerPage(220); setCurrentPage(1); }}
-                    title="Illustrated Folio: ~200-250 words with large illustrated plates"
+                    onClick={() => { setWordsPerPage(260); setCurrentPage(1); }}
+                    title="Dense Chapters: 12-18 Pages"
                   >
-                    Illustrated A4
+                    Standard Folios
                   </button>
                 </div>
               </div>
