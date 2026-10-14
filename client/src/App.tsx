@@ -46,6 +46,12 @@ export const App: React.FC = () => {
 
   const handleAuthSuccess = (authenticatedUser: any, _token: string) => {
     setUser(authenticatedUser);
+    // Explicitly navigate to appropriate dashboard upon login
+    if (authenticatedUser?.role === 'ADMIN') {
+      setCurrentTab('admin');
+    } else {
+      setCurrentTab('saved');
+    }
   };
 
   const handleLogout = () => {
