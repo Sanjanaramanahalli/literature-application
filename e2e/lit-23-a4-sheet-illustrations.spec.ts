@@ -22,6 +22,18 @@ test.describe('Sprint - Literature Page A4 Size Sheet and Embedded Illustrations
     const coverPage = page.locator('#reader-cover-page');
     await expect(coverPage).toBeVisible({ timeout: 8000 });
 
+    // Verify Cover Page displays 100-200 pages count
+    const totalPagesPill = page.locator('#cover-page-total-pages');
+    await expect(totalPagesPill).toBeVisible();
+    const pillText = await totalPagesPill.textContent();
+    const pageNumMatch = pillText?.match(/(\d+)\s*Pages/i);
+    expect(pageNumMatch).toBeTruthy();
+    if (pageNumMatch) {
+      const pageNum = parseInt(pageNumMatch[1], 10);
+      expect(pageNum).toBeGreaterThanOrEqual(100);
+      expect(pageNum).toBeLessThanOrEqual(200);
+    }
+
     // 4. Click 'Begin Reading Manuscript (Page by Page)'
     const openManuscriptBtn = page.locator('#btn-open-manuscript');
     await expect(openManuscriptBtn).toBeVisible();

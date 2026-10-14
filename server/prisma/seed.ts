@@ -194,17 +194,25 @@ async function main() {
     tagNames.map((name) => prisma.tag.create({ data: { name } }))
   );
 
-  // Helper to generate rich, substantial 30-page canonical manuscript texts filling A4 pages
+  // Helper to generate rich, substantial 120-page canonical manuscript texts filling A4 pages
   const create15PageContent = (headerTitle: string, baseText: string, extraPassages: string[] = []): string => {
     const pages: string[] = [];
-    for (let p = 1; p <= 30; p++) {
+    const reflections = [
+      "The contemplation of this chapter reveals the deeper currents of the human spirit. In the silence of the archival chamber, each word resonates across centuries of thought, inviting the reader to reflect upon the enduring truths of life, art, and destiny.",
+      "As the narrative advances across this folio, the psychological tapestry deepens. The classical characters grapple with moral imperatives, unearthing universal struggles that echo through world literature.",
+      "Here the text captures the delicate cadence of introspection. Philosophy and human vulnerability merge seamlessly upon the parchment, presenting a timeless tableau of sorrow, longing, and triumph.",
+      "In this passage, the author's mastery of atmosphere becomes vividly apparent. Every phrase carries subtle symbolic weight, illuminating the hidden motivations that drive mortal existence.",
+      "The historical resonance of this folio stands as a testament to the preservation of classical letters. Across cultural frontiers, these sentiments endure unimpaired by the passage of ages.",
+      "Examining the cadence of this archival excerpt reveals how classical rhetoric mirrors the rhythms of human heartbeat and conversational candor.",
+      "Within these lines lie the ethical crossroads of the narrative. The tension between duty and personal desire unfolds with dramatic precision.",
+      "A serene clarity pervades this section of the work. The prose achieves that rare balance between aesthetic grace and rigorous intellectual inquiry."
+    ];
+
+    for (let p = 1; p <= 120; p++) {
       const extra = extraPassages[(p - 1) % (extraPassages.length || 1)] || '';
+      const reflection = reflections[(p - 1) % reflections.length];
       pages.push(
-        `[ Folio ${p} — ${headerTitle} ]\n\n${baseText}\n\n${extra}\n\n` +
-        `The contemplation of this chapter reveals the deeper currents of the human spirit. ` +
-        `In the silence of the archival chamber, each word resonates across centuries of thought, ` +
-        `inviting the reader to reflect upon the enduring truths of life, art, and destiny.\n\n` +
-        `[End of Folio ${p} archival entry]`
+        `[ Folio ${p} of 120 — ${headerTitle} ]\n\n${baseText}\n\n${extra}\n\n${reflection}\n\n[End of Folio ${p} archival entry]`
       );
     }
     return pages.join('\n\n---page---\n\n');
