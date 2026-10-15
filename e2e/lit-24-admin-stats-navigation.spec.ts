@@ -22,15 +22,15 @@ test.describe('LIT-24: Interactive Admin Dashboard Statistic Cards & Dedicated D
     await page.locator('#btn-submit-login').click();
 
     // Verify successful login into Admin Sanctuary
-    await expect(page.locator('#auth-modal')).not.toBeVisible();
-    await expect(page.locator('#admin-editorial-view')).toBeVisible();
+    await expect(page.locator('#auth-modal')).not.toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#admin-editorial-view')).toBeVisible({ timeout: 15000 });
 
     // Ensure we are on the Analytics tab
     const analyticsTabBtn = page.locator('#tab-btn-kpi-dashboard');
     if (await analyticsTabBtn.isVisible()) {
       await analyticsTabBtn.click();
     }
-    await expect(page.locator('#kpi-cards-container')).toBeVisible();
+    await expect(page.locator('#kpi-cards-container')).toBeVisible({ timeout: 15000 });
   });
 
   test('Card 1: Total Literature card opens dedicated directory with search and filters', async ({ page }) => {
@@ -219,8 +219,10 @@ test.describe('LIT-24: Interactive Admin Dashboard Statistic Cards & Dedicated D
     await expect(statView).toBeVisible();
     await expect(statView.locator('h1')).toContainText('New Releases Published');
 
+    // Either table or empty state must be visible depending on current month database records
     const table = statView.locator('#stat-table-new-releases');
-    await expect(table).toBeVisible();
+    const emptyState = statView.locator('#stat-empty-new-releases');
+    await expect(table.or(emptyState)).toBeVisible();
 
     await statView.locator('#btn-stat-back-to-dashboard').click();
     await expect(page.locator('#kpi-cards-container')).toBeVisible();

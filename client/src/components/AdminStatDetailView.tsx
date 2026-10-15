@@ -686,7 +686,7 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
           </button>
         </div>
       ) : filteredData.length === 0 ? (
-        <div className="admin-stat-empty">
+        <div className="admin-stat-empty" id={`stat-empty-${view}`} data-testid={`stat-empty-${view}`}>
           <div className="admin-stat-empty-icon">
             <Search size={28} />
           </div>
