@@ -100,6 +100,7 @@ export const Header: React.FC<HeaderProps> = ({
             className={`nav-link ${currentTab === 'world-literature' ? 'active' : ''}`}
             onClick={() => handleNav('world-literature')}
             id="nav-world-literature"
+            data-testid="nav-explore"
             title="Discover classical literature across supported Indian languages"
           >
             <Globe size={15} style={{ marginRight: '4px' }} />
@@ -176,32 +177,37 @@ export const Header: React.FC<HeaderProps> = ({
                   position: 'relative',
                   background: showNotifications ? 'var(--bg-secondary)' : 'transparent',
                   border: '1px solid var(--border-classic)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '6px 10px',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   color: 'var(--accent-burgundy)',
+                  transition: 'all 0.2s ease',
                 }}
               >
-                <Bell size={18} />
+                <Bell size={16} />
                 {unreadCount > 0 && (
                   <span
                     id="notif-badge-count"
                     style={{
                       position: 'absolute',
-                      top: '-6px',
-                      right: '-6px',
+                      top: '-4px',
+                      right: '-4px',
                       background: 'var(--accent-burgundy)',
                       color: '#ffffff',
-                      fontSize: '0.7rem',
+                      fontSize: '0.65rem',
                       fontWeight: 700,
-                      borderRadius: '10px',
-                      padding: '1px 5px',
-                      minWidth: '16px',
-                      textAlign: 'center',
-                      lineHeight: '14px',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                      borderRadius: '9999px',
+                      padding: '0 4px',
+                      minWidth: '15px',
+                      height: '15px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
                     }}
                   >
                     {unreadCount > 9 ? '9+' : unreadCount}
@@ -300,18 +306,18 @@ export const Header: React.FC<HeaderProps> = ({
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--accent-burgundy)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.72rem' }}>
+                <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'var(--accent-burgundy)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.68rem', flexShrink: 0 }}>
                   {user.name ? user.name[0].toUpperCase() : 'S'}
                 </div>
               )}
               <span className="user-role-tag">{user.role}</span>
-              <span className="user-name">{user.name}</span>
+              <span className="user-name" title={user.name}>{user.name}</span>
               <button
-                className="btn btn-secondary btn-sm"
+                className="btn-header-logout"
                 onClick={onLogout}
                 title="Sign Out"
                 id="btn-logout"
-                style={{ padding: '0.3rem 0.5rem', display: 'flex', alignItems: 'center' }}
+                aria-label="Sign Out"
               >
                 <LogOut size={13} />
               </button>
