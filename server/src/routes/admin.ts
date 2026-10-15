@@ -1069,4 +1069,175 @@ adminRouter.get('/saves', authenticateToken, requireRole('ADMIN'), async (req: A
   }
 });
 
+// Page 10: New Users This Month (Calendar Month)
+adminRouter.get('/new-users', authenticateToken, requireRole('ADMIN'), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { search, role } = req.query;
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const users = await prisma.user.findMany({
+      where: {
+        createdAt: { gte: startOfMonth },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        avatarUrl: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    let enriched = users.map((u: any) => ({
+      ...u,
+      accountStatus: 'Active',
+    }));
+
+    if (role && String(role).trim() && String(role) !== 'ALL') {
+      enriched = enriched.filter((u) => u.role === String(role).trim());
+    }
+
+    if (search && String(search).trim()) {
+      const q = String(search).toLowerCase();
+      enriched = enriched.filter(
+        (u) => u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)
+      );
+    }
+
+    res.json({
+      total: enriched.length,
+      users: enriched,
+      startOfMonth,
+    });
+  } catch (err) {
+    console.error('Admin new users fetch error:', err);
+    res.status(500).json({ error: 'Failed to retrieve new users.' });
+  }
+});
+
+// Page 11: New Releases This Month (Published within current calendar month)
+adminRouter.get('/new-releases', authenticateToken, requireRole('ADMIN'), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { search, language, category } = req.query;
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const literatures = await prisma.literature.findMany({
+      where: {
+        publicationStatus: 'PUBLISHED',
+        publicationDate: { gte: startOfMonth },
+      },
+      include: {
+        creator: true,
+        category: true,
+        ratings: true,
+      },
+      orderBy: { publicationDate: 'desc' },
+    });
+
+    let enriched = literatures.map((item: any) => {
+      const count = item.ratings?.length || 0;
+      const avg = count > 0 ? Number((item.ratings.reduce((acc: number, r: any) => acc + r.value, 0) / count).toFixed(1)) : 0;
+      return {
+        id: item.id,
+        title: item.title,
+        author: item.creator?.name || 'Unknown Author',
+        language: item.language || 'English',
+        category: item.category?.name || 'Classics',
+        publicationStatus: item.publicationStatus,
+        publicationDate: item.publicationDate || item.createdAt,
+        createdAt: item.createdAt,
+        averageRating: avg,
+        ratingsCount: count,
+      };
+    });
+
+    if (language && String(language).trim() && String(language) !== 'ALL') {
+      enriched = enriched.filter((item) => item.language.toLowerCase() === String(language).toLowerCase());
+    }
+
+    if (category && String(category).trim() && String(category) !== 'ALL') {
+      enriched = enriched.filter((item) => item.category.toLowerCase() === String(category).toLowerCase());
+    }
+
+    if (search && String(search).trim()) {
+      const q = String(search).toLowerCase();
+      enriched = enriched.filter(
+        (item) => item.title.toLowerCase().includes(q) || item.author.toLowerCase().includes(q)
+      );
+    }
+
+    res.json({
+      total: enriched.length,
+      releases: enriched,
+      startOfMonth,
+    });
+  } catch (err) {
+    console.error('Admin new releases fetch error:', err);
+    res.status(500).json({ error: 'Failed to retrieve new releases.' });
+  }
+});
+
+// Page 12: Total Art & Craft across 28 Indian States
+adminRouter.get('/artcraft-records', authenticateToken, requireRole('ADMIN'), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { search, state, type } = req.query;
+
+    const crafts = await prisma.artCraft.findMany({
+      orderBy: { state: 'asc' },
+    });
+
+    let list = crafts.map((c: any) => ({
+      id: c.id,
+      name: c.name,
+      localName: c.localName || null,
+      state: c.state,
+      region: c.region || null,
+      district: c.district || null,
+      place: c.place,
+      type: c.type,
+      history: c.history,
+      culturalSignificance: c.culturalSignificance,
+      materials: c.materials,
+      status: c.status || 'PUBLISHED',
+      createdAt: c.createdAt,
+    }));
+
+    if (state && String(state).trim() && String(state) !== 'ALL') {
+      list = list.filter((c) => c.state.toLowerCase() === String(state).toLowerCase());
+    }
+
+    if (type && String(type).trim() && String(type) !== 'ALL') {
+      list = list.filter((c) => c.type.toLowerCase() === String(type).toLowerCase());
+    }
+
+    if (search && String(search).trim()) {
+      const q = String(search).toLowerCase();
+      list = list.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.state.toLowerCase().includes(q) ||
+          (c.district && c.district.toLowerCase().includes(q)) ||
+          c.place.toLowerCase().includes(q) ||
+          c.type.toLowerCase().includes(q)
+      );
+    }
+
+    res.json({
+      total: list.length,
+      crafts: list,
+    });
+  } catch (err) {
+    console.error('Admin art craft records fetch error:', err);
+    res.status(500).json({ error: 'Failed to retrieve art & craft records.' });
+  }
+});
+
+
 

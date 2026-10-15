@@ -15,6 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
+  Sparkles,
+  MapPin,
 } from 'lucide-react';
 import { getApiUrl } from '../config/api';
 import './AdminStatDetailView.css';
@@ -28,7 +30,10 @@ export type StatSubView =
   | 'total-ratings'
   | 'average-rating'
   | 'total-comments'
-  | 'total-saves';
+  | 'total-saves'
+  | 'new-users'
+  | 'new-releases'
+  | 'total-artcraft';
 
 interface AdminStatDetailViewProps {
   view: StatSubView;
@@ -136,6 +141,30 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
           icon: <BookmarkCheck size={24} />,
           endpoint: '/api/admin/saves',
         };
+      case 'new-users':
+        return {
+          title: 'New Readers & Scholars Enrolled This Month',
+          subtitle: 'Scholars registered within the current calendar month cycle.',
+          breadcrumb: 'New Users This Month',
+          icon: <Users size={24} />,
+          endpoint: '/api/admin/new-users',
+        };
+      case 'new-releases':
+        return {
+          title: 'New Releases Published This Month',
+          subtitle: 'Classical literature works published and made live during the current calendar month cycle.',
+          breadcrumb: 'New Releases This Month',
+          icon: <CheckCircle2 size={24} />,
+          endpoint: '/api/admin/new-releases',
+        };
+      case 'total-artcraft':
+        return {
+          title: 'Total Art & Craft Heritage Directory',
+          subtitle: 'Cultural arts, traditional craftsmanship, and heritage records across all 28 Indian States.',
+          breadcrumb: 'Total Art & Craft',
+          icon: <Sparkles size={24} />,
+          endpoint: '/api/admin/artcraft-records',
+        };
     }
   };
 
@@ -172,6 +201,14 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
         setData(json.comments || []);
       } else if (view === 'total-saves') {
         setData(json.saves || []);
+      } else if (view === 'new-users') {
+        setData(json.users || []);
+        setServerMeta({ startOfMonth: json.startOfMonth });
+      } else if (view === 'new-releases') {
+        setData(json.releases || []);
+        setServerMeta({ startOfMonth: json.startOfMonth });
+      } else if (view === 'total-artcraft') {
+        setData(json.crafts || []);
       }
     } catch (err: any) {
       console.error('Error fetching stat page data:', err);
@@ -181,6 +218,10 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
     }
   };
 
+  // State filter for total-artcraft
+  const [selectedState, setSelectedState] = useState('ALL');
+  const [selectedRole, setSelectedRole] = useState('ALL');
+
   useEffect(() => {
     fetchData();
     setCurrentPage(1);
@@ -189,6 +230,8 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
     setSelectedCategory('ALL');
     setSelectedStatus('ALL');
     setSelectedRating('ALL');
+    setSelectedState('ALL');
+    setSelectedRole('ALL');
     setSortBy('default');
   }, [view]);
 
@@ -200,7 +243,7 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       result = result.filter((item) => {
-        if (view.includes('literature') || view === 'average-rating') {
+        if (view.includes('literature') || view === 'average-rating' || view === 'new-releases') {
           return (
             item.title?.toLowerCase().includes(q) ||
             item.creator?.name?.toLowerCase().includes(q) ||
@@ -208,7 +251,7 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
             item.genre?.toLowerCase().includes(q) ||
             item.language?.toLowerCase().includes(q)
           );
-        } else if (view === 'registered-readers') {
+        } else if (view === 'registered-readers' || view === 'new-users') {
           return (
             item.name?.toLowerCase().includes(q) ||
             item.email?.toLowerCase().includes(q)
@@ -231,6 +274,15 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
             item.readerName?.toLowerCase().includes(q) ||
             item.literatureAuthor?.toLowerCase().includes(q)
           );
+        } else if (view === 'total-artcraft') {
+          return (
+            item.name?.toLowerCase().includes(q) ||
+            item.state?.toLowerCase().includes(q) ||
+            item.district?.toLowerCase().includes(q) ||
+            item.place?.toLowerCase().includes(q) ||
+            item.type?.toLowerCase().includes(q) ||
+            item.culturalSignificance?.toLowerCase().includes(q)
+          );
         }
         return true;
       });
@@ -244,12 +296,22 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
       });
     }
 
-    // Category filter
+    // Category / Type filter
     if (selectedCategory !== 'ALL') {
       result = result.filter((item) => {
-        const cat = item.category?.name || item.category || item.literatureCategory;
+        const cat = item.category?.name || item.category || item.literatureCategory || item.type;
         return cat && cat.toLowerCase() === selectedCategory.toLowerCase();
       });
+    }
+
+    // State filter for Art & Craft
+    if (view === 'total-artcraft' && selectedState !== 'ALL') {
+      result = result.filter((item) => item.state && item.state.toLowerCase() === selectedState.toLowerCase());
+    }
+
+    // Role filter for new-users
+    if (view === 'new-users' && selectedRole !== 'ALL') {
+      result = result.filter((item) => item.role === selectedRole);
     }
 
     // Status filter (for general literature view or readers)
@@ -282,7 +344,7 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
     }
 
     return result;
-  }, [data, searchQuery, selectedLanguage, selectedCategory, selectedStatus, selectedRating, sortBy, view]);
+  }, [data, searchQuery, selectedLanguage, selectedCategory, selectedStatus, selectedRating, selectedState, selectedRole, sortBy, view]);
 
   // Derived unique lists for dropdown filters
   const availableLanguages = useMemo(() => {
@@ -297,11 +359,20 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
   const availableCategories = useMemo(() => {
     const set = new Set<string>();
     data.forEach((item) => {
-      const c = item.category?.name || item.category || item.literatureCategory;
+      const c = item.category?.name || item.category || item.literatureCategory || (view === 'total-artcraft' ? item.type : null);
       if (c) set.add(c);
     });
     return Array.from(set).sort();
-  }, [data]);
+  }, [data, view]);
+
+  const availableStates = useMemo(() => {
+    if (view !== 'total-artcraft') return [];
+    const set = new Set<string>();
+    data.forEach((item) => {
+      if (item.state) set.add(item.state);
+    });
+    return Array.from(set).sort();
+  }, [data, view]);
 
   // Pagination slice
   const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
@@ -396,6 +467,33 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
             </span>
           </div>
         )}
+
+        {view === 'new-users' && (
+          <div className="admin-stat-pill">
+            <span className="admin-stat-pill-label">Registration Window</span>
+            <span className="admin-stat-pill-val" style={{ color: '#2563EB' }}>
+              Current Calendar Cycle
+            </span>
+          </div>
+        )}
+
+        {view === 'new-releases' && (
+          <div className="admin-stat-pill">
+            <span className="admin-stat-pill-label">Publishing Window</span>
+            <span className="admin-stat-pill-val" style={{ color: '#059669' }}>
+              Current Calendar Cycle
+            </span>
+          </div>
+        )}
+
+        {view === 'total-artcraft' && (
+          <div className="admin-stat-pill">
+            <span className="admin-stat-pill-label">Geographical Scope</span>
+            <span className="admin-stat-pill-val" style={{ color: '#B45309' }}>
+              28 Indian States & Regions
+            </span>
+          </div>
+        )}
       </div>
 
       {/* 3. Search and Filtering Section */}
@@ -416,8 +514,45 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
             />
           </div>
 
-          {/* Language filter for literature, saves, rating summary */}
-          {(view.includes('literature') || view === 'average-rating' || view === 'total-saves') && availableLanguages.length > 0 && (
+          {/* State filter for total-artcraft */}
+          {view === 'total-artcraft' && availableStates.length > 0 && (
+            <select
+              className="admin-stat-select"
+              value={selectedState}
+              onChange={(e) => {
+                setSelectedState(e.target.value);
+                setCurrentPage(1);
+              }}
+              id="stat-filter-state"
+            >
+              <option value="ALL">All States ({availableStates.length})</option>
+              {availableStates.map((st) => (
+                <option key={st} value={st}>
+                  {st}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {/* Role filter for new-users */}
+          {view === 'new-users' && (
+            <select
+              className="admin-stat-select"
+              value={selectedRole}
+              onChange={(e) => {
+                setSelectedRole(e.target.value);
+                setCurrentPage(1);
+              }}
+              id="stat-filter-role"
+            >
+              <option value="ALL">All Roles</option>
+              <option value="READER">Readers Only</option>
+              <option value="ADMIN">Admins Only</option>
+            </select>
+          )}
+
+          {/* Language filter for literature, saves, rating summary, new releases */}
+          {(view.includes('literature') || view === 'average-rating' || view === 'total-saves' || view === 'new-releases') && availableLanguages.length > 0 && (
             <select
               className="admin-stat-select"
               value={selectedLanguage}
@@ -436,8 +571,8 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
             </select>
           )}
 
-          {/* Category filter */}
-          {(view.includes('literature') || view === 'average-rating' || view === 'total-saves') && availableCategories.length > 0 && (
+          {/* Category / Type filter */}
+          {(view.includes('literature') || view === 'average-rating' || view === 'total-saves' || view === 'new-releases' || view === 'total-artcraft') && availableCategories.length > 0 && (
             <select
               className="admin-stat-select"
               value={selectedCategory}
@@ -447,7 +582,7 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
               }}
               id="stat-filter-category"
             >
-              <option value="ALL">All Categories</option>
+              <option value="ALL">{view === 'total-artcraft' ? 'All Craft Types' : 'All Categories'}</option>
               {availableCategories.map((c) => (
                 <option key={c} value={c}>
                   {c}
@@ -675,6 +810,41 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
                     <th>Language</th>
                     <th>Category</th>
                     <th>Saved Date</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
+                  </tr>
+                )}
+                {view === 'new-users' && (
+                  <tr>
+                    <th style={{ width: '50px' }}>No.</th>
+                    <th>User / Scholar Name</th>
+                    <th>Email Address</th>
+                    <th>Role</th>
+                    <th>Registration Date</th>
+                    <th>Account Status</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
+                  </tr>
+                )}
+                {view === 'new-releases' && (
+                  <tr>
+                    <th style={{ width: '50px' }}>No.</th>
+                    <th>Literature Title</th>
+                    <th>Author</th>
+                    <th>Language</th>
+                    <th>Category</th>
+                    <th>Published Date</th>
+                    <th>Average Rating</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
+                  </tr>
+                )}
+                {view === 'total-artcraft' && (
+                  <tr>
+                    <th style={{ width: '50px' }}>No.</th>
+                    <th>Art / Craft Name</th>
+                    <th>State & Place</th>
+                    <th>Category / Type</th>
+                    <th>Cultural Significance</th>
+                    <th>Materials</th>
+                    <th>Status</th>
                     <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 )}
@@ -941,6 +1111,111 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
                     );
                   }
 
+                  if (view === 'new-users') {
+                    return (
+                      <tr key={row.id}>
+                        <td>{rowNumber}</td>
+                        <td className="admin-stat-table-primary">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--accent-burgundy-subtle)', color: 'var(--accent-burgundy)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8rem' }}>
+                              {row.name ? row.name[0].toUpperCase() : 'U'}
+                            </div>
+                            <span>{row.name}</span>
+                          </div>
+                        </td>
+                        <td>{row.email}</td>
+                        <td>
+                          <span className={`admin-stat-badge ${row.role === 'ADMIN' ? 'draft' : 'active'}`}>
+                            {row.role}
+                          </span>
+                        </td>
+                        <td>{new Date(row.createdAt).toLocaleDateString()}</td>
+                        <td>
+                          <span className="admin-stat-badge active">{row.accountStatus || 'Active'}</span>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Verified</span>
+                        </td>
+                      </tr>
+                    );
+                  }
+
+                  if (view === 'new-releases') {
+                    return (
+                      <tr key={row.id}>
+                        <td>{rowNumber}</td>
+                        <td className="admin-stat-table-primary">{row.title}</td>
+                        <td>{row.author}</td>
+                        <td>{row.language}</td>
+                        <td>{row.category}</td>
+                        <td>{new Date(row.publicationDate).toLocaleDateString()}</td>
+                        <td>
+                          {row.ratingsCount > 0 ? (
+                            <span className="admin-stat-stars">
+                              ★ {row.averageRating.toFixed(1)} ({row.ratingsCount})
+                            </span>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)' }}>Fresh Release</span>
+                          )}
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <button
+                            type="button"
+                            className="admin-stat-action-btn"
+                            onClick={() => onViewLiterature?.(row.id)}
+                            title="Read released work"
+                          >
+                            <Eye size={13} /> Read
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  }
+
+                  if (view === 'total-artcraft') {
+                    return (
+                      <tr key={row.id}>
+                        <td>{rowNumber}</td>
+                        <td className="admin-stat-table-primary">
+                          <div style={{ fontWeight: 600 }}>{row.name}</div>
+                          {row.localName && (
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                              {row.localName}
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <MapPin size={13} style={{ color: 'var(--accent-burgundy)' }} />
+                            <span>{row.state}</span>
+                          </div>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                            {row.place || row.district || 'Heritage Region'}
+                          </div>
+                        </td>
+                        <td>
+                          <span className="admin-stat-badge published" style={{ backgroundColor: 'rgba(217, 119, 6, 0.12)', color: '#B45309' }}>
+                            {row.type}
+                          </span>
+                        </td>
+                        <td style={{ maxWidth: '240px', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                          {row.culturalSignificance ? row.culturalSignificance.slice(0, 100) + '...' : 'Traditional heritage'}
+                        </td>
+                        <td style={{ maxWidth: '160px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                          {Array.isArray(row.materials) ? row.materials.join(', ') : (row.materials || 'Traditional')}
+                        </td>
+                        <td>
+                          <span className="admin-stat-badge active">{row.status || 'PUBLISHED'}</span>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <span style={{ fontSize: '0.82rem', color: '#B45309', fontWeight: 600 }}>
+                            Heritage
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  }
+
                   return null;
                 })}
               </tbody>
@@ -969,6 +1244,11 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
                     {row.literatureAuthor && <span>Author: {row.literatureAuthor}</span>}
                     {row.language && <span>Language: {row.language}</span>}
                     {row.category?.name && <span>Category: {row.category.name}</span>}
+                    {row.category && typeof row.category === 'string' && <span>Category: {row.category}</span>}
+                    {row.type && <span>Type: {row.type}</span>}
+                    {row.state && <span>State: {row.state}</span>}
+                    {row.place && <span>Place: {row.place}</span>}
+                    {row.role && <span>Role: {row.role}</span>}
                     {row.email && <span>Email: {row.email}</span>}
                     {row.value && (
                       <span className="admin-stat-stars">
@@ -980,8 +1260,8 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
                         Avg: ★ {row.averageRating.toFixed(1)} ({row.ratingsCount} ratings)
                       </span>
                     )}
-                    {row.createdAt && (
-                      <span>Date: {new Date(row.createdAt).toLocaleDateString()}</span>
+                    {(row.publicationDate || row.createdAt) && (
+                      <span>Date: {new Date(row.publicationDate || row.createdAt).toLocaleDateString()}</span>
                     )}
                   </div>
 

@@ -1328,7 +1328,21 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
             </div>
 
             {/* 10. New Users This Month */}
-            <div className="kpi-card" id="kpi-new-users" data-testid="kpi-card-new-users">
+            <div
+              className="kpi-card interactive"
+              id="kpi-new-users"
+              data-testid="kpi-card-new-users"
+              role="button"
+              tabIndex={0}
+              onClick={() => setStatSubView('new-users')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setStatSubView('new-users');
+                }
+              }}
+              aria-label="View New Users Enrolled This Month"
+            >
               <div className="kpi-card-top">
                 <span className="kpi-card-label">New Users This Month</span>
                 <div className="kpi-card-icon-wrap blue">
@@ -1339,12 +1353,26 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                 {kpiData && kpiData.newUsersThisMonth !== undefined ? kpiData.newUsersThisMonth : '0'}
               </div>
               <div className="kpi-card-subtext">
-                <span>Enrolled this calendar cycle</span>
+                <span>Enrolled this calendar cycle • View →</span>
               </div>
             </div>
 
             {/* 11. New Releases This Month */}
-            <div className="kpi-card" id="kpi-new-releases" data-testid="kpi-card-new-releases">
+            <div
+              className="kpi-card interactive"
+              id="kpi-new-releases"
+              data-testid="kpi-card-new-releases"
+              role="button"
+              tabIndex={0}
+              onClick={() => setStatSubView('new-releases')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setStatSubView('new-releases');
+                }
+              }}
+              aria-label="View New Literary Works Released This Month"
+            >
               <div className="kpi-card-top">
                 <span className="kpi-card-label">New Releases This Month</span>
                 <div className="kpi-card-icon-wrap green">
@@ -1355,12 +1383,26 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                 {kpiData && kpiData.newReleasesThisMonth !== undefined ? kpiData.newReleasesThisMonth : '0'}
               </div>
               <div className="kpi-card-subtext">
-                <span>Preserved manuscripts this month</span>
+                <span>Preserved manuscripts this month • View →</span>
               </div>
             </div>
 
             {/* 12. Total Art & Craft (Cultural Heritage Telemetry) */}
-            <div className="kpi-card" id="kpi-total-artcraft" data-testid="kpi-card-total-artcraft">
+            <div
+              className="kpi-card interactive"
+              id="kpi-total-artcraft"
+              data-testid="kpi-card-total-artcraft"
+              role="button"
+              tabIndex={0}
+              onClick={() => setStatSubView('total-artcraft')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setStatSubView('total-artcraft');
+                }
+              }}
+              aria-label="View Total Art and Craft Heritage Records"
+            >
               <div className="kpi-card-top">
                 <span className="kpi-card-label">Total Art & Craft</span>
                 <div className="kpi-card-icon-wrap gold">
@@ -1371,7 +1413,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                 {kpiData && kpiData.totalArtCraft !== undefined ? kpiData.totalArtCraft : '0'}
               </div>
               <div className="kpi-card-subtext">
-                <span>Across all 28 Indian States</span>
+                <span>Across all 28 Indian States • View →</span>
               </div>
             </div>
           </div>

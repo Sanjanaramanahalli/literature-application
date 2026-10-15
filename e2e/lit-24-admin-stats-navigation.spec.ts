@@ -194,12 +194,68 @@ test.describe('LIT-24: Interactive Admin Dashboard Statistic Cards & Dedicated D
     await expect(page.locator('#kpi-cards-container')).toBeVisible();
   });
 
+  test('Card 10: New Users This Month card displays current month registrations', async ({ page }) => {
+    const card = page.locator('#kpi-new-users');
+    await expect(card).toBeVisible();
+    await card.click();
+
+    const statView = page.locator('#admin-stat-view-new-users');
+    await expect(statView).toBeVisible();
+    await expect(statView.locator('h1')).toContainText('New Readers & Scholars');
+
+    const table = statView.locator('#stat-table-new-users');
+    await expect(table).toBeVisible();
+
+    await statView.locator('#btn-stat-back-to-dashboard').click();
+    await expect(page.locator('#kpi-cards-container')).toBeVisible();
+  });
+
+  test('Card 11: New Releases This Month card displays works published in current calendar month', async ({ page }) => {
+    const card = page.locator('#kpi-new-releases');
+    await expect(card).toBeVisible();
+    await card.click();
+
+    const statView = page.locator('#admin-stat-view-new-releases');
+    await expect(statView).toBeVisible();
+    await expect(statView.locator('h1')).toContainText('New Releases Published');
+
+    const table = statView.locator('#stat-table-new-releases');
+    await expect(table).toBeVisible();
+
+    await statView.locator('#btn-stat-back-to-dashboard').click();
+    await expect(page.locator('#kpi-cards-container')).toBeVisible();
+  });
+
+  test('Card 12: Total Art & Craft card displays cultural records across 28 states', async ({ page }) => {
+    const card = page.locator('#kpi-total-artcraft');
+    await expect(card).toBeVisible();
+    await card.click();
+
+    const statView = page.locator('#admin-stat-view-total-artcraft');
+    await expect(statView).toBeVisible();
+    await expect(statView.locator('h1')).toContainText('Total Art & Craft');
+
+    const table = statView.locator('#stat-table-total-artcraft');
+    await expect(table).toBeVisible();
+    await expect(table.locator('tbody tr')).not.toHaveCount(0);
+
+    // Verify state filter exists and works
+    const stateFilter = statView.locator('#stat-filter-state');
+    await expect(stateFilter).toBeVisible();
+    await stateFilter.selectOption('Karnataka');
+    await expect(table.locator('tbody tr')).toContainText(['Karnataka']);
+
+    // Breadcrumb return
+    await statView.locator('#btn-stat-breadcrumb-dashboard').click();
+    await expect(page.locator('#kpi-cards-container')).toBeVisible();
+  });
+
   test('Accessibility: Cards support keyboard Enter navigation', async ({ page }) => {
-    const card = page.locator('#kpi-total-literature');
+    const card = page.locator('#kpi-total-artcraft');
     await card.focus();
     await page.keyboard.press('Enter');
 
-    const statView = page.locator('#admin-stat-view-total-literature');
+    const statView = page.locator('#admin-stat-view-total-artcraft');
     await expect(statView).toBeVisible();
   });
 });
