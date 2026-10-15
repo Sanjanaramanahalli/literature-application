@@ -565,11 +565,54 @@ export const prismaMongoAdapter = {
       const doc = await RatingModel.findOne(convertWhereClause(where)).lean();
       return doc || null;
     },
-    findMany: async ({ where }: any = {}) => {
+    findMany: async ({ where, include, orderBy }: any = {}) => {
       if (isUsingMemoryStore()) {
-        return memoryStore.ratings.filter((r) => matchesFilter(r, where));
+        let list = memoryStore.ratings.filter((r) => matchesFilter(r, where));
+        if (orderBy) {
+          list = [...list].sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0).getTime();
+            const dateB = new Date(b.createdAt || 0).getTime();
+            return dateB - dateA;
+          });
+        }
+        if (include) {
+          list = list.map((r) => {
+            const copy = { ...r };
+            if (include.user) {
+              copy.user = memoryStore.users.find((u) => u.id === r.userId) || null;
+            }
+            if (include.literature) {
+              const lit = memoryStore.literatures.find((l) => l.id === r.literatureId) || null;
+              copy.literature = lit ? { ...lit, creator: memoryStore.creators.find((c) => c.id === lit.creatorId) || null } : null;
+            }
+            return copy;
+          });
+        }
+        return list;
       }
-      return await RatingModel.find(convertWhereClause(where)).lean();
+      let q = RatingModel.find(convertWhereClause(where));
+      if (orderBy) q = q.sort(convertOrderBy(orderBy));
+      const docs = await q.lean();
+      if (!include) return docs;
+      return await Promise.all(
+        docs.map(async (r: any) => {
+          if (include.user) {
+            r.user = await UserModel.findOne({ id: r.userId }).lean();
+          }
+          if (include.literature) {
+            const lit: any = await LiteratureModel.findOne({ id: r.literatureId }).lean();
+            if (lit) {
+              if (include.literature.include?.creator) {
+                lit.creator = await CreatorModel.findOne({ id: lit.creatorId }).lean();
+              }
+              r.literature = lit;
+            } else {
+              r.literature = null;
+            }
+          }
+          return r;
+        })
+      );
     },
     create: async ({ data }: { data: any }) => {
       const id = data.id || randomUUID();
@@ -649,10 +692,28 @@ export const prismaMongoAdapter = {
     findMany: async ({ where, include, orderBy }: any = {}) => {
       if (isUsingMemoryStore()) {
         let items = memoryStore.saves.filter((s) => matchesFilter(s, where));
-        if (include?.literature) {
+        if (orderBy) {
+          items = [...items].sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0).getTime();
+            const dateB = new Date(b.createdAt || 0).getTime();
+            return dateB - dateA;
+          });
+        }
+        if (include) {
           items = items.map((s) => {
-            const lit = memoryStore.literatures.find((l) => l.id === s.literatureId);
-            return { ...s, literature: lit || null };
+            const copy = { ...s };
+            if (include.user) {
+              copy.user = memoryStore.users.find((u) => u.id === s.userId) || null;
+            }
+            if (include.literature) {
+              const lit = memoryStore.literatures.find((l) => l.id === s.literatureId);
+              copy.literature = lit ? {
+                ...lit,
+                creator: memoryStore.creators.find((c) => c.id === lit.creatorId) || null,
+                category: memoryStore.categories.find((c) => c.id === lit.categoryId) || null,
+              } : null;
+            }
+            return copy;
           });
         }
         return items;
@@ -663,6 +724,9 @@ export const prismaMongoAdapter = {
       if (!include) return docs;
       return await Promise.all(
         docs.map(async (s: any) => {
+          if (include.user) {
+            s.user = await UserModel.findOne({ id: s.userId }).lean();
+          }
           if (include.literature) {
             const lit = await LiteratureModel.findOne({ id: s.literatureId }).lean();
             s.literature = lit ? await populateLiterature(lit, include.literature.include) : null;

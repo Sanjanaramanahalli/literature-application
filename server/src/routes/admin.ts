@@ -203,17 +203,23 @@ adminRouter.post(
   }
 );
 
-// 2b. List all Literature for Admin Curation (Drafts, Published, Unpublished)
+// 2b. List all Literature for Admin Curation (Drafts, Published, Unpublished, All) with Full Filtering
 adminRouter.get(
   '/literature',
   authenticateToken,
   requireRole('ADMIN'),
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      const { status } = req.query;
+      const { status, search, language, category } = req.query;
       const whereClause: any = {};
-      if (status && ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'].includes(String(status).toUpperCase())) {
-        whereClause.publicationStatus = String(status).toUpperCase();
+
+      const statusStr = String(status || '').toUpperCase();
+      if (statusStr && ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'].includes(statusStr)) {
+        whereClause.publicationStatus = statusStr;
+      }
+
+      if (language && String(language).trim()) {
+        whereClause.language = String(language).trim();
       }
 
       const literatures = await prisma.literature.findMany({
@@ -230,15 +236,15 @@ adminRouter.get(
         orderBy: { updatedAt: 'desc' },
       });
 
-      const enriched = literatures.map((item) => {
-        const totalRatingsCount = item.ratings.length;
+      let enriched = literatures.map((item) => {
+        const totalRatingsCount = item.ratings?.length || 0;
         const averageRating =
           totalRatingsCount > 0
-            ? Number((item.ratings.reduce((acc, r) => acc + r.value, 0) / totalRatingsCount).toFixed(1))
+            ? Number((item.ratings.reduce((acc: number, r: any) => acc + r.value, 0) / totalRatingsCount).toFixed(1))
             : 0;
 
-        const likesCount = item.votes.filter((v) => v.type === 'LIKE').length;
-        const downvotesCount = item.votes.filter((v) => v.type === 'DOWNVOTE').length;
+        const likesCount = (item.votes || []).filter((v: any) => v.type === 'LIKE').length;
+        const downvotesCount = (item.votes || []).filter((v: any) => v.type === 'DOWNVOTE').length;
 
         return {
           id: item.id,
@@ -256,17 +262,43 @@ adminRouter.get(
           updatedAt: item.updatedAt,
           creator: item.creator,
           category: item.category,
-          tags: item.tags.map((t) => t.tag.name),
+          tags: (item.tags || []).map((t: any) => t.tag?.name || t.tag || t),
           totalRatingsCount,
           averageRating,
-          totalSavesCount: item.saves.length,
-          totalCommentsCount: item.comments.length,
+          totalSavesCount: item.saves?.length || 0,
+          totalCommentsCount: item.comments?.length || 0,
           likesCount,
           downvotesCount,
         };
       });
 
-      res.json({ literatures: enriched });
+      // Filter by category slug or name if specified
+      if (category && String(category).trim() && String(category) !== 'ALL') {
+        const catStr = String(category).toLowerCase();
+        enriched = enriched.filter(
+          (item) =>
+            item.category?.name?.toLowerCase() === catStr ||
+            item.category?.slug?.toLowerCase() === catStr ||
+            item.category?.id === category
+        );
+      }
+
+      // Filter by search query across title, author name, brief
+      if (search && String(search).trim()) {
+        const q = String(search).toLowerCase();
+        enriched = enriched.filter(
+          (item) =>
+            item.title?.toLowerCase().includes(q) ||
+            item.creator?.name?.toLowerCase().includes(q) ||
+            item.brief?.toLowerCase().includes(q) ||
+            item.genre?.toLowerCase().includes(q)
+        );
+      }
+
+      res.json({
+        total: enriched.length,
+        literatures: enriched,
+      });
     } catch (err) {
       console.error('Admin list literature error:', err);
       res.status(500).json({ error: 'Failed to retrieve literature list for administration.' });
@@ -715,4 +747,326 @@ adminRouter.get('/notifications', authenticateToken, requireRole('ADMIN'), async
     res.status(500).json({ error: 'Failed to retrieve notifications.' });
   }
 });
+
+// =========================================================================
+// DEDICATED STATISTIC DATA ENDPOINTS FOR ADMIN DASHBOARD CARDS
+// =========================================================================
+
+// Page 5: Registered Readers (Strictly excludes administrators)
+adminRouter.get('/readers', authenticateToken, requireRole('ADMIN'), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { search, status } = req.query;
+    const readers = await prisma.user.findMany({
+      where: { role: 'READER' },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        avatarUrl: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    // Enrich each reader with contribution counts (ratings given, comments posted, saves made)
+    let enriched = await Promise.all(
+      readers.map(async (r: any) => {
+        const ratingsCount = await prisma.rating.count({ where: { userId: r.id } });
+        const commentsCount = await prisma.comment.count({ where: { userId: r.id } });
+        const savesCount = await prisma.save.count({ where: { userId: r.id } });
+        return {
+          ...r,
+          accountStatus: 'Active',
+          ratingsCount,
+          commentsCount,
+          savesCount,
+          totalContributions: ratingsCount + commentsCount + savesCount,
+        };
+      })
+    );
+
+    if (search && String(search).trim()) {
+      const q = String(search).toLowerCase();
+      enriched = enriched.filter(
+        (r) => r.name?.toLowerCase().includes(q) || r.email?.toLowerCase().includes(q)
+      );
+    }
+
+    if (status && String(status).trim() && String(status) !== 'ALL') {
+      const st = String(status).toLowerCase();
+      enriched = enriched.filter((r) => r.accountStatus.toLowerCase() === st);
+    }
+
+    res.json({
+      total: enriched.length,
+      readers: enriched,
+    });
+  } catch (err) {
+    console.error('Admin readers fetch error:', err);
+    res.status(500).json({ error: 'Failed to retrieve registered readers.' });
+  }
+});
+
+// Page 6: Total Ratings (All individual rating records with reader and literature details)
+adminRouter.get('/ratings', authenticateToken, requireRole('ADMIN'), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { search, rating } = req.query;
+    const ratings = await prisma.rating.findMany({
+      include: {
+        user: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
+        literature: {
+          select: {
+            id: true,
+            title: true,
+            language: true,
+            genre: true,
+            creator: { select: { name: true } },
+            category: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    let list = ratings.map((r: any) => ({
+      id: r.id,
+      value: r.value,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      userId: r.userId,
+      literatureId: r.literatureId,
+      readerName: r.user?.name || 'Anonymous Reader',
+      readerEmail: r.user?.email || 'N/A',
+      readerAvatar: r.user?.avatarUrl || null,
+      literatureTitle: r.literature?.title || 'Unknown Work',
+      literatureAuthor: r.literature?.creator?.name || 'Unknown Author',
+      literatureLanguage: r.literature?.language || 'English',
+      literatureCategory: r.literature?.category?.name || 'Classics',
+    }));
+
+    if (rating && !isNaN(Number(rating))) {
+      const targetVal = Number(rating);
+      list = list.filter((r) => r.value === targetVal);
+    }
+
+    if (search && String(search).trim()) {
+      const q = String(search).toLowerCase();
+      list = list.filter(
+        (r) =>
+          r.literatureTitle?.toLowerCase().includes(q) ||
+          r.literatureAuthor?.toLowerCase().includes(q) ||
+          r.readerName?.toLowerCase().includes(q) ||
+          r.readerEmail?.toLowerCase().includes(q)
+      );
+    }
+
+    res.json({
+      total: list.length,
+      ratings: list,
+    });
+  } catch (err) {
+    console.error('Admin ratings fetch error:', err);
+    res.status(500).json({ error: 'Failed to retrieve ratings.' });
+  }
+});
+
+// Page 7: Average Rating & Summaries per Literature
+adminRouter.get('/ratings/summary', authenticateToken, requireRole('ADMIN'), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { search, language, category, sortBy } = req.query;
+
+    const literatures = await prisma.literature.findMany({
+      include: {
+        creator: true,
+        category: true,
+        ratings: true,
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    // Compute stats
+    let totalAllRatingsCount = 0;
+    let totalAllRatingsSum = 0;
+
+    let items = literatures.map((lit) => {
+      const count = lit.ratings?.length || 0;
+      const sum = (lit.ratings || []).reduce((acc: number, r: any) => acc + r.value, 0);
+      const avg = count > 0 ? Number((sum / count).toFixed(1)) : null;
+
+      totalAllRatingsCount += count;
+      totalAllRatingsSum += sum;
+
+      return {
+        id: lit.id,
+        title: lit.title,
+        author: lit.creator?.name || 'Unknown Author',
+        language: lit.language || 'English',
+        category: lit.category?.name || 'Classics',
+        publicationStatus: lit.publicationStatus,
+        ratingsCount: count,
+        averageRating: avg, // null if 0 ratings, avoiding false 0.0 or 5.0
+      };
+    });
+
+    const overallAverage =
+      totalAllRatingsCount > 0 ? Number((totalAllRatingsSum / totalAllRatingsCount).toFixed(1)) : 0.0;
+
+    if (language && String(language).trim()) {
+      items = items.filter((item) => item.language.toLowerCase() === String(language).toLowerCase());
+    }
+
+    if (category && String(category).trim() && String(category) !== 'ALL') {
+      items = items.filter((item) => item.category.toLowerCase() === String(category).toLowerCase());
+    }
+
+    if (search && String(search).trim()) {
+      const q = String(search).toLowerCase();
+      items = items.filter(
+        (item) => item.title.toLowerCase().includes(q) || item.author.toLowerCase().includes(q)
+      );
+    }
+
+    // Sort options: highest, lowest, most-ratings, least-ratings
+    if (sortBy === 'highest') {
+      items.sort((a, b) => (b.averageRating ?? -1) - (a.averageRating ?? -1));
+    } else if (sortBy === 'lowest') {
+      items.sort((a, b) => (a.averageRating ?? 999) - (b.averageRating ?? 999));
+    } else if (sortBy === 'most-ratings') {
+      items.sort((a, b) => b.ratingsCount - a.ratingsCount);
+    } else if (sortBy === 'least-ratings') {
+      items.sort((a, b) => a.ratingsCount - b.ratingsCount);
+    }
+
+    res.json({
+      total: items.length,
+      overallAverage,
+      totalRatingsRecorded: totalAllRatingsCount,
+      summary: items,
+    });
+  } catch (err) {
+    console.error('Admin rating summary fetch error:', err);
+    res.status(500).json({ error: 'Failed to retrieve rating summaries.' });
+  }
+});
+
+// Page 8: Total Comments & Threaded Replies
+adminRouter.get('/comments', authenticateToken, requireRole('ADMIN'), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { search, moderationStatus } = req.query;
+
+    const comments = await prisma.comment.findMany({
+      include: {
+        user: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
+        literature: { select: { id: true, title: true, language: true, creator: { select: { name: true } } } },
+        replies: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    let list = comments.map((c: any) => ({
+      id: c.id,
+      content: c.content,
+      parentId: c.parentId,
+      isReply: !!c.parentId,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+      moderationStatus: 'APPROVED',
+      userId: c.userId,
+      readerName: c.user?.name || 'Anonymous Reader',
+      readerEmail: c.user?.email || 'N/A',
+      readerAvatar: c.user?.avatarUrl || null,
+      literatureId: c.literatureId,
+      literatureTitle: c.literature?.title || 'Unknown Work',
+      literatureAuthor: c.literature?.creator?.name || 'Unknown Author',
+      repliesCount: c.replies?.length || 0,
+    }));
+
+    if (moderationStatus && String(moderationStatus).trim() && String(moderationStatus) !== 'ALL') {
+      const mod = String(moderationStatus).toLowerCase();
+      list = list.filter((c) => c.moderationStatus.toLowerCase() === mod);
+    }
+
+    if (search && String(search).trim()) {
+      const q = String(search).toLowerCase();
+      list = list.filter(
+        (c) =>
+          c.content.toLowerCase().includes(q) ||
+          c.readerName.toLowerCase().includes(q) ||
+          c.literatureTitle.toLowerCase().includes(q)
+      );
+    }
+
+    res.json({
+      total: list.length,
+      comments: list,
+    });
+  } catch (err) {
+    console.error('Admin comments fetch error:', err);
+    res.status(500).json({ error: 'Failed to retrieve comments.' });
+  }
+});
+
+// Page 9: Total Saves (Sanctuary bookmarks)
+adminRouter.get('/saves', authenticateToken, requireRole('ADMIN'), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { search, language, category } = req.query;
+
+    const saves = await prisma.save.findMany({
+      include: {
+        user: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
+        literature: {
+          include: {
+            creator: true,
+            category: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    let list = saves.map((s: any) => ({
+      id: s.id,
+      createdAt: s.createdAt,
+      userId: s.userId,
+      readerName: s.user?.name || 'Anonymous Reader',
+      readerEmail: s.user?.email || 'N/A',
+      readerAvatar: s.user?.avatarUrl || null,
+      literatureId: s.literatureId,
+      literatureTitle: s.literature?.title || 'Unknown Work',
+      literatureAuthor: s.literature?.creator?.name || 'Unknown Author',
+      literatureLanguage: s.literature?.language || 'English',
+      literatureCategory: s.literature?.category?.name || 'Classics',
+      literatureStatus: s.literature?.publicationStatus || 'PUBLISHED',
+    }));
+
+    if (language && String(language).trim()) {
+      list = list.filter((s) => s.literatureLanguage.toLowerCase() === String(language).toLowerCase());
+    }
+
+    if (category && String(category).trim() && String(category) !== 'ALL') {
+      list = list.filter((s) => s.literatureCategory.toLowerCase() === String(category).toLowerCase());
+    }
+
+    if (search && String(search).trim()) {
+      const q = String(search).toLowerCase();
+      list = list.filter(
+        (s) =>
+          s.literatureTitle.toLowerCase().includes(q) ||
+          s.literatureAuthor.toLowerCase().includes(q) ||
+          s.readerName.toLowerCase().includes(q)
+      );
+    }
+
+    res.json({
+      total: list.length,
+      saves: list,
+    });
+  } catch (err) {
+    console.error('Admin saves fetch error:', err);
+    res.status(500).json({ error: 'Failed to retrieve saves.' });
+  }
+});
+
 

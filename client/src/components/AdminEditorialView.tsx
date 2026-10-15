@@ -38,6 +38,8 @@ import { getApiUrl } from '../config/api';
 
 import './AdminEditorialView.css';
 import './ArtCraftView.css';
+import { AdminStatDetailView } from './AdminStatDetailView';
+import type { StatSubView } from './AdminStatDetailView';
 
 
 interface Creator {
@@ -177,6 +179,9 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
 
   // Quick Action Modal States
   const [quickActionModal, setQuickActionModal] = useState<'users' | 'categories' | 'settings' | null>(null);
+
+  // Dedicated Stat Card Sub-View ('total-literature', 'published-literature', etc.)
+  const [statSubView, setStatSubView] = useState<StatSubView | null>(null);
 
 
   // Form State
@@ -963,12 +968,21 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
       {/* VIEW 0: EXECUTIVE KPI DASHBOARD & SECONDARY ANALYTICS (LIT-10) */}
       {activeTab === 'analytics' && (
         <div id="executive-kpi-dashboard-view">
-          {/* Header Bar with Live Refresh */}
-          <div className="kpi-dashboard-header">
-            <div>
-              <h2 className="serif-title" style={{ fontSize: '1.45rem', color: 'var(--accent-burgundy)' }}>
-                Athenæum Sanctuary Metrics & Executive KPIs
-              </h2>
+          {statSubView ? (
+            <AdminStatDetailView
+              view={statSubView}
+              onBack={() => setStatSubView(null)}
+              onViewLiterature={onViewLiterature}
+              onRefreshDashboard={fetchDashboardKpis}
+            />
+          ) : (
+            <>
+              {/* Header Bar with Live Refresh */}
+              <div className="kpi-dashboard-header">
+                <div>
+                  <h2 className="serif-title" style={{ fontSize: '1.45rem', color: 'var(--accent-burgundy)' }}>
+                    Athenæum Sanctuary Metrics & Executive KPIs
+                  </h2>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                 Live database telemetry {lastRefreshedTime ? `• Last synchronized at ${lastRefreshedTime}` : ''}
               </p>
@@ -1041,10 +1055,24 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
             </div>
           </div>
 
-          {/* 11 LIVE KPI CARDS (RESPONSIVE 4 / 2 / 1) */}
+          {/* 11 LIVE KPI CARDS (RESPONSIVE 4 / 2 / 1) - ALL NINE PRIMARY METRICS CLICKABLE */}
           <div className="kpis-grid" id="kpi-cards-container">
             {/* 1. Total Literature */}
-            <div className="kpi-card" id="kpi-total-literature" data-testid="kpi-card-total-literature">
+            <div
+              className="kpi-card"
+              id="kpi-total-literature"
+              data-testid="kpi-card-total-literature"
+              role="button"
+              tabIndex={0}
+              aria-label="Open Total Literature directory (137 works cataloged)"
+              onClick={() => setStatSubView('total-literature')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setStatSubView('total-literature');
+                }
+              }}
+            >
               <div className="kpi-card-top">
                 <span className="kpi-card-label">Total Literature</span>
                 <div className="kpi-card-icon-wrap burgundy">
@@ -1055,12 +1083,26 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                 {kpiData ? kpiData.totalLiterature : '0'}
               </div>
               <div className="kpi-card-subtext">
-                <span>All cataloged manuscripts</span>
+                <span>All cataloged manuscripts • Click to explore →</span>
               </div>
             </div>
 
             {/* 2. Published Literature */}
-            <div className="kpi-card" id="kpi-published-literature" data-testid="kpi-card-published-literature">
+            <div
+              className="kpi-card"
+              id="kpi-published-literature"
+              data-testid="kpi-card-published-literature"
+              role="button"
+              tabIndex={0}
+              aria-label="Open Published Works catalog"
+              onClick={() => setStatSubView('published-literature')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setStatSubView('published-literature');
+                }
+              }}
+            >
               <div className="kpi-card-top">
                 <span className="kpi-card-label">Published Works</span>
                 <div className="kpi-card-icon-wrap green">
@@ -1071,12 +1113,26 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                 {kpiData ? kpiData.publishedLiterature : '0'}
               </div>
               <div className="kpi-card-subtext">
-                <span>Live in public catalog</span>
+                <span>Live in public catalog • Click to explore →</span>
               </div>
             </div>
 
             {/* 3. Draft Literature */}
-            <div className="kpi-card" id="kpi-draft-literature" data-testid="kpi-card-draft-literature">
+            <div
+              className="kpi-card"
+              id="kpi-draft-literature"
+              data-testid="kpi-card-draft-literature"
+              role="button"
+              tabIndex={0}
+              aria-label="Open Draft Literature editor"
+              onClick={() => setStatSubView('draft-literature')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setStatSubView('draft-literature');
+                }
+              }}
+            >
               <div className="kpi-card-top">
                 <span className="kpi-card-label">Draft Literature</span>
                 <div className="kpi-card-icon-wrap amber">
@@ -1087,12 +1143,26 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                 {kpiData ? kpiData.draftLiterature : '0'}
               </div>
               <div className="kpi-card-subtext">
-                <span>Curatorial work in progress</span>
+                <span>Curatorial work in progress • Click to explore →</span>
               </div>
             </div>
 
             {/* 4. Unpublished Literature */}
-            <div className="kpi-card" id="kpi-unpublished-literature" data-testid="kpi-card-unpublished-literature">
+            <div
+              className="kpi-card"
+              id="kpi-unpublished-literature"
+              data-testid="kpi-card-unpublished-literature"
+              role="button"
+              tabIndex={0}
+              aria-label="Open Unpublished Literature archives"
+              onClick={() => setStatSubView('unpublished-literature')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setStatSubView('unpublished-literature');
+                }
+              }}
+            >
               <div className="kpi-card-top">
                 <span className="kpi-card-label">Unpublished Literature</span>
                 <div className="kpi-card-icon-wrap purple">
@@ -1103,12 +1173,26 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                 {kpiData ? kpiData.unpublishedLiterature : '0'}
               </div>
               <div className="kpi-card-subtext">
-                <span>Withdrawn or decommissioned</span>
+                <span>Withdrawn or decommissioned • Click to explore →</span>
               </div>
             </div>
 
             {/* 5. Registered Readers (Strictly Excluding Admins) */}
-            <div className="kpi-card" id="kpi-registered-readers" data-testid="kpi-card-registered-readers">
+            <div
+              className="kpi-card"
+              id="kpi-registered-readers"
+              data-testid="kpi-card-registered-readers"
+              role="button"
+              tabIndex={0}
+              aria-label="Open Registered Readers directory"
+              onClick={() => setStatSubView('registered-readers')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setStatSubView('registered-readers');
+                }
+              }}
+            >
               <div className="kpi-card-top">
                 <span className="kpi-card-label">Registered Readers</span>
                 <div className="kpi-card-icon-wrap blue">
@@ -1119,12 +1203,26 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                 {kpiData ? kpiData.registeredReaders : '0'}
               </div>
               <div className="kpi-card-subtext">
-                <span>Active scholar accounts (excl. Admins)</span>
+                <span>Active scholar accounts (excl. Admins) • View →</span>
               </div>
             </div>
 
             {/* 6. Total Ratings */}
-            <div className="kpi-card" id="kpi-total-ratings" data-testid="kpi-card-total-ratings">
+            <div
+              className="kpi-card"
+              id="kpi-total-ratings"
+              data-testid="kpi-card-total-ratings"
+              role="button"
+              tabIndex={0}
+              aria-label="Open Total Ratings logs"
+              onClick={() => setStatSubView('total-ratings')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setStatSubView('total-ratings');
+                }
+              }}
+            >
               <div className="kpi-card-top">
                 <span className="kpi-card-label">Total Ratings</span>
                 <div className="kpi-card-icon-wrap gold">
@@ -1135,12 +1233,26 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                 {kpiData ? kpiData.totalRatings : '0'}
               </div>
               <div className="kpi-card-subtext">
-                <span>Scholar ratings recorded</span>
+                <span>Scholar ratings recorded • Click to view →</span>
               </div>
             </div>
 
             {/* 7. Average Rating */}
-            <div className="kpi-card" id="kpi-average-rating" data-testid="kpi-card-average-rating">
+            <div
+              className="kpi-card"
+              id="kpi-average-rating"
+              data-testid="kpi-card-average-rating"
+              role="button"
+              tabIndex={0}
+              aria-label="Open Average Rating summaries"
+              onClick={() => setStatSubView('average-rating')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setStatSubView('average-rating');
+                }
+              }}
+            >
               <div className="kpi-card-top">
                 <span className="kpi-card-label">Average Rating</span>
                 <div className="kpi-card-icon-wrap gold">
@@ -1151,12 +1263,26 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                 {kpiData && !isNaN(kpiData.averageRating) ? kpiData.averageRating.toFixed(1) : '0.0'}
               </div>
               <div className="kpi-card-subtext">
-                <span>Scale 1.0 to 5.0 stars</span>
+                <span>Scale 1.0 to 5.0 stars • View breakdown →</span>
               </div>
             </div>
 
             {/* 8. Total Comments */}
-            <div className="kpi-card" id="kpi-total-comments" data-testid="kpi-card-total-comments">
+            <div
+              className="kpi-card"
+              id="kpi-total-comments"
+              data-testid="kpi-card-total-comments"
+              role="button"
+              tabIndex={0}
+              aria-label="Open Total Comments and reflections"
+              onClick={() => setStatSubView('total-comments')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setStatSubView('total-comments');
+                }
+              }}
+            >
               <div className="kpi-card-top">
                 <span className="kpi-card-label">Total Comments</span>
                 <div className="kpi-card-icon-wrap purple">
@@ -1167,12 +1293,26 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                 {kpiData ? kpiData.totalComments : '0'}
               </div>
               <div className="kpi-card-subtext">
-                <span>Discussions and threaded replies</span>
+                <span>Discussions and threaded replies • View →</span>
               </div>
             </div>
 
             {/* 9. Total Saves */}
-            <div className="kpi-card" id="kpi-total-saves" data-testid="kpi-card-total-saves">
+            <div
+              className="kpi-card"
+              id="kpi-total-saves"
+              data-testid="kpi-card-total-saves"
+              role="button"
+              tabIndex={0}
+              aria-label="Open Total Saves directory"
+              onClick={() => setStatSubView('total-saves')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setStatSubView('total-saves');
+                }
+              }}
+            >
               <div className="kpi-card-top">
                 <span className="kpi-card-label">Total Saves</span>
                 <div className="kpi-card-icon-wrap burgundy">
@@ -1183,7 +1323,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                 {kpiData ? kpiData.totalSaves : '0'}
               </div>
               <div className="kpi-card-subtext">
-                <span>Sanctuary bookmarked works</span>
+                <span>Sanctuary bookmarked works • View →</span>
               </div>
             </div>
 
@@ -1465,6 +1605,8 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                 </div>
               </div>
             </div>
+          )}
+            </>
           )}
         </div>
       )}
