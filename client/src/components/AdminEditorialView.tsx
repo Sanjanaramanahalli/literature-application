@@ -359,10 +359,10 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
     const token = localStorage.getItem('literature_token');
     try {
       const [creatorRes, catRes] = await Promise.all([
-        fetch('/api/admin/creators', {
+        fetch(getApiUrl('/api/admin/creators'), {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('/api/admin/categories', {
+        fetch(getApiUrl('/api/admin/categories'), {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -391,7 +391,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
     if (!isAdmin) return;
     const token = localStorage.getItem('literature_token');
     try {
-      const res = await fetch('/api/admin/literature', {
+      const res = await fetch(getApiUrl('/api/admin/literature'), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -408,7 +408,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
     setKpiLoading(true);
     const token = localStorage.getItem('literature_token');
     try {
-      const res = await fetch('/api/admin/dashboard/stats', {
+      const res = await fetch(getApiUrl('/api/admin/dashboard/stats'), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -899,6 +899,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
             className={`editorial-tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
             onClick={() => {
               setActiveTab('analytics');
+              setStatSubView(null);
               fetchDashboardKpis();
             }}
             id="tab-btn-executive-analytics"
@@ -1059,7 +1060,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
           <div className="kpis-grid" id="kpi-cards-container">
             {/* 1. Total Literature */}
             <div
-              className="kpi-card"
+              className="kpi-card interactive"
               id="kpi-total-literature"
               data-testid="kpi-card-total-literature"
               role="button"
@@ -1089,7 +1090,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
 
             {/* 2. Published Literature */}
             <div
-              className="kpi-card"
+              className="kpi-card interactive"
               id="kpi-published-literature"
               data-testid="kpi-card-published-literature"
               role="button"
@@ -1119,7 +1120,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
 
             {/* 3. Draft Literature */}
             <div
-              className="kpi-card"
+              className="kpi-card interactive"
               id="kpi-draft-literature"
               data-testid="kpi-card-draft-literature"
               role="button"
@@ -1149,7 +1150,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
 
             {/* 4. Unpublished Literature */}
             <div
-              className="kpi-card"
+              className="kpi-card interactive"
               id="kpi-unpublished-literature"
               data-testid="kpi-card-unpublished-literature"
               role="button"
@@ -1179,7 +1180,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
 
             {/* 5. Registered Readers (Strictly Excluding Admins) */}
             <div
-              className="kpi-card"
+              className="kpi-card interactive"
               id="kpi-registered-readers"
               data-testid="kpi-card-registered-readers"
               role="button"
@@ -1209,7 +1210,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
 
             {/* 6. Total Ratings */}
             <div
-              className="kpi-card"
+              className="kpi-card interactive"
               id="kpi-total-ratings"
               data-testid="kpi-card-total-ratings"
               role="button"
@@ -1239,7 +1240,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
 
             {/* 7. Average Rating */}
             <div
-              className="kpi-card"
+              className="kpi-card interactive"
               id="kpi-average-rating"
               data-testid="kpi-card-average-rating"
               role="button"
@@ -1269,7 +1270,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
 
             {/* 8. Total Comments */}
             <div
-              className="kpi-card"
+              className="kpi-card interactive"
               id="kpi-total-comments"
               data-testid="kpi-card-total-comments"
               role="button"
@@ -1299,7 +1300,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
 
             {/* 9. Total Saves */}
             <div
-              className="kpi-card"
+              className="kpi-card interactive"
               id="kpi-total-saves"
               data-testid="kpi-card-total-saves"
               role="button"
