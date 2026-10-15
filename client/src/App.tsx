@@ -97,36 +97,42 @@ export const App: React.FC = () => {
           <div
             className="active-user-banner"
             style={{
-              marginBottom: '2rem',
+              marginBottom: '1.75rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               flexWrap: 'wrap',
               gap: '0.75rem',
-              padding: '0.85rem 1.25rem',
-              backgroundColor: 'var(--bg-secondary)',
+              padding: '0.65rem 1rem',
+              backgroundColor: 'var(--bg-surface)',
               border: '1px solid var(--border-classic)',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: 'var(--radius-sm)',
+              boxShadow: 'var(--shadow-subtle)',
             }}
             id="active-user-banner"
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              {user.avatarUrl && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              {user.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
                   alt={user.name}
-                  style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent-gold)' }}
+                  style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--accent-gold)' }}
                   referrerPolicy="no-referrer"
                 />
+              ) : (
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-burgundy-subtle)', color: 'var(--accent-burgundy)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+                  {user.name ? user.name[0].toUpperCase() : 'S'}
+                </div>
               )}
               <div>
-                <p style={{ fontWeight: 600, color: 'var(--accent-burgundy)' }}>
-                  Scholar Session: {user.name} ({user.role})
+                <p style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)', margin: 0 }}>
+                  {user.name} <span style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--text-muted)' }}>• {user.email}</span>
                 </p>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{user.email}</p>
               </div>
             </div>
-            <span className="tag-badge burgundy">Authenticated</span>
+            <span className="tag-badge" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--accent-burgundy)', borderColor: 'var(--border-classic)' }}>
+              {user.role} • {user.role === 'ADMIN' ? 'Archivist Curator' : 'Registered Reader'}
+            </span>
           </div>
         )}
 

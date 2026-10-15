@@ -291,7 +291,7 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           {user ? (
-            <div className="user-profile-badge">
+            <div className="user-profile-badge" id="header-user-profile">
               {user.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
@@ -299,7 +299,11 @@ export const Header: React.FC<HeaderProps> = ({
                   className="user-avatar-img"
                   referrerPolicy="no-referrer"
                 />
-              ) : null}
+              ) : (
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--accent-burgundy)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.72rem' }}>
+                  {user.name ? user.name[0].toUpperCase() : 'S'}
+                </div>
+              )}
               <span className="user-role-tag">{user.role}</span>
               <span className="user-name">{user.name}</span>
               <button
@@ -307,8 +311,9 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={onLogout}
                 title="Sign Out"
                 id="btn-logout"
+                style={{ padding: '0.3rem 0.5rem', display: 'flex', alignItems: 'center' }}
               >
-                <LogOut size={14} />
+                <LogOut size={13} />
               </button>
             </div>
           ) : (
@@ -404,6 +409,45 @@ export const Header: React.FC<HeaderProps> = ({
               Admin Sign-In
             </button>
           )}
+
+          {/* User Sign In / Sign Out in Mobile Menu */}
+          <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-classic)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {user ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.25rem 0' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  Signed in as <strong>{user.name}</strong> ({user.role})
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => { setMobileMenuOpen(false); onLogout(); }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', padding: '0.35rem 0.65rem' }}
+                >
+                  <LogOut size={13} />
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  style={{ flex: 1 }}
+                  onClick={() => { setMobileMenuOpen(false); onOpenAuth('login'); }}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  style={{ flex: 1 }}
+                  onClick={() => { setMobileMenuOpen(false); onOpenAuth('register'); }}
+                >
+                  Inscribe
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </header>
