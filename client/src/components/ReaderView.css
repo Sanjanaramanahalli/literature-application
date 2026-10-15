@@ -517,6 +517,8 @@
 
 .book-page-viewport.a4-viewport {
   max-width: 794px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 /* Authentic A4 Size Sheet (210mm x 297mm proportion: 1 to 1.414) */
@@ -524,7 +526,8 @@
 .a4-page-sheet {
   width: 100%;
   max-width: 794px;
-  min-height: 540px;
+  min-height: 800px;
+  aspect-ratio: 1 / 1.414;
   background: #fdfbf7;
   color: #241a12;
   border-radius: 3px 6px 6px 3px;
@@ -1273,9 +1276,12 @@
   .a4-page-sheet,
   .full-literature-folio-card.a4-full-folio-sheet {
     min-height: auto;
+    aspect-ratio: auto;
+    max-width: 100%;
   }
   .book-page-inner-folio.a4-inner-folio {
     min-height: auto;
+    padding: 1.5rem 1rem;
   }
 }
 
