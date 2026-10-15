@@ -198,4 +198,38 @@ test.describe('LIT-22: Admin and Reader Login & Role Access Suite', () => {
       await expect(adminError).toContainText(/Access denied|not authorized/i);
     }
   });
+
+  test('P3: Personal accounts - sanjanalramanahalli@gmail.com logs into Admin and sanjanalr8@gmail.com logs into Reader', async ({ page }) => {
+    // 1. Test Reader Login with sanjanalr8@gmail.com
+    await page.locator('#btn-open-login').click();
+    await page.locator('#login-email').fill('sanjanalr8@gmail.com');
+    await page.locator('#login-password').fill('ReaderPassword123!');
+    await page.locator('#btn-submit-login').click();
+
+    await expect(page.locator('#auth-modal')).not.toBeVisible();
+    const activeBanner = page.locator('#active-user-banner');
+    await expect(activeBanner).toBeVisible();
+    await expect(activeBanner).toContainText('sanjanalr8@gmail.com');
+    await expect(activeBanner).toContainText('READER');
+
+    // Logout
+    await page.locator('#btn-logout').click();
+    await expect(page.locator('#btn-open-login')).toBeVisible();
+
+    // 2. Test Admin Login with sanjanalramanahalli@gmail.com
+    const adminSignInNav = page.locator('#nav-admin-signin');
+    if (await adminSignInNav.isVisible()) {
+      await adminSignInNav.click();
+      await page.locator('#admin-email').fill('sanjanalramanahalli@gmail.com');
+      await page.locator('#admin-password').fill('AdminPassword123!');
+      await page.locator('#btn-submit-admin-signin').click();
+
+      const adminBanner = page.locator('#active-user-banner');
+      await expect(adminBanner).toBeVisible();
+      await expect(adminBanner).toContainText('sanjanalramanahalli@gmail.com');
+      await expect(adminBanner).toContainText('ADMIN');
+      await expect(page.locator('#admin-editorial-view')).toBeVisible();
+    }
+  });
 });
+

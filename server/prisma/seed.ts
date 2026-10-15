@@ -45,6 +45,15 @@ async function main() {
     },
   });
 
+  const admin2 = await prisma.user.create({
+    data: {
+      name: 'Sanjana Ramanahalli (Curator)',
+      email: 'sanjanalramanahalli@gmail.com',
+      passwordHash: adminPasswordHash,
+      role: 'ADMIN',
+    },
+  });
+
   const reader1 = await prisma.user.create({
     data: {
       name: 'Julian Croft',
@@ -63,7 +72,16 @@ async function main() {
     },
   });
 
-  console.log('Created Users: 1 Admin, 2 Readers');
+  const reader3 = await prisma.user.create({
+    data: {
+      name: 'Sanjana Ramanahalli',
+      email: 'sanjanalr8@gmail.com',
+      passwordHash: readerPasswordHash,
+      role: 'READER',
+    },
+  });
+
+  console.log('Created Users: 2 Admins, 3 Readers');
 
   // 3. Create Categories
   const categories = await Promise.all([

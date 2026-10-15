@@ -66,6 +66,17 @@ export async function seedMemoryStore() {
     updatedAt: new Date(),
   };
 
+  const sanjanaAdmin = {
+    id: 'user_admin_sanjana',
+    name: 'Sanjana Ramanahalli (Administrator)',
+    email: 'sanjanalramanahalli@gmail.com',
+    passwordHash: adminPasswordHash,
+    role: 'ADMIN',
+    avatarUrl: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
   const readerUser = {
     id: 'user_reader_001',
     name: 'Julian Croft',
@@ -77,7 +88,18 @@ export async function seedMemoryStore() {
     updatedAt: new Date(),
   };
 
-  memoryStore.users = [adminUser, readerUser];
+  const sanjanaReader = {
+    id: 'user_reader_sanjana',
+    name: 'Sanjana Ramanahalli (Reader)',
+    email: 'sanjanalr8@gmail.com',
+    passwordHash: readerPasswordHash,
+    role: 'READER',
+    avatarUrl: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  memoryStore.users = [adminUser, sanjanaAdmin, readerUser, sanjanaReader];
 
   // Categories
   const catClassics = {

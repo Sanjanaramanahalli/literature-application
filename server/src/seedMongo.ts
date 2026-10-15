@@ -33,10 +33,28 @@ export async function seedMongoDatabase() {
     },
   });
 
+  const admin2 = await prisma.user.create({
+    data: {
+      name: 'Sanjana Ramanahalli (Curator)',
+      email: 'sanjanalramanahalli@gmail.com',
+      passwordHash: adminPasswordHash,
+      role: 'ADMIN',
+    },
+  });
+
   const reader1 = await prisma.user.create({
     data: {
       name: 'Julian Croft',
       email: 'julian@literature.org',
+      passwordHash: readerPasswordHash,
+      role: 'READER',
+    },
+  });
+
+  const reader2 = await prisma.user.create({
+    data: {
+      name: 'Sanjana Ramanahalli',
+      email: 'sanjanalr8@gmail.com',
       passwordHash: readerPasswordHash,
       role: 'READER',
     },
