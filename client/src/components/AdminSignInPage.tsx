@@ -5,11 +5,13 @@ import './AdminSignInPage.css';
 interface AdminSignInPageProps {
   onSuccess: (user: any, token: string) => void;
   onNavigateHome: () => void;
+  onOpenForgotPassword?: () => void;
 }
 
 export const AdminSignInPage: React.FC<AdminSignInPageProps> = ({
   onSuccess,
   onNavigateHome,
+  onOpenForgotPassword,
 }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -107,9 +109,29 @@ export const AdminSignInPage: React.FC<AdminSignInPageProps> = ({
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="admin-password">
-              Administrator Password
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+              <label className="form-label" htmlFor="admin-password" style={{ marginBottom: 0 }}>
+                Administrator Password
+              </label>
+              {onOpenForgotPassword && (
+                <button
+                  type="button"
+                  onClick={onOpenForgotPassword}
+                  id="btn-admin-forgot-password"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    color: 'var(--accent-gold, #c5a059)',
+                    fontSize: '0.82rem',
+                    cursor: 'pointer',
+                    textDecoration: 'underline'
+                  }}
+                >
+                  Forgot Password?
+                </button>
+              )}
+            </div>
             <div className="input-with-icon">
               <Lock size={18} className="input-icon" />
               <input
@@ -148,6 +170,28 @@ export const AdminSignInPage: React.FC<AdminSignInPageProps> = ({
             <LogIn size={16} />
             <span>{loading ? 'Authenticating Archival Session...' : 'Sign In to Curator Studio'}</span>
           </button>
+
+          {onOpenForgotPassword && (
+            <div style={{ marginTop: '1.25rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              <span>Need to set or reset your password? </span>
+              <button
+                type="button"
+                onClick={onOpenForgotPassword}
+                id="btn-admin-reset-link"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  color: 'var(--accent-gold, #c5a059)',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  textDecoration: 'underline'
+                }}
+              >
+                Reset via OTP
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>

@@ -3,7 +3,7 @@ import { X, Lock, Mail, User, KeyRound, AlertCircle, CheckCircle, ArrowRight, Sh
 
 interface AuthModalProps {
   isOpen: boolean;
-  initialMode: 'login' | 'register';
+  initialMode: 'login' | 'register' | 'forgot';
   onClose: () => void;
   onSuccess: (user: any, token: string) => void;
 }

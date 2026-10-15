@@ -25,7 +25,7 @@ export const App: React.FC = () => {
   
   // Auth Modal State
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot'>('login');
 
   useEffect(() => {
     // Check saved session
@@ -39,7 +39,7 @@ export const App: React.FC = () => {
     }
   }, []);
 
-  const handleOpenAuth = (mode: 'login' | 'register') => {
+  const handleOpenAuth = (mode: 'login' | 'register' | 'forgot') => {
     setAuthMode(mode);
     setAuthModalOpen(true);
   };
@@ -246,6 +246,7 @@ export const App: React.FC = () => {
                   setCurrentTab('admin');
                 }}
                 onNavigateHome={() => setCurrentTab('home')}
+                onOpenForgotPassword={() => handleOpenAuth('forgot')}
               />
             )}
           </>
