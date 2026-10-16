@@ -14,6 +14,7 @@ import { ExternalLiteratureReader } from './components/ExternalLiteratureReader'
 import type { ExternalWorkDetail } from './components/ExternalLiteratureReader';
 import './components/Header.css';
 import './components/AuthModal.css';
+import './components/AdminSignInPage.css';
 
 export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<string>('home');
