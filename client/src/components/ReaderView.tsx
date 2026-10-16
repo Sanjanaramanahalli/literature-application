@@ -39,6 +39,7 @@ interface ReaderViewProps {
   onBack: () => void;
   onOpenAuth: (mode: 'login' | 'register') => void;
   onSearchExternal?: (queryText: string, languageCode?: string) => void;
+  onNavigateSaved?: () => void;
 }
 
 interface DetailedLiterature extends LiteratureItem {
@@ -58,6 +59,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   onBack,
   onOpenAuth,
   onSearchExternal,
+  onNavigateSaved,
 }) => {
   const [literature, setLiterature] = useState<DetailedLiterature | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -581,10 +583,24 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
     <div className="reader-view-container" id="reader-view-container">
       {/* Top Navigation Bar */}
       <div className="reader-navigation-bar">
-        <button className="reader-back-btn" onClick={onBack} id="btn-reader-back">
-          <ArrowLeft size={16} />
-          <span>Return to Catalog</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+          <button className="reader-back-btn" onClick={onBack} id="btn-reader-back">
+            <ArrowLeft size={16} />
+            <span>Return to Catalog</span>
+          </button>
+          {user && onNavigateSaved && (
+            <button
+              className="reader-back-btn"
+              onClick={onNavigateSaved}
+              id="btn-reader-open-saved"
+              title="Open your Saved Works sanctuary"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+            >
+              <Bookmark size={15} fill="var(--accent-burgundy)" />
+              <span>Saved Works</span>
+            </button>
+          )}
+        </div>
 
         <div className="reader-actions-quick">
           {viewingMode === 'content' && (

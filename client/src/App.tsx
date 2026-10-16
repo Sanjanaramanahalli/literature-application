@@ -148,6 +148,12 @@ export const App: React.FC = () => {
               setSearchNavFilters({ query: queryText, language: languageCode || 'auto' });
               setCurrentTab('world-literature');
             }}
+            onNavigateSaved={() => {
+              setSelectedLiteratureId(null);
+              setSelectedArtCraft(null);
+              setSelectedExternalWork(null);
+              setCurrentTab('saved');
+            }}
           />
         ) : selectedExternalWork ? (
           <ExternalLiteratureReader
