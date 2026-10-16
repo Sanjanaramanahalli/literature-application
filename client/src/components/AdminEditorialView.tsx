@@ -1414,7 +1414,7 @@ export const AdminEditorialView: React.FC<AdminEditorialViewProps> = ({
                 {kpiData && kpiData.totalArtCraft !== undefined ? kpiData.totalArtCraft : '0'}
               </div>
               <div className="kpi-card-subtext">
-                <span>Across all 28 Indian States • View →</span>
+                <span>Across all 28 Regional States • View →</span>
               </div>
             </div>
           </div>

@@ -160,7 +160,7 @@ export const AdminStatDetailView: React.FC<AdminStatDetailViewProps> = ({
       case 'total-artcraft':
         return {
           title: 'Total Art & Craft Heritage Directory',
-          subtitle: 'Cultural arts, traditional craftsmanship, and heritage records across all 28 Indian States.',
+          subtitle: 'Cultural arts, traditional craftsmanship, and heritage records across all 28 Regional States.',
           breadcrumb: 'Total Art & Craft',
           icon: <Sparkles size={24} />,
           endpoint: '/api/admin/artcraft-records',
