@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BookOpen, Search, Bookmark, ShieldCheck, LogOut, Menu, X, Palette, Bell, Heart, MessageSquare, UserPlus } from 'lucide-react';
+import './Header.css';
 
 interface NotificationItem {
   id: string;

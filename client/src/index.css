@@ -111,6 +111,19 @@ p.reading-text {
   transition: all 0.2s ease-in-out;
   text-decoration: none;
   border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.btn-sm {
+  font-size: 0.82rem;
+  padding: 0.38rem 0.85rem;
+  gap: 0.35rem;
+}
+
+.btn-xs {
+  font-size: 0.74rem;
+  padding: 0.25rem 0.55rem;
+  gap: 0.25rem;
 }
 
 .btn:focus-visible {
