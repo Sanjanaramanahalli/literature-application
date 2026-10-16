@@ -1,95 +1,117 @@
+/* ==========================================================================
+   ATHENÆUM CURATORIAL EDITORIAL PORTAL - SIGN-IN STYLES
+   ========================================================================== */
+
 .admin-signin-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 280px);
-  padding: 2.5rem 1rem;
+  min-height: calc(100vh - 220px);
+  padding: 3rem 1.25rem;
+  background-color: var(--bg-primary, #fdfbf7);
 }
 
 .admin-signin-card {
-  background: var(--bg-card, #ffffff);
-  border: 1px solid var(--border-classic, #e2dcd2);
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-classic, #e3dac9);
   border-radius: var(--radius-lg, 12px);
-  box-shadow: 0 12px 36px rgba(44, 24, 16, 0.08);
+  box-shadow: 0 16px 44px rgba(44, 29, 17, 0.1);
   width: 100%;
   max-width: 480px;
-  padding: 2.5rem 2.25rem;
+  padding: 2.5rem 2.5rem 2.25rem;
   position: relative;
+  box-sizing: border-box;
 }
 
 .admin-signin-back {
   background: none;
   border: none;
-  color: var(--text-secondary, #6b645b);
+  color: var(--text-secondary, #5c4a3c);
+  font-family: var(--font-ui, sans-serif);
   font-size: 0.88rem;
+  font-weight: 500;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
   cursor: pointer;
-  padding: 0;
+  padding: 0.35rem 0.65rem;
   margin-bottom: 1.5rem;
-  transition: color 0.15s ease;
+  margin-left: -0.65rem;
+  border-radius: var(--radius-sm, 4px);
+  transition: all 0.15s ease;
 }
 
 .admin-signin-back:hover {
-  color: var(--accent-burgundy, #6b1d2f);
+  color: var(--accent-burgundy, #722f37);
+  background-color: var(--bg-secondary, #f6f1e9);
 }
 
 .admin-signin-header {
   text-align: center;
   margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .admin-signin-crest {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 64px;
-  height: 64px;
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(107, 29, 47, 0.1) 0%, rgba(184, 134, 11, 0.15) 100%);
-  border: 2px solid var(--accent-gold, #b8860b);
-  color: var(--accent-burgundy, #6b1d2f);
-  margin-bottom: 1rem;
+  background: linear-gradient(135deg, rgba(114, 47, 55, 0.12) 0%, rgba(197, 160, 89, 0.22) 100%);
+  border: 2px solid var(--accent-gold, #c5a059);
+  color: var(--accent-burgundy, #722f37);
+  margin-bottom: 1.15rem;
+  box-shadow: 0 4px 14px rgba(114, 47, 55, 0.15);
 }
 
 .admin-signin-badge {
   display: inline-block;
-  background-color: rgba(107, 29, 47, 0.08);
-  color: var(--accent-burgundy, #6b1d2f);
-  font-size: 0.75rem;
+  background-color: rgba(114, 47, 55, 0.08);
+  color: var(--accent-burgundy, #722f37);
+  font-family: var(--font-ui, sans-serif);
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.25rem 0.75rem;
+  letter-spacing: 0.1em;
+  padding: 0.28rem 0.85rem;
   border-radius: 9999px;
-  margin-bottom: 0.5rem;
-  border: 1px solid rgba(107, 29, 47, 0.2);
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(114, 47, 55, 0.22);
 }
 
 .admin-signin-title {
-  font-size: 2rem;
-  color: var(--accent-burgundy, #6b1d2f);
-  margin-bottom: 0.5rem;
+  font-family: var(--font-heading, 'Playfair Display', serif);
+  font-size: 1.95rem;
+  font-weight: 700;
+  color: var(--accent-burgundy, #722f37);
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
 .admin-signin-subtitle {
-  color: var(--text-secondary, #6b645b);
-  font-size: 0.92rem;
+  color: var(--text-secondary, #5c4a3c);
+  font-family: var(--font-ui, sans-serif);
+  font-size: 0.9rem;
   line-height: 1.5;
-  max-width: 360px;
+  max-width: 380px;
   margin: 0 auto;
 }
 
 .admin-signin-error {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.65rem;
   background-color: #fef2f2;
   border: 1px solid #fecaca;
-  color: #b91c1c;
+  color: #991b1b;
   padding: 0.85rem 1rem;
-  border-radius: var(--radius-sm, 6px);
+  border-radius: var(--radius-sm, 4px);
+  font-family: var(--font-ui, sans-serif);
   font-size: 0.88rem;
   margin-bottom: 1.5rem;
   line-height: 1.4;
@@ -98,46 +120,167 @@
 .admin-signin-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.35rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.form-label {
+  font-family: var(--font-ui, sans-serif);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #5c4a3c);
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-icon {
+  position: absolute;
+  left: 0.95rem;
+  color: var(--text-muted, #8c7869);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.65rem;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 0.94rem;
+  color: var(--text-primary, #2c1d11);
+  background-color: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-classic, #e3dac9);
+  border-radius: var(--radius-sm, 4px);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.input-with-icon .form-input.password-input {
+  padding-right: 2.75rem;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--accent-burgundy, #722f37);
+  box-shadow: 0 0 0 3px rgba(114, 47, 55, 0.12);
+  background-color: #ffffff;
+}
+
+.form-input::placeholder {
+  color: #a89f91;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #8c7869);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem;
+  border-radius: var(--radius-sm, 4px);
+  transition: color 0.15s ease, background-color 0.15s ease;
+  z-index: 2;
+}
+
+.password-toggle-btn:hover {
+  color: var(--accent-burgundy, #722f37);
+  background-color: rgba(114, 47, 55, 0.06);
 }
 
 .admin-signin-meta-info {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  color: var(--text-muted, #8c827a);
-  background: var(--bg-secondary, #faf7f2);
-  padding: 0.6rem 0.85rem;
-  border-radius: var(--radius-sm, 6px);
-  border: 1px dashed var(--border-classic, #e2dcd2);
+  gap: 0.6rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary, #5c4a3c);
+  background: var(--bg-secondary, #f6f1e9);
+  padding: 0.65rem 0.95rem;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px dashed var(--border-classic, #e3dac9);
+  line-height: 1.4;
 }
 
 .admin-submit-btn {
   width: 100%;
-  padding: 0.85rem;
-  font-size: 1rem;
+  padding: 0.85rem 1.25rem;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 0.98rem;
   font-weight: 600;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-  background-color: var(--accent-burgundy, #6b1d2f);
+  gap: 0.6rem;
+  margin-top: 0.35rem;
+  background-color: var(--accent-burgundy, #722f37);
   color: #ffffff;
-  border: none;
-  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--accent-burgundy, #722f37);
+  border-radius: var(--radius-sm, 4px);
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(114, 47, 55, 0.2);
 }
 
 .admin-submit-btn:hover:not(:disabled) {
-  background-color: #521523;
+  background-color: var(--accent-burgundy-hover, #58242a);
+  border-color: var(--accent-burgundy-hover, #58242a);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(107, 29, 47, 0.25);
+  box-shadow: 0 4px 14px rgba(114, 47, 55, 0.28);
 }
 
 .admin-submit-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.65;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.admin-reset-container {
+  margin-top: 1.25rem;
+  text-align: center;
+  font-size: 0.86rem;
+  color: var(--text-secondary, #5c4a3c);
+}
+
+.admin-reset-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 0.35rem;
+  color: var(--accent-burgundy, #722f37);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.15s ease;
+}
+
+.admin-reset-link:hover {
+  color: var(--accent-burgundy-hover, #58242a);
+}
+
+@media (max-width: 520px) {
+  .admin-signin-card {
+    padding: 2rem 1.25rem;
+  }
+  .admin-signin-title {
+    font-size: 1.65rem;
+  }
+  .admin-signin-crest {
+    width: 56px;
+    height: 56px;
+  }
 }

@@ -137,7 +137,7 @@ export const AdminSignInPage: React.FC<AdminSignInPageProps> = ({
               <input
                 id="admin-password"
                 type={showPassword ? 'text' : 'password'}
-                className="form-input"
+                className="form-input password-input"
                 placeholder="••••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -172,21 +172,13 @@ export const AdminSignInPage: React.FC<AdminSignInPageProps> = ({
           </button>
 
           {onOpenForgotPassword && (
-            <div style={{ marginTop: '1.25rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              <span>Need to set or reset your password? </span>
+            <div className="admin-reset-container">
+              <span>Need to set or reset your password?</span>
               <button
                 type="button"
                 onClick={onOpenForgotPassword}
                 id="btn-admin-reset-link"
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  padding: 0,
-                  color: 'var(--accent-gold, #c5a059)',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  textDecoration: 'underline'
-                }}
+                className="admin-reset-link"
               >
                 Reset via OTP
               </button>
