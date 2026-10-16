@@ -413,9 +413,9 @@ export const SearchView: React.FC<SearchViewProps> = ({
       {/* Header */}
       <div className="search-header">
         <span className="ornament-line">✦ ✦ ✦</span>
-        <h1 className="serif-title search-main-title">Literature Compendium</h1>
+        <h1 className="serif-title search-main-title">Advanced Literature Search</h1>
         <p className="search-main-subtitle">
-          Dynamically explore published classics and discover literary masterpieces across regional and classical languages via Wikimedia.
+          Explore cataloged classical manuscripts, world literature, and cultural craft traditions with precision filters.
         </p>
 
         {/* Scope Selector */}
@@ -427,7 +427,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
             id="tab-search-literature"
           >
             <BookOpen size={15} style={{ marginRight: '6px' }} />
-            Literature & Wikimedia Discovery
+            Literature Archives
           </button>
           <button
             type="button"
@@ -436,7 +436,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
             id="tab-search-artcraft"
           >
             <Palette size={15} style={{ marginRight: '6px' }} />
-            Indian Art & Craft
+            Art & Craft Compendium
           </button>
         </div>
       </div>
@@ -651,7 +651,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
             <div className="filters-grid">
               <div className="filter-field">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label htmlFor="search-select-language" className="filter-label">Indian Language</label>
+                  <label htmlFor="search-select-language" className="filter-label">Language / Script</label>
                 </div>
                 <select
                   id="search-select-language"
@@ -826,7 +826,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
           <Filter size={15} />
           <span>
             {loading
-              ? 'Searching Indian archives & Wikimedia...'
+              ? 'Searching literary archives & compendium...'
               : searchMode === 'artcraft'
               ? `${craftResults.length} ${craftResults.length === 1 ? 'Craft Tradition' : 'Craft Traditions'} Discovered`
               : `${results.length} ${results.length === 1 ? 'Literature Work' : 'Literature Works'} Discovered`}
