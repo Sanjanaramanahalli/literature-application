@@ -137,15 +137,16 @@
 .user-profile-badge {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.25rem 0.6rem 0.25rem 0.35rem;
+  gap: 0.5rem;
+  padding: 0.2rem 0.65rem 0.2rem 0.35rem;
   background-color: var(--bg-surface);
   border: 1px solid var(--border-classic);
   border-radius: 9999px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
   white-space: nowrap;
   flex-shrink: 0;
+  max-width: 260px;
 }
 
 .user-profile-badge:hover {
@@ -157,10 +158,11 @@
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-primary);
-  max-width: 140px;
+  max-width: 130px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: inline-block;
 }
 
 .user-avatar-img {
