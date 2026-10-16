@@ -711,6 +711,7 @@ export const prismaMongoAdapter = {
                 ...lit,
                 creator: memoryStore.creators.find((c) => c.id === lit.creatorId) || null,
                 category: memoryStore.categories.find((c) => c.id === lit.categoryId) || null,
+                ratings: memoryStore.ratings.filter((r) => r.literatureId === lit.id) || [],
               } : null;
             }
             return copy;

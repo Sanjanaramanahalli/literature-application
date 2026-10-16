@@ -378,33 +378,36 @@ readerRouter.get('/saved', authenticateToken, async (req: AuthRequest, res: Resp
       orderBy: { createdAt: 'desc' },
     });
 
-    const appSavedWorks = saves.map((s) => {
-      const lit = s.literature;
-      const totalRatingsCount = lit.ratings.length;
-      const averageRating =
-        totalRatingsCount > 0
-          ? Number((lit.ratings.reduce((acc, r) => acc + r.value, 0) / totalRatingsCount).toFixed(1))
-          : 0;
+    const appSavedWorks = saves
+      .filter((s: any) => s && s.literature)
+      .map((s: any) => {
+        const lit = s.literature;
+        const ratings = Array.isArray(lit.ratings) ? lit.ratings : [];
+        const totalRatingsCount = ratings.length;
+        const averageRating =
+          totalRatingsCount > 0
+            ? Number((ratings.reduce((acc: number, r: any) => acc + (r.value || 0), 0) / totalRatingsCount).toFixed(1))
+            : 0;
 
-      return {
-        id: lit.id,
-        title: lit.title,
-        subheading: lit.subheading,
-        brief: lit.brief,
-        language: lit.language,
-        genre: lit.genre,
-        coverImage: lit.coverImage,
-        thumbnailUrl: lit.coverImage,
-        publicationDate: lit.publicationDate,
-        creator: lit.creator,
-        category: lit.category,
-        averageRating,
-        totalRatingsCount,
-        source: 'APPLICATION' as const,
-        sourceLabel: 'Published Literature',
-        savedAt: s.createdAt,
-      };
-    });
+        return {
+          id: lit.id,
+          title: lit.title,
+          subheading: lit.subheading,
+          brief: lit.brief,
+          language: lit.language,
+          genre: lit.genre,
+          coverImage: lit.coverImage,
+          thumbnailUrl: lit.coverImage,
+          publicationDate: lit.publicationDate,
+          creator: lit.creator,
+          category: lit.category,
+          averageRating,
+          totalRatingsCount,
+          source: 'APPLICATION' as const,
+          sourceLabel: 'Published Literature',
+          savedAt: s.createdAt,
+        };
+      });
 
     // Also fetch external Wikimedia saved works
     let externalSavedWorks: any[] = [];
@@ -448,6 +451,7 @@ readerRouter.get('/saved', authenticateToken, async (req: AuthRequest, res: Resp
 
     res.json({ savedWorks: allSavedWorks });
   } catch (err) {
+    console.error('[ReaderRouter] Failed to fetch saved works:', err);
     res.status(500).json({ error: 'Failed to fetch saved works.' });
   }
 });
