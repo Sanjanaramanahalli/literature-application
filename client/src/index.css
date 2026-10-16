@@ -60,7 +60,15 @@ body {
   font-family: var(--font-ui);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
+
+img, svg {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
 
 /* Typography Hierarchy */
 h1, h2, h3, h4, .serif-title {

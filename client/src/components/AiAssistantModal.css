@@ -330,3 +330,60 @@
   color: var(--text-primary, #2c1810);
   font-weight: 500;
 }
+
+@media (max-width: 640px) {
+  .ai-modal-overlay {
+    padding: 0.5rem;
+  }
+  .ai-modal-card {
+    max-height: 94vh;
+  }
+  .ai-modal-header {
+    padding: 1rem 1.15rem;
+  }
+  .ai-modal-title {
+    font-size: 1.15rem;
+  }
+  .ai-modal-tabs {
+    padding: 0.35rem 0.75rem 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+  .ai-tab-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.78rem;
+    flex-shrink: 0;
+  }
+  .ai-modal-body {
+    padding: 1.15rem 1rem;
+    gap: 1rem;
+  }
+  .ai-modal-footer {
+    padding: 0.85rem 1rem;
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+  .ai-modal-footer > div {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
+  }
+  .ai-modal-footer .btn-ai-action,
+  .ai-modal-footer .btn-ai-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+  .lang-select-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .lang-select {
+    flex: 1;
+    max-width: 160px;
+  }
+}
+
