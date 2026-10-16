@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Issue Prioritization Matrix (P0, P1, P2)</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 20px;
+    background: #f8fafc;
+    color: #1e293b;
+  }
+  .header {
+    margin-bottom: 16px;
+  }
+  h2 {
+    margin: 0 0 6px 0;
+    color: #0f172a;
+    font-size: 20px;
+  }
+  p.subtitle {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    font-size: 12px;
+  }
+  th {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+  }
+  td {
+    padding: 7px 10px;
+    border: 1px solid #e2e8f0;
+    vertical-align: top;
+    line-height: 1.4;
+  }
+  tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+  .center {
+    text-align: center;
+  }
+  .badge-p0 {
+    font-weight: bold;
+    color: #b91c1c;
+    background: #fee2e2;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+  .badge-p1 {
+    font-weight: bold;
+    color: #c2410c;
+    background: #ffedd5;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+  .badge-p2 {
+    font-weight: bold;
+    color: #1d4ed8;
+    background: #dbeafe;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h2>Software Defect Triage & Severity Classification Report</h2>
+  <p class="subtitle">Module: Permit to Work (PTW), LOTO & Incident Management | Prioritization: P0, P1, P2</p>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 35px; text-align: center;">No.</th>
+      <th style="width: 150px;">Module</th>
+      <th style="width: 340px;">Bug / Issue</th>
+      <th>Expected Result</th>
+      <th style="width: 60px; text-align: center;">Priority</th>
+      <th style="width: 120px;">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">1</td>
+      <td><b>Request Access</b></td>
+      <td>Request Access cannot be submitted. Warning shows: &ldquo;We couldn't reach the server. Check your connection and send the form again.&rdquo;</td>
+      <td>Request Access form should submit successfully without connection errors</td>
+      <td class="center"><span class="badge-p0">P0</span></td>
+      <td>■ New</td>
+    </tr>
+    <tr>
+      <td class="center">2</td>
+      <td><b>LOTO</b></td>
+      <td>File/evidence cannot be uploaded in the Lockout/Tagout field.</td>
+      <td>File/evidence should upload successfully in the LOTO field</td>
+      <td class="center"><span class="badge-p0">P0</span></td>
+      <td>■ Related – PTW-023</td>
+    </tr>
+    <tr>
+      <td class="center">3</td>
+      <td><b>Permit Templates</b></td>
+      <td>Add Section is not working when creating/editing a permit template.</td>
+      <td>Add Section button should create a new section in the template</td>
+      <td class="center"><span class="badge-p1">P1</span></td>
+      <td>■ New</td>
+    </tr>
+    <tr>
+      <td class="center">4</td>
+      <td><b>Permit Creation</b></td>
+      <td>Machinery does not appear in the dropdown initially. It appears only after refreshing the application.</td>
+      <td>Machinery dropdown should load immediately without requiring page refresh</td>
+      <td class="center"><span class="badge-p1">P1</span></td>
+      <td>■ Same – PTW-058</td>
+    </tr>
+    <tr>
+      <td class="center">5</td>
+      <td><b>Incident Management</b></td>
+      <td>Chat Admin cannot report an incident. Warning shows: &ldquo;Validation failed, UUID expired.&rdquo;</td>
+      <td>Incidents should be reported successfully without UUID expiration error</td>
+      <td class="center"><span class="badge-p0">P0</span></td>
+      <td>■ New</td>
+    </tr>
+    <tr>
+      <td class="center">6</td>
+      <td><b>Permit Permissions</b></td>
+      <td>Org Admin can perform multiple permit actions—fill permit details, submit, approve, and start work. The configured role/workflow permissions need to be verified.</td>
+      <td>Role-based permissions should enforce Segregation of Duties; Org Admin should not self-approve or start work</td>
+      <td class="center"><span class="badge-p0">P0</span></td>
+      <td>■ New</td>
+    </tr>
+    <tr>
+      <td class="center">7</td>
+      <td><b>Notifications</b></td>
+      <td>Permit approval notification appears in Messages, but clicking it does not open the specific permit; it opens/shows all permits.</td>
+      <td>Clicking notification should open the specific permit directly</td>
+      <td class="center"><span class="badge-p1">P1</span></td>
+      <td>■ New</td>
+    </tr>
+    <tr>
+      <td class="center">8</td>
+      <td><b>Permit Creation – LOTO</b></td>
+      <td>Add Lockout/Tagout is not working while creating a permit.</td>
+      <td>Add Lockout/Tagout should work and attach isolations to the permit</td>
+      <td class="center"><span class="badge-p0">P0</span></td>
+      <td>■ Related – PTW-021</td>
+    </tr>
+    <tr>
+      <td class="center">9</td>
+      <td><b>Permit Closure – Evidence</b></td>
+      <td>After adding evidence during permit closure, &ldquo;Authentication required&rdquo; is displayed.</td>
+      <td>Evidence should submit without authentication error to allow closure</td>
+      <td class="center"><span class="badge-p0">P0</span></td>
+      <td>■ New</td>
+    </tr>
+    <tr>
+      <td class="center">10</td>
+      <td><b>Profile</b></td>
+      <td>Profile picture cannot be removed, and the selected profile picture does not display.</td>
+      <td>Selected picture should display, and remove option should be available</td>
+      <td class="center"><span class="badge-p2">P2</span></td>
+      <td>■ Same – PTW-036</td>
+    </tr>
+    <tr>
+      <td class="center">11</td>
+      <td><b>Evidence</b></td>
+      <td>Uploaded evidence cannot be opened/viewed.</td>
+      <td>Uploaded evidence files/images should open and view properly</td>
+      <td class="center"><span class="badge-p1">P1</span></td>
+      <td>■ Same – PTW-063</td>
+    </tr>
+    <tr>
+      <td class="center">12</td>
+      <td><b>HOD Notification</b></td>
+      <td>HOD does not receive a notification when the Job Issuer submits a permit and HOD approval is the next step.</td>
+      <td>HOD should receive notification when permit requires approval</td>
+      <td class="center"><span class="badge-p1">P1</span></td>
+      <td>■ Same – PTW-059</td>
+    </tr>
+    <tr>
+      <td class="center">13</td>
+      <td><b>User & Roles</b></td>
+      <td>Temporary Password – Copy button is not working.</td>
+      <td>Temporary password should be copied to clipboard successfully</td>
+      <td class="center"><span class="badge-p1">P1</span></td>
+      <td>■ Same – PTW-005</td>
+    </tr>
+    <tr>
+      <td class="center">14</td>
+      <td><b>Download</b></td>
+      <td>A Download option is required/available for downloading the details, but its expected behavior should be verified.</td>
+      <td>Download option should export permit/incident details properly</td>
+      <td class="center"><span class="badge-p2">P2</span></td>
+      <td>■ New</td>
+    </tr>
+    <tr>
+      <td class="center">15</td>
+      <td><b>Incident – Root Cause</b></td>
+      <td>Clicking Record Root Cause for an unsafe incident does not open the expected popup/form.</td>
+      <td>Record Root Cause button should open the investigation form</td>
+      <td class="center"><span class="badge-p1">P1</span></td>
+      <td>■ New</td>
+    </tr>
+    <tr>
+      <td class="center">16</td>
+      <td><b>Incident – Corrective Action</b></td>
+      <td>Clicking Corrective Action does not open the expected popup/form.</td>
+      <td>Corrective Action button should open the CAPA action form</td>
+      <td class="center"><span class="badge-p1">P1</span></td>
+      <td>■ New</td>
+    </tr>
+    <tr>
+      <td class="center">17</td>
+      <td><b>Incident – Assign</b></td>
+      <td>In Manager Incidents, clicking Assign results in &ldquo;Unable to load page.&rdquo;</td>
+      <td>Assign button should open assignment screen/modal without error</td>
+      <td class="center"><span class="badge-p1">P1</span></td>
+      <td>■ New</td>
+    </tr>
+    <tr>
+      <td class="center">18</td>
+      <td><b>Permit Creation – Back</b></td>
+      <td>There is no Back button while creating a permit.</td>
+      <td>Back button should be available on each permit creation step</td>
+      <td class="center"><span class="badge-p2">P2</span></td>
+      <td>■ Same – PTW-027</td>
+    </tr>
+    <tr>
+      <td class="center">19</td>
+      <td><b>Permit Page – Back</b></td>
+      <td>The Permit page does not have a Back button.</td>
+      <td>Back button should be available on the Permit page</td>
+      <td class="center"><span class="badge-p2">P2</span></td>
+      <td>■ Same – PTW-002</td>
+    </tr>
+    <tr>
+      <td class="center">20</td>
+      <td><b>Permit Creation – Next</b></td>
+      <td>After entering Basic Information, the Next button does not respond on the first click. The user has to click it again.</td>
+      <td>Next button should respond and navigate immediately on first click</td>
+      <td class="center"><span class="badge-p2">P2</span></td>
+      <td>■ New</td>
+    </tr>
+  </tbody>
+</table>
+
+</body>
+</html>

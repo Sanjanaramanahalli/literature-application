@@ -244,7 +244,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
       setHasMore(fetchedResults.length >= PAGE_SIZE);
     } catch (err: any) {
       console.error('Search failure:', err);
-      setError(err.message || 'Failed to query Indian literature archives.');
+      setError(err.message || 'Failed to query literature archives.');
     } finally {
       setLoading(false);
       setLoadingMore(false);
