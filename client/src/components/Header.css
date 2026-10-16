@@ -234,7 +234,7 @@
   padding: 0.4rem 0;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 960px) {
   .desktop-nav {
     display: none;
   }
