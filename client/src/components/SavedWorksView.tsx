@@ -89,9 +89,45 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
       }
 
       const data = await res.json();
-      setSavedWorks(data.savedWorks || []);
+      const serverSaved = data.savedWorks || [];
+
+      // Dual-Persistence: Cache saved works by user ID in localStorage so they survive serverless cold starts
+      const userKey = `literature_saved_${user?.id || user?.email || 'default'}`;
+      let cachedWorks: SavedWork[] = [];
+      try {
+        const rawCached = localStorage.getItem(userKey);
+        if (rawCached) cachedWorks = JSON.parse(rawCached);
+      } catch (e) {
+        // ignore parse error
+      }
+
+      // Merge server works with locally cached works to prevent cold-start loss
+      const mergedMap = new Map<string, SavedWork>();
+      cachedWorks.forEach((w) => mergedMap.set(w.externalId || w.id, w));
+      serverSaved.forEach((w: SavedWork) => mergedMap.set(w.externalId || w.id, w));
+      const combined = Array.from(mergedMap.values());
+
+      try {
+        localStorage.setItem(userKey, JSON.stringify(combined));
+      } catch (e) {
+        // ignore quota error
+      }
+
+      setSavedWorks(combined);
     } catch (err: any) {
       console.error('Fetch saved works error:', err);
+      // Fallback to locally cached saved works if server had a cold-boot disconnect
+      const userKey = `literature_saved_${user?.id || user?.email || 'default'}`;
+      try {
+        const rawCached = localStorage.getItem(userKey);
+        if (rawCached) {
+          const cached = JSON.parse(rawCached);
+          if (cached.length > 0) {
+            setSavedWorks(cached);
+            return;
+          }
+        }
+      } catch (e) {}
       setError(err.message || 'Error loading saved literature.');
     } finally {
       setLoading(false);
@@ -140,7 +176,14 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
         if (res.ok) {
           const data = await res.json();
           if (!data.saved) {
-            setSavedWorks((prev) => prev.filter((w) => w.id !== work.id));
+            setSavedWorks((prev) => {
+              const next = prev.filter((w) => w.id !== work.id);
+              const userKey = `literature_saved_${user?.id || user?.email || 'default'}`;
+              try {
+                localStorage.setItem(userKey, JSON.stringify(next));
+              } catch (e) {}
+              return next;
+            });
           }
         }
       }

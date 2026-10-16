@@ -365,6 +365,42 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       setIsSaved(data.saved);
       setSavesCount(data.totalSavesCount);
       setFeedbackMessage(data.message);
+
+      // Dual-Persistence: update user's localStorage saved cache immediately
+      const userKey = `literature_saved_${user?.id || user?.email || 'default'}`;
+      try {
+        let cached: any[] = [];
+        const raw = localStorage.getItem(userKey);
+        if (raw) cached = JSON.parse(raw);
+
+        if (data.saved && literature) {
+          if (!cached.some((w) => w.id === literature.id)) {
+            cached.unshift({
+              id: literature.id,
+              title: literature.title,
+              subheading: literature.subheading,
+              brief: literature.brief,
+              language: literature.language,
+              genre: literature.genre,
+              coverImage: literature.coverImage,
+              thumbnailUrl: literature.coverImage,
+              publicationDate: literature.publicationDate,
+              creator: literature.creator,
+              category: literature.category,
+              averageRating: literature.averageRating || 0,
+              totalRatingsCount: literature.totalRatingsCount || 0,
+              source: 'APPLICATION',
+              sourceLabel: 'Published Literature',
+              savedAt: new Date().toISOString(),
+            });
+          }
+        } else if (!data.saved) {
+          cached = cached.filter((w) => w.id !== literatureId);
+        }
+        localStorage.setItem(userKey, JSON.stringify(cached));
+      } catch (cacheErr) {
+        // ignore quota error
+      }
     } catch (err: any) {
       console.error('Save toggle error:', err);
       setFeedbackMessage(err.message || 'Error updating saved status.');
