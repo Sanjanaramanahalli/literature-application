@@ -315,6 +315,11 @@
     right: 12px;
     top: 12px;
   }
+  .detected-language-pill {
+    position: static !important;
+    margin-top: 0.35rem;
+    align-self: flex-start;
+  }
   .filters-grid {
     grid-template-columns: 1fr;
   }
