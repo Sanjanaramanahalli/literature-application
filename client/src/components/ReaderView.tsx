@@ -863,16 +863,29 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
           <span style={{ color: 'var(--accent-burgundy)', fontSize: '0.92rem', fontWeight: 500 }}>
             {feedbackMessage}
           </span>
-          {!user && (
-            <button
-              type="button"
-              className="btn btn-primary btn-sm"
-              onClick={() => onOpenAuth('login')}
-              style={{ padding: '0.35rem 0.85rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
-            >
-              Sign In
-            </button>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+            {user && onNavigateSaved && (feedbackMessage.toLowerCase().includes('saved') || feedbackMessage.toLowerCase().includes('collection')) && (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={onNavigateSaved}
+                id="btn-toast-view-saved"
+                style={{ padding: '0.35rem 0.85rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+              >
+                View Saved Works →
+              </button>
+            )}
+            {!user && (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => onOpenAuth('login')}
+                style={{ padding: '0.35rem 0.85rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+              >
+                Sign In
+              </button>
+            )}
+          </div>
         </div>
       )}
 
