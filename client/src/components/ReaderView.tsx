@@ -30,6 +30,7 @@ import { ThreadedComments } from './ThreadedComments';
 import { WhatsAppAiAssistant } from './WhatsAppAiAssistant';
 import type { LiteratureItem } from './LiteratureCard';
 import { getIllustrationForFolio } from '../config/literatureIllustrations';
+import { getApiUrl } from '../config/api';
 import './ReaderView.css';
 
 interface ReaderViewProps {
@@ -339,7 +340,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
         return;
       }
 
-      const res = await fetch(`/api/reader/literature/${literatureId}/save`, {
+      const res = await fetch(getApiUrl(`/api/reader/literature/${literatureId}/save`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

@@ -602,7 +602,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                 type="text"
                 id="search-input-title"
                 className="main-search-input"
-                placeholder="Search Indian literature in native script or English (e.g. ಮಲೆಗಳಲ್ಲಿ ಮದುಮಗಳು, ಕುವೆಂಪು, गोदान, சிலப்பதிகாரம், వేమన)..."
+                placeholder="Search classical literature in native script or English (e.g. Hamlet, Iliad, ಮಲೆಗಳಲ್ಲಿ ಮದುಮಗಳು, गोदान)..."
                 value={query}
                 onChange={(e) => handleQueryChange(e.target.value)}
               />
@@ -721,7 +721,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                   value={resultType}
                   onChange={(e) => setResultType(e.target.value as any)}
                 >
-                  <option value="ALL">All Indian Literature Entries</option>
+                  <option value="ALL">All Literature Entries</option>
                   <option value="WORK">📖 Literature Works (Novels, Poems, Plays, Epics)</option>
                   <option value="AUTHOR">✍️ Literary Authors & Poets</option>
                 </select>
@@ -731,7 +731,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
             {/* Quick-suggest chips & Reset Action */}
             <div className="search-actions-bar">
               <div className="quick-suggest-group">
-                <span className="suggest-label">Explore Indian Classics:</span>
+                <span className="suggest-label">Explore Classics:</span>
                 <button
                   type="button"
                   className="chip-btn"

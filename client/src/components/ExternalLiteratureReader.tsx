@@ -301,7 +301,7 @@ export const ExternalLiteratureReader: React.FC<ExternalLiteratureReaderProps> =
                   ))
                 ) : (
                   <p className="manuscript-paragraph">
-                    {work.title} is documented in classical Indian literature archives under {work.language}.
+                    {work.title} is documented in classical literature archives under {work.language}.
                     You can inspect the complete biographical and literary citations directly on the archival source folio.
                   </p>
                 )}

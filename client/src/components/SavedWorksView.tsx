@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bookmark, Trash2, BookOpen, Star, Calendar, Globe, Tag } from 'lucide-react';
 import type { ExternalWorkDetail } from './ExternalLiteratureReader';
+import { getApiUrl } from '../config/api';
 import './SavedWorksView.css';
 
 interface SavedWork {
@@ -72,7 +73,7 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
         return;
       }
 
-      const res = await fetch('/api/reader/saved', {
+      const res = await fetch(getApiUrl('/api/reader/saved'), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -108,7 +109,7 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
       const token = localStorage.getItem('literature_token');
       if (work.source === 'WIKIMEDIA' || work.externalId) {
         // Remove external saved work
-        const res = await fetch('/api/reader/external/save', {
+        const res = await fetch(getApiUrl('/api/reader/external/save'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -129,7 +130,7 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
         }
       } else {
         // Remove standard DB literature
-        const res = await fetch(`/api/reader/literature/${work.id}/save`, {
+        const res = await fetch(getApiUrl(`/api/reader/literature/${work.id}/save`), {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -176,7 +177,7 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
         onSelectExternalWork({
           id: work.externalId || work.id,
           title: work.title,
-          language: work.language || 'Indian Literature',
+          language: work.language || 'Classical Literature',
           languageCode: langCode,
           extract: work.brief || '',
           thumbnailUrl: work.coverImage || undefined,
@@ -221,7 +222,7 @@ export const SavedWorksView: React.FC<SavedWorksViewProps> = ({
         <span className="ornament-line">✦ ✦ ✦</span>
         <h1 className="serif-title saved-main-title">Personal Reading Sanctuary</h1>
         <p className="saved-main-subtitle">
-          Your curated collection of preserved manuscripts and discovered Indian literature.
+          Your curated collection of preserved manuscripts and discovered literary works.
         </p>
       </header>
 
