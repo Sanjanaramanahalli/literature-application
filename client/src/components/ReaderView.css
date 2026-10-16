@@ -73,6 +73,10 @@
   opacity: 0.9;
 }
 
+.btn-label-mobile-only {
+  display: none;
+}
+
 /* Distraction-free Reading Sanctuary Article Container */
 .reader-article-wrapper {
   max-width: 860px;
@@ -1142,9 +1146,15 @@
     padding: 0.35rem 0.55rem;
     font-size: 0.78rem;
     min-width: auto;
-  }
   .btn-label-responsive {
     display: none;
+  }
+  .btn-label-mobile-only {
+    display: inline;
+  }
+  .reader-settings-dropdown {
+    right: -10px !important;
+    max-width: 90vw !important;
   }
   .cover-page-inner {
     grid-template-columns: 1fr;

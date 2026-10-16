@@ -229,14 +229,27 @@
 
 @media (max-width: 768px) {
   .saved-main-title {
-    font-size: 2rem;
+    font-size: 1.85rem;
+  }
+  .saved-main-subtitle {
+    font-size: 0.95rem;
   }
   .saved-grid {
     grid-template-columns: 1fr;
     gap: 1.25rem;
   }
   .saved-card {
-    padding: 1.25rem;
+    flex-direction: column;
+  }
+  .saved-card-cover {
+    width: 100%;
+    min-width: 100%;
+    height: 180px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-classic);
+  }
+  .saved-card-body {
+    padding: 1.25rem 1rem;
   }
   .saved-card-actions {
     flex-direction: column;
@@ -245,6 +258,15 @@
   .saved-card-actions .btn {
     width: 100%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .saved-empty-state {
+    padding: 3rem 1.25rem;
+  }
+  .saved-empty-title {
+    font-size: 1.45rem;
   }
 }
 

@@ -619,10 +619,11 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
     <div className="reader-view-container" id="reader-view-container">
       {/* Top Navigation Bar */}
       <div className="reader-navigation-bar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-          <button className="reader-back-btn" onClick={onBack} id="btn-reader-back">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+          <button className="reader-back-btn" onClick={onBack} id="btn-reader-back" title="Return to Catalog">
             <ArrowLeft size={16} />
-            <span>Return to Catalog</span>
+            <span className="btn-label-responsive">Return to Catalog</span>
+            <span className="btn-label-mobile-only">Catalog</span>
           </button>
           {user && onNavigateSaved && (
             <button
@@ -633,7 +634,8 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
               style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
             >
               <Bookmark size={15} fill="var(--accent-burgundy)" />
-              <span>Saved Works</span>
+              <span className="btn-label-responsive">Saved Works</span>
+              <span className="btn-label-mobile-only">Saved</span>
             </button>
           )}
         </div>
