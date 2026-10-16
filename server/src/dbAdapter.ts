@@ -103,6 +103,11 @@ function matchesFilter(item: any, where: any): boolean {
       if (!value.some((sub) => matchesFilter(item, sub))) return false;
     } else if (key === 'NOT') {
       if (matchesFilter(item, value)) return false;
+    } else if (key.includes('_') && value && typeof value === 'object' && !Array.isArray(value)) {
+      // Prisma compound unique keys like userId_literatureId: { userId, literatureId }
+      for (const [subKey, subVal] of Object.entries(value as Record<string, any>)) {
+        if (item[subKey] !== subVal) return false;
+      }
     } else if (value && typeof value === 'object' && !(value instanceof Date)) {
       const fieldVal = item[key];
       for (const [op, opVal] of Object.entries(value as Record<string, any>)) {
