@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BookOpen, Search, Bookmark, ShieldCheck, LogOut, Menu, X, Palette, Globe, Bell, Heart, MessageSquare, UserPlus } from 'lucide-react';
+import { BookOpen, Search, Bookmark, ShieldCheck, LogOut, Menu, X, Palette, Bell, Heart, MessageSquare, UserPlus } from 'lucide-react';
 
 interface NotificationItem {
   id: string;
@@ -95,16 +95,6 @@ export const Header: React.FC<HeaderProps> = ({
             id="nav-home"
           >
             Home
-          </button>
-          <button
-            className={`nav-link ${currentTab === 'world-literature' ? 'active' : ''}`}
-            onClick={() => handleNav('world-literature')}
-            id="nav-world-literature"
-            data-testid="nav-explore"
-            title="Discover classical literature across supported Indian languages"
-          >
-            <Globe size={15} style={{ marginRight: '4px' }} />
-            Indian Literature
           </button>
           <button
             className={`nav-link ${currentTab === 'categories' ? 'active' : ''}`}
@@ -306,12 +296,12 @@ export const Header: React.FC<HeaderProps> = ({
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'var(--accent-burgundy)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.68rem', flexShrink: 0 }}>
+                <div className="user-avatar-fallback">
                   {user.name ? user.name[0].toUpperCase() : 'S'}
                 </div>
               )}
-              <span className="user-role-tag">{user.role}</span>
               <span className="user-name" title={user.name}>{user.name}</span>
+              <span className="user-role-tag">{user.role}</span>
               <button
                 className="btn-header-logout"
                 onClick={onLogout}
@@ -357,10 +347,6 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="mobile-drawer" id="mobile-menu">
           <button className="mobile-nav-link" onClick={() => handleNav('home')}>
             Home
-          </button>
-          <button className="mobile-nav-link" onClick={() => handleNav('world-literature')} id="mobile-nav-world-literature">
-            <Globe size={15} style={{ marginRight: '6px', display: 'inline' }} />
-            Indian Literature
           </button>
           <button className="mobile-nav-link" onClick={() => handleNav('categories')}>
             Categories

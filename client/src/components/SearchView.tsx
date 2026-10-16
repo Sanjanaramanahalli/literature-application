@@ -413,9 +413,9 @@ export const SearchView: React.FC<SearchViewProps> = ({
       {/* Header */}
       <div className="search-header">
         <span className="ornament-line">✦ ✦ ✦</span>
-        <h1 className="serif-title search-main-title">Indian Literature Compendium</h1>
+        <h1 className="serif-title search-main-title">Literature Compendium</h1>
         <p className="search-main-subtitle">
-          Dynamically explore published Indian classics and discover literary masterpieces across Kannada, Hindi, Tamil, Telugu, Sanskrit, and all regional languages via Wikimedia.
+          Dynamically explore published classics and discover literary masterpieces across regional and classical languages via Wikimedia.
         </p>
 
         {/* Scope Selector */}
@@ -427,7 +427,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
             id="tab-search-literature"
           >
             <BookOpen size={15} style={{ marginRight: '6px' }} />
-            Indian Literature & Wikimedia Discovery
+            Literature & Wikimedia Discovery
           </button>
           <button
             type="button"

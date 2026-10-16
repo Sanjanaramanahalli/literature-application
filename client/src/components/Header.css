@@ -130,7 +130,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.25rem 0.6rem 0.25rem 0.35rem;
+  padding: 0.25rem 0.65rem 0.25rem 0.35rem;
   background-color: var(--bg-surface);
   border: 1px solid var(--border-classic);
   border-radius: 9999px;
@@ -145,7 +145,7 @@
 
 .user-name {
   font-size: 0.84rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
   max-width: 140px;
   white-space: nowrap;
@@ -161,16 +161,31 @@
   border: 1.5px solid var(--accent-gold);
 }
 
+.user-avatar-fallback {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-burgundy);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.72rem;
+  flex-shrink: 0;
+  letter-spacing: 0;
+}
+
 .user-role-tag {
   font-size: 0.62rem;
   text-transform: uppercase;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 0.12rem 0.38rem;
-  background-color: rgba(139, 29, 63, 0.12);
+  letter-spacing: 0.05em;
+  padding: 0.12rem 0.45rem;
+  background-color: rgba(139, 29, 63, 0.1);
   color: var(--accent-burgundy);
   border-radius: 9999px;
-  border: 1px solid rgba(139, 29, 63, 0.2);
+  border: 1px solid rgba(139, 29, 63, 0.18);
 }
 
 .btn-header-logout {
@@ -178,7 +193,7 @@
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 0.2rem;
+  padding: 0.25rem;
   display: flex;
   align-items: center;
   justify-content: center;

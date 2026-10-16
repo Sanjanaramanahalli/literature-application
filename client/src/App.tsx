@@ -93,7 +93,7 @@ export const App: React.FC = () => {
         )}
 
         {/* Active user greeting pill */}
-        {user && currentTab !== 'admin-signin' && !selectedLiteratureId && !selectedArtCraft && !selectedExternalWork && (
+        {user && currentTab !== 'admin-signin' && currentTab !== 'admin' && !selectedLiteratureId && !selectedArtCraft && !selectedExternalWork && (
           <div
             className="active-user-banner"
             style={{
