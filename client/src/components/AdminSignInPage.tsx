@@ -52,8 +52,58 @@ export const AdminSignInPage: React.FC<AdminSignInPageProps> = ({
   };
 
   return (
-    <div className="admin-signin-container" id="admin-signin-page">
-      <div className="admin-signin-card">
+    <div
+      className="admin-signin-container"
+      id="admin-signin-page"
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: 'calc(100vh - 220px)',
+        padding: '2.5rem 1.25rem',
+        backgroundColor: '#FDFBF7',
+        width: '100%',
+        boxSizing: 'border-box',
+      }}
+    >
+      <style>{`
+        #admin-signin-page input.form-input {
+          width: 100% !important;
+          padding: 0.75rem 1rem 0.75rem 2.65rem !important;
+          font-family: inherit !important;
+          font-size: 0.94rem !important;
+          color: #2C1D11 !important;
+          background-color: #FFFFFF !important;
+          border: 1px solid #E3DAC9 !important;
+          border-radius: 6px !important;
+          box-sizing: border-box !important;
+          height: 44px !important;
+          outline: none !important;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+        }
+        #admin-signin-page input.form-input:focus {
+          border-color: #722F37 !important;
+          box-shadow: 0 0 0 3px rgba(114, 47, 55, 0.12) !important;
+        }
+        #admin-signin-page input.form-input.password-input {
+          padding-right: 2.75rem !important;
+        }
+      `}</style>
+
+      <div
+        className="admin-signin-card"
+        style={{
+          backgroundColor: '#FFFFFF',
+          border: '1px solid #E3DAC9',
+          borderRadius: '12px',
+          boxShadow: '0 16px 44px rgba(44, 29, 17, 0.1)',
+          width: '100%',
+          maxWidth: '480px',
+          padding: '2.5rem 2.5rem 2.25rem',
+          margin: '0 auto',
+          boxSizing: 'border-box',
+        }}
+      >
         {/* Back Link */}
         <button
           type="button"
@@ -166,6 +216,27 @@ export const AdminSignInPage: React.FC<AdminSignInPageProps> = ({
             className="btn btn-primary admin-submit-btn"
             disabled={loading}
             id="btn-submit-admin-signin"
+            style={{
+              width: '100%',
+              padding: '0.85rem 1.25rem',
+              fontFamily: "var(--font-ui, 'Inter', sans-serif)",
+              fontSize: '0.98rem',
+              fontWeight: 600,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.65rem',
+              marginTop: '0.5rem',
+              backgroundColor: '#722F37',
+              color: '#FFFFFF',
+              border: '1px solid #722F37',
+              borderRadius: '6px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              boxShadow: '0 4px 14px rgba(114, 47, 55, 0.22)',
+              minHeight: '48px',
+              boxSizing: 'border-box',
+              letterSpacing: '0.01em',
+            }}
           >
             <LogIn size={16} />
             <span>{loading ? 'Authenticating Archival Session...' : 'Sign In to Curator Studio'}</span>
