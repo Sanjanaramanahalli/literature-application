@@ -6,38 +6,38 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Core Color Palette */
-  --bg-primary: #FDFBF7;           /* Warm Alabaster / Ivory */
-  --bg-secondary: #F6F1E9;         /* Aged Parchment / Vellum */
-  --bg-surface: #FFFFFF;           /* Pristine Paper */
-  --bg-dark: #1E140C;              /* Bookbinder Ebony */
+  /* Core Color Palette — Classic Editorial Master Specification */
+  --accent-burgundy: #71313B;      /* Deep Burgundy */
+  --accent-burgundy-hover: #56232B;
+  --accent-burgundy-subtle: #F5EBEC;
+
+  --bg-primary: #FBF8F2;           /* Warm Ivory */
+  --bg-secondary: #F4EFE6;         /* Soft Parchment Vellum */
+  --bg-surface: #FFFFFF;           /* Paper White */
+  --bg-dark: #35251F;              /* Dark Brown */
   
-  --text-primary: #2C1D11;         /* Deep Antique Dark Brown */
-  --text-secondary: #5C4A3C;       /* Warm Sepia */
-  --text-muted: #8C7869;           /* Pale Sepia / Inscription */
-  --text-light: #FDFBF7;           /* Light Ivory */
+  --text-primary: #35251F;         /* Dark Brown (High-Contrast Editorial) */
+  --text-secondary: #806F62;       /* Secondary Text / Warm Sepia */
+  --text-muted: #9E8E81;           /* Pale Sepia / Inscription */
+  --text-light: #FBF8F2;           /* Light Warm Ivory */
 
-  --accent-burgundy: #722F37;      /* Imperial Wine / Burgundy */
-  --accent-burgundy-hover: #58242A;
-  --accent-burgundy-subtle: #F4EAEB;
+  --accent-gold: #B58A4B;          /* Antique Gold */
+  --accent-gold-hover: #9E7437;
+  --accent-gold-light: #F8F3EA;
 
-  --accent-gold: #C5A059;          /* Illuminated Gold */
-  --accent-gold-hover: #AF8B45;
-  --accent-gold-light: #F7F1E4;
+  --border-classic: #E9DFD0;       /* Muted Beige Delicate Border */
+  --border-focus: #B58A4B;         /* Gold Focus Ring */
 
-  --border-classic: #E3DAC9;       /* Delicate Bookline Border */
-  --border-focus: #C5A059;         /* Gold Focus Ring */
-
-  /* Typography Scale */
-  --font-display: 'Cinzel', 'Playfair Display', Georgia, serif;
-  --font-heading: 'Playfair Display', Georgia, serif;
-  --font-reading: 'Lora', Georgia, serif;
-  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Typography Scale with Multilingual Indian Script Fallbacks */
+  --font-display: 'Cinzel', 'Playfair Display', 'Nirmala UI', 'Tunga', 'Kefa', Georgia, serif;
+  --font-heading: 'Playfair Display', 'Cinzel', 'Nirmala UI', 'Tunga', Georgia, serif;
+  --font-reading: 'Lora', 'Georgia', 'Nirmala UI', 'Kedage', serif;
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   /* Elevation & Shadows */
-  --shadow-subtle: 0 2px 8px rgba(44, 29, 17, 0.04);
-  --shadow-card: 0 4px 16px rgba(44, 29, 17, 0.07);
-  --shadow-elevated: 0 8px 24px rgba(44, 29, 17, 0.12);
+  --shadow-subtle: 0 2px 8px rgba(53, 37, 31, 0.05);
+  --shadow-card: 0 4px 18px rgba(53, 37, 31, 0.08);
+  --shadow-elevated: 0 10px 30px rgba(53, 37, 31, 0.12);
 
   /* Layout Boundaries */
   --container-max: 1240px;
@@ -48,10 +48,31 @@
 }
 
 /* Global Reset & Base */
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+/* Base Form & Control Resets to prevent any browser unstyled elements */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  box-sizing: border-box;
+  outline: none;
 }
 
 body {
