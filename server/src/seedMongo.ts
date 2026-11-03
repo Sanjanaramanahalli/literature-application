@@ -243,7 +243,7 @@ export async function seedMongoDatabase() {
 
   // 7. Seed Art & Crafts
   if (Array.isArray(indianArtCraftsData) && indianArtCraftsData.length > 0) {
-    for (const craft of indianArtCraftsData.slice(0, 30)) {
+    for (const craft of indianArtCraftsData) {
       await prisma.artCraft.create({ data: craft });
     }
   }

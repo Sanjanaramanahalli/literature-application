@@ -7,11 +7,12 @@
   bottom: 0;
   background-color: rgba(30, 20, 12, 0.65);
   backdrop-filter: blur(4px);
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  z-index: 99999 !important;
   padding: 1.5rem;
+  pointer-events: auto !important;
   animation: fadeIn 0.2s ease-out;
 }
 

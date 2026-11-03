@@ -499,7 +499,7 @@ export async function seedMemoryStore() {
 
   // Art & Crafts
   if (Array.isArray(indianArtCraftsData) && indianArtCraftsData.length > 0) {
-    memoryStore.artCrafts = indianArtCraftsData.slice(0, 30).map((c: any) => ({
+    memoryStore.artCrafts = indianArtCraftsData.map((c: any) => ({
       id: c.id || randomUUID(),
       ...c,
       createdAt: new Date(),

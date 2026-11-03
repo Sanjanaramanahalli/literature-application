@@ -314,18 +314,30 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             </div>
           ) : (
-            <div className="auth-buttons">
+            <div className="auth-buttons" style={{ position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <button
-                className="btn btn-secondary btn-sm"
-                onClick={() => onOpenAuth('login')}
+                type="button"
+                className="btn btn-secondary btn-sm header-auth-btn"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onOpenAuth('login');
+                }}
                 id="btn-open-login"
+                style={{ cursor: 'pointer', pointerEvents: 'auto', userSelect: 'none' }}
               >
                 Sign In
               </button>
               <button
-                className="btn btn-primary btn-sm"
-                onClick={() => onOpenAuth('register')}
+                type="button"
+                className="btn btn-primary btn-sm header-auth-btn"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onOpenAuth('register');
+                }}
                 id="btn-open-register"
+                style={{ cursor: 'pointer', pointerEvents: 'auto', userSelect: 'none' }}
               >
                 Create Account
               </button>
@@ -425,18 +437,30 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   type="button"
                   className="btn btn-secondary btn-sm"
-                  style={{ flex: 1 }}
-                  onClick={() => { setMobileMenuOpen(false); onOpenAuth('login'); }}
+                  style={{ flex: 1, cursor: 'pointer', pointerEvents: 'auto' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setMobileMenuOpen(false);
+                    onOpenAuth('login');
+                  }}
+                  id="mobile-btn-open-login"
                 >
                   Sign In
                 </button>
                 <button
                   type="button"
                   className="btn btn-primary btn-sm"
-                  style={{ flex: 1 }}
-                  onClick={() => { setMobileMenuOpen(false); onOpenAuth('register'); }}
+                  style={{ flex: 1, cursor: 'pointer', pointerEvents: 'auto' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setMobileMenuOpen(false);
+                    onOpenAuth('register');
+                  }}
+                  id="mobile-btn-open-register"
                 >
-                  Inscribe
+                  Create Account
                 </button>
               </div>
             )}
