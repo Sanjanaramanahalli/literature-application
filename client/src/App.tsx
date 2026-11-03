@@ -84,11 +84,11 @@ export const App: React.FC = () => {
         {/* Welcome Sanctuary Hero Banner (Show for home, categories) */}
         {(currentTab === 'home' || currentTab === 'categories') && !selectedLiteratureId && !selectedExternalWork && (
           <div className="app-welcome-banner" style={{ textAlign: 'center', padding: '2rem 1rem 1.5rem', marginBottom: '1.5rem' }}>
-            <h1 className="app-welcome-heading" style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: 'var(--accent-burgundy)' }} id="sanctuary-welcome-heading">
-              Welcome to the Athenæum
+            <h1 className="app-welcome-heading serif-title" style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: 'var(--accent-burgundy)' }} id="sanctuary-welcome-heading">
+              Welcome to Literature Application
             </h1>
             <p className="app-welcome-subtitle" style={{ maxWidth: '680px', margin: '0 auto', color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: '1.6' }}>
-              A dedicated sanctuary for discovering, reading, and contemplating timeless works of world literature.
+              Discover stories, explore cultures, and enjoy reading.
             </p>
           </div>
         )}
